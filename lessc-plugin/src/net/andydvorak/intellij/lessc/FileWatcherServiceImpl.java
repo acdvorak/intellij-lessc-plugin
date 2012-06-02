@@ -1,12 +1,11 @@
 package net.andydvorak.intellij.lessc;
 
 import com.intellij.ide.DataManager;
-import com.intellij.openapi.actionSystem.DataConstants;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
@@ -20,14 +19,23 @@ import org.lesscss.LessException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-public class FileWatcherServiceImpl implements ApplicationComponent {
+public class FileWatcherServiceImpl implements ApplicationComponent, FileWatcherService {
 
-    // TODO: Put this in <configuration> in plugin.xml
+    // TODO: Get these values dynamically from the current Module or Project config
     private static final String LESS_DIR = "/Users/tkmax82/kiosk/Applications/Kiosk/Kiosk-Web/src/main/less";
     private static final String CSS_DIR = "/Users/tkmax82/kiosk/Applications/Kiosk/Kiosk-Web/src/main/webapp/media/css/ngKiosk";
 
+    private final Map<String, File> fileMap;
+    private final LessCompiler lessCompiler;
+    private final VirtualFileListenerImpl virtualFileListener;
+
     public FileWatcherServiceImpl() {
+        fileMap = new HashMap<String, File>();
+        lessCompiler = new LessCompiler();
+        virtualFileListener = new VirtualFileListenerImpl(this);
     }
 
     private boolean isFileWatchable(final VirtualFileEvent virtualFileEvent) {
@@ -35,29 +43,51 @@ public class FileWatcherServiceImpl implements ApplicationComponent {
                 virtualFileEvent.getFile().getCanonicalPath().startsWith(LESS_DIR);
     }
 
-    @NotNull
+    private String getLessPath(final VirtualFileEvent virtualFileEvent) {
+        return virtualFileEvent.getFile().getCanonicalPath();
+    }
+
     private String getCssPath(final VirtualFileEvent virtualFileEvent) {
         return CSS_DIR + virtualFileEvent.getFile().getCanonicalPath()
                 .replaceFirst(LESS_DIR, "")
                 .replaceAll("\\.less$", ".css");
     }
 
-    private void handleFileChange(final VirtualFileEvent virtualFileEvent) {
-        if ( isFileWatchable(virtualFileEvent) ) {
-            final LessCompiler lessCompiler = new LessCompiler();
+    private File getCachedFile(final String path) {
+        if ( fileMap.containsKey(path) ) {
+            return fileMap.get(path);
+        } else {
+            final File file = new File(path);
+            fileMap.put(path, file);
+            return file;
+        }
+    }
 
-            final String lessPath = virtualFileEvent.getFile().getCanonicalPath();
+    private void removeCachedFile(final String path) {
+        fileMap.remove(path);
+    }
+
+    public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
+        if ( isFileWatchable(virtualFileEvent) ) {
+            final String lessPath = getLessPath(virtualFileEvent);
             final String cssPath = getCssPath(virtualFileEvent);
 
+            final File lessFile = getCachedFile(lessPath);
+            final File cssFile = getCachedFile(cssPath);
+
+            final IndicatorState indicatorState = startProgress(lessFile, cssFile);
+
             try {
-                lessCompiler.compile(new File(lessPath), new File(cssPath));
-                handleSuccess(virtualFileEvent);
+                lessCompiler.compile(lessFile, cssFile);
+                handleSuccess(lessFile, cssFile);
             } catch (IOException e) {
                 e.printStackTrace();  // TODO: Use proper logging mechanism
                 handleException(e, virtualFileEvent);
             } catch (LessException e) {
                 e.printStackTrace();  // TODO: Use proper logging mechanism
                 handleException(e, virtualFileEvent);
+            } finally {
+                stopProgress(indicatorState);
             }
 
             // TODO: Use proper logging mechanism
@@ -68,15 +98,68 @@ public class FileWatcherServiceImpl implements ApplicationComponent {
         }
     }
 
+    // TODO: this doesn't seem to do anything
+    private IndicatorState startProgress(final File lessFile, final File cssFile) {
+        final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+
+        IndicatorState indicatorState = null;
+
+        if (indicator != null) {
+            // Save indicator's state so we can restore it later
+            indicatorState = new IndicatorState(indicator.getText(), indicator.getFraction());
+
+            indicator.setText("Compiling " + lessFile.getName() + " to " + cssFile.getName());
+            indicator.setFraction(0);
+        }
+
+        return indicatorState;
+    }
+
+    private void stopProgress(final IndicatorState indicatorState) {
+        final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+
+        // Restore previous indicator state
+        if (indicator != null && indicatorState != null) {
+            indicator.setText(indicatorState.getText());
+            indicator.setFraction(indicatorState.getFraction());
+        }
+    }
+
+    public void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
+        // TODO: Implement this w/ intelligent cleanup of CSS file
+
+        // TODO: Clean this up
+        removeCachedFile(virtualFileMoveEvent.getOldParent().getCanonicalPath() + "/" + virtualFileMoveEvent.getFileName());
+
+//        handleFileEvent((VirtualFileEvent) virtualFileMoveEvent);
+    }
+
+    public void handleFileEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
+        // TODO: Implement this
+
+//        handleFileEvent((VirtualFileEvent) virtualFileCopyEvent);
+    }
+
+    public void handleDeletedFileEvent(final VirtualFileEvent virtualFileEvent) {
+        // TODO: Implement this w/ intelligent cleanup of CSS file
+
+        removeCachedFile(virtualFileEvent.getFile().getCanonicalPath());
+    }
+
     private void handleException(final Exception e, final VirtualFileEvent virtualFileEvent) {
-        displayPopup(e.getLocalizedMessage(), MessageType.ERROR);
+        showBalloon(virtualFileEvent.getFileName() + ": " + e.getLocalizedMessage(), MessageType.ERROR);
     }
 
-    private void handleSuccess(final VirtualFileEvent virtualFileEvent) {
-        displayPopup(virtualFileEvent.getFileName() + " successfully converted to CSS", MessageType.INFO);
+    private void handleSuccess(final File lessFile, final File cssFile) {
+        showBalloon(lessFile.getName() + " successfully compiled to CSS", MessageType.INFO);
+
+        final VirtualFile virtualCssFile = LocalFileSystem.getInstance().findFileByIoFile(cssFile);
+
+        // TODO: performance of synchronous vs. asynchronous?
+        virtualCssFile.refresh(false, false);
     }
 
-    private void displayPopup(final String message, final MessageType messageType) {
+    private void showBalloon(final String message, final MessageType messageType) {
         final DataContext dataContext = DataManager.getInstance().getDataContext();
         final StatusBar statusBar = WindowManager.getInstance().getStatusBar(DataKeys.PROJECT.getData(dataContext));
 
@@ -88,53 +171,11 @@ public class FileWatcherServiceImpl implements ApplicationComponent {
     }
 
     public void initComponent() {
-        final VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
-
-        virtualFileManager.addVirtualFileListener(new VirtualFileListener() {
-            public void propertyChanged(final VirtualFilePropertyEvent virtualFilePropertyEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public void contentsChanged(final VirtualFileEvent virtualFileEvent) {
-                handleFileChange(virtualFileEvent);
-            }
-
-            public void fileCreated(final VirtualFileEvent virtualFileEvent) {
-                handleFileChange(virtualFileEvent);
-            }
-
-            public void fileDeleted(final VirtualFileEvent virtualFileEvent) {
-                // TODO: Implement this w/ intelligent cleanup of CSS file
-            }
-
-            public void fileMoved(final VirtualFileMoveEvent virtualFileMoveEvent) {
-                // TODO: Implement this w/ intelligent cleanup of CSS file
-            }
-
-            public void fileCopied(final VirtualFileCopyEvent virtualFileCopyEvent) {
-                // TODO: Implement this
-            }
-
-            public void beforePropertyChange(final VirtualFilePropertyEvent virtualFilePropertyEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public void beforeContentsChange(final VirtualFileEvent virtualFileEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public void beforeFileDeletion(final VirtualFileEvent virtualFileEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public void beforeFileMovement(final VirtualFileMoveEvent virtualFileMoveEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        });
+        VirtualFileManager.getInstance().addVirtualFileListener(virtualFileListener);
     }
 
     public void disposeComponent() {
-        // TODO: insert component disposal logic here
+        VirtualFileManager.getInstance().removeVirtualFileListener(virtualFileListener);
     }
 
     @NotNull
