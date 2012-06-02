@@ -21,11 +21,12 @@ The goal is to eventually be able to maintain arbitrarily complex directory stru
 
 # TODO
 
-1.  Make LESS & CSS paths configurable (per module or project if possible)
-2.  Show progress indicator during compilation
-3.  Move compilation to non-UI thread (if possible - IDEA's threading model may not permit this)
-4.  Integrate with Maven LESS plugin (extension points and config)
-5.  Add per-file config options as LESS comments
+1.  **Make LESS & CSS paths configurable (per module or project if possible)**
+2.  **Re-compile when an imported file is updated**
+3.  Show progress indicator during compilation
+4.  Move compilation to non-UI thread (if possible - IDEA's threading model may not permit this)
+5.  Integrate with Maven LESS plugin (extension points and config)
+6.  Add per-file config options as LESS comments
 
 # Known Issues
 
