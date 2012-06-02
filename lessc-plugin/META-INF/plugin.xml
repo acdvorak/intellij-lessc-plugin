@@ -10,7 +10,7 @@
   <application-components>
     <!-- Add your application components here -->
       <component>
-          <implementation-class>net.andydvorak.intellij.lessc.FileWatcherService</implementation-class>
+          <implementation-class>net.andydvorak.intellij.lessc.FileWatcherServiceImpl</implementation-class>
       </component>
   </application-components>
 

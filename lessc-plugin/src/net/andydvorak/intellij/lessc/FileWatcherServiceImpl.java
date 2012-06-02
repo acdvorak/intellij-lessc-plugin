@@ -21,13 +21,13 @@ import org.lesscss.LessException;
 import java.io.File;
 import java.io.IOException;
 
-public class FileWatcherService implements ApplicationComponent {
+public class FileWatcherServiceImpl implements ApplicationComponent {
 
     // TODO: Put this in <configuration> in plugin.xml
     private static final String LESS_DIR = "/Users/tkmax82/kiosk/Applications/Kiosk/Kiosk-Web/src/main/less";
     private static final String CSS_DIR = "/Users/tkmax82/kiosk/Applications/Kiosk/Kiosk-Web/src/main/webapp/media/css/ngKiosk";
 
-    public FileWatcherService() {
+    public FileWatcherServiceImpl() {
     }
 
     private boolean isFileWatchable(final VirtualFileEvent virtualFileEvent) {
@@ -37,34 +37,30 @@ public class FileWatcherService implements ApplicationComponent {
 
     @NotNull
     private String getCssPath(final VirtualFileEvent virtualFileEvent) {
-        return CSS_DIR + virtualFileEvent.getFile().getCanonicalPath().replaceFirst(LESS_DIR, "").replaceAll("\\.less$", ".css");
+        return CSS_DIR + virtualFileEvent.getFile().getCanonicalPath()
+                .replaceFirst(LESS_DIR, "")
+                .replaceAll("\\.less$", ".css");
     }
 
     private void handleFileChange(final VirtualFileEvent virtualFileEvent) {
         if ( isFileWatchable(virtualFileEvent) ) {
-            // Instantiate the LESS compiler
-            LessCompiler lessCompiler = new LessCompiler();
+            final LessCompiler lessCompiler = new LessCompiler();
 
             final String lessPath = virtualFileEvent.getFile().getCanonicalPath();
             final String cssPath = getCssPath(virtualFileEvent);
 
             try {
-                // Compile LESS input string to CSS output string
-//                        final String css = lessCompiler.compile("@color: #4D926F; #header { color: @color; }");
-
-                // Compile LESS input file to CSS output file
                 lessCompiler.compile(new File(lessPath), new File(cssPath));
-
                 handleSuccess(virtualFileEvent);
             } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();  // TODO: Use proper logging mechanism
                 handleException(e, virtualFileEvent);
-
             } catch (LessException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();  // TODO: Use proper logging mechanism
                 handleException(e, virtualFileEvent);
             }
 
+            // TODO: Use proper logging mechanism
             System.out.println("contentsChanged: " + virtualFileEvent.getFileName());
             System.out.println("\t" + CSS_DIR);
             System.out.println("\t" + "lessPath: " + lessPath);
@@ -82,21 +78,13 @@ public class FileWatcherService implements ApplicationComponent {
 
     private void displayPopup(final String message, final MessageType messageType) {
         final DataContext dataContext = DataManager.getInstance().getDataContext();
-        final Project project = DataKeys.PROJECT.getData(dataContext);
-
-//        final Project currentProject = DataKeys.PROJECT.getData(actionEvent.getDataContext());
-//        final VirtualFile currentFile = DataKeys.VIRTUAL_FILE.getData(actionEvent.getDataContext());
-//        final Editor editor = DataKeys.EDITOR.getData(actionEvent.getDataContext());
-
-        final StatusBar statusBar = WindowManager.getInstance()
-                .getStatusBar(DataKeys.PROJECT.getData(dataContext));
+        final StatusBar statusBar = WindowManager.getInstance().getStatusBar(DataKeys.PROJECT.getData(dataContext));
 
         JBPopupFactory.getInstance()
                 .createHtmlTextBalloonBuilder(message, messageType, null)
                 .setFadeoutTime(7500)
                 .createBalloon()
-                .show(RelativePoint.getCenterOf(statusBar.getComponent()),
-                        Balloon.Position.atRight);
+                .show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
     }
 
     public void initComponent() {
@@ -116,15 +104,15 @@ public class FileWatcherService implements ApplicationComponent {
             }
 
             public void fileDeleted(final VirtualFileEvent virtualFileEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
+                // TODO: Implement this w/ intelligent cleanup of CSS file
             }
 
             public void fileMoved(final VirtualFileMoveEvent virtualFileMoveEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
+                // TODO: Implement this w/ intelligent cleanup of CSS file
             }
 
             public void fileCopied(final VirtualFileCopyEvent virtualFileCopyEvent) {
-                //To change body of implemented methods use File | Settings | File Templates.
+                // TODO: Implement this
             }
 
             public void beforePropertyChange(final VirtualFilePropertyEvent virtualFilePropertyEvent) {
@@ -151,6 +139,6 @@ public class FileWatcherService implements ApplicationComponent {
 
     @NotNull
     public String getComponentName() {
-        return "FileWatcherService";
+        return "FileWatcherServiceImpl";
     }
 }
