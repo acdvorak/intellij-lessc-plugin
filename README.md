@@ -1,3 +1,12 @@
+# What Does This Plugin Do?
+
+This plugin monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
+It also notifies IntelliJ when the corresponding CSS file changes so that you don't have to manually synchronize
+and upload them to your deployment target every time you update a LESS file.
+
+The goal is to eventually be able to maintain arbitrarily complex directory structures, unlike external tools such as
+[SimpLESS](http://wearekiss.com/simpless) (which can only output to ```./``` or ```../css/```).
+
 # Getting Started
 
 1.  Create a new project in IntelliJ with a "Plugin" module
@@ -16,3 +25,4 @@
 2.  Show progress indicator during compilation
 3.  Move compilation to non-UI thread (if possible - IDEA's threading model may not permit this)
 4.  Integrate with Maven LESS plugin (extension points and config)
+5.  Add per-file config options as LESS comments
