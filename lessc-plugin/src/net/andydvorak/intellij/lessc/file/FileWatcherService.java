@@ -1,4 +1,4 @@
-package net.andydvorak.intellij.lessc;
+package net.andydvorak.intellij.lessc.file;
 
 import com.intellij.openapi.vfs.VirtualFileCopyEvent;
 import com.intellij.openapi.vfs.VirtualFileEvent;
