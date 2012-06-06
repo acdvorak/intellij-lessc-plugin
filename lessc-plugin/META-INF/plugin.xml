@@ -1,32 +1,42 @@
 <idea-plugin version="2">
-    <name>Plugin name here</name>
-    <description>short description of the plugin</description>
-    <version>1.0</version>
-    <vendor>YourCompany</vendor>
+    <name>LESS CSS Compiler</name>
+    <description>This plugin watches LESS directories for changes and compiles changed files to CSS.</description>
+    <version>1.1</version>
+    <vendor>AndyDvorak.net</vendor>
 
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
     <idea-version since-build="107.105"/>
 
-    <application-components>
-        <!-- Add your application components here -->
-    </application-components>
+    <depends optional="true" config-file="java.xml">com.intellij.modules.java</depends>
+
+    <application-components></application-components>
 
     <project-components>
-        <!-- Add your project components here -->
         <component>
-            <implementation-class>net.andydvorak.intellij.lessc.file.LessFileWatcherServiceImpl</implementation-class>
+            <!--<implementation-class>net.andydvorak.intellij.lessc.file.LessFileWatcherServiceImpl</implementation-class>-->
+            <implementation-class>net.andydvorak.intellij.lessc.LessManager</implementation-class>
+            <loadForDefaultProject/>
         </component>
     </project-components>
 
-    <actions>
-        <!-- Add your actions here -->
-    </actions>
+    <module-components></module-components>
+
+    <actions></actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
+        <!--<projectConfigurable implementation="net.andydvorak.intellij.lessc.ui.ProjectConfigForm"></projectConfigurable>-->
+
+        <projectConfigurable instance="net.andydvorak.intellij.lessc.ui.LessProjectConfigurable" />
+        <errorHandler implementation="com.intellij.diagnostic.ITNReporter" />
+        <applicationService serviceInterface="net.andydvorak.intellij.lessc.file.LessFileUtils"
+                            serviceImplementation="net.andydvorak.intellij.lessc.file.LessFileUtils" />
+
+        <!--<checkinHandlerFactory implementation="com.maddyhome.idea.copyright.actions.UpdateCopyrightCheckinHandlerFactory" />-->
+        <!--<projectService serviceInterface="com.maddyhome.idea.copyright.actions.UpdateCopyrightCheckinHandlerState"-->
+        <!--serviceImplementation="com.maddyhome.idea.copyright.actions.UpdateCopyrightCheckinHandlerState" />-->
     </extensions>
 
-    <module-components>
-        <!-- Add your module components here -->
-    </module-components>
+    <extensionPoints>
+        <extensionPoint name="updater" beanClass="com.intellij.openapi.fileTypes.FileTypeExtensionPoint"/>
+    </extensionPoints>
 </idea-plugin>

@@ -54,7 +54,7 @@ public class LessFileWatcherServiceImpl implements ProjectComponent, LessFileWat
     }
 
     public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
-        if ( lessFileUtils.isFileWatchable(virtualFileEvent) ) {
+        if ( lessFileUtils.isSupported(virtualFileEvent) ) {
             final File lessFile = lessFileUtils.getLessFile(virtualFileEvent);
             final File cssFile = lessFileUtils.getLessFile(virtualFileEvent);
 

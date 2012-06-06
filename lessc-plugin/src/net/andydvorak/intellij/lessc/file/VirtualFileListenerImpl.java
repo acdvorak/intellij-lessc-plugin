@@ -4,30 +4,30 @@ import com.intellij.openapi.vfs.*;
 
 public class VirtualFileListenerImpl implements VirtualFileListener {
 
-    final FileWatcherService fileWatcherService;
+    final LessFileWatcherService lessFileWatcherService;
 
-    public VirtualFileListenerImpl(final FileWatcherService fileWatcherService) {
-        this.fileWatcherService = fileWatcherService;
+    public VirtualFileListenerImpl(final LessFileWatcherService lessFileWatcherService) {
+        this.lessFileWatcherService = lessFileWatcherService;
     }
 
     public void contentsChanged(final VirtualFileEvent virtualFileEvent) {
-        fileWatcherService.handleFileEvent(virtualFileEvent);
+        lessFileWatcherService.handleFileEvent(virtualFileEvent);
     }
 
     public void fileCreated(final VirtualFileEvent virtualFileEvent) {
-        fileWatcherService.handleFileEvent(virtualFileEvent);
+        lessFileWatcherService.handleFileEvent(virtualFileEvent);
     }
 
     public void fileDeleted(final VirtualFileEvent virtualFileEvent) {
-        fileWatcherService.handleDeletedFileEvent(virtualFileEvent);
+        lessFileWatcherService.handleDeletedFileEvent(virtualFileEvent);
     }
 
     public void fileMoved(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        fileWatcherService.handleFileEvent(virtualFileMoveEvent);
+        lessFileWatcherService.handleFileEvent(virtualFileMoveEvent);
     }
 
     public void fileCopied(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        fileWatcherService.handleFileEvent(virtualFileCopyEvent);
+        lessFileWatcherService.handleFileEvent(virtualFileCopyEvent);
     }
 
     public void propertyChanged(final VirtualFilePropertyEvent virtualFilePropertyEvent) {}

@@ -1,5 +1,6 @@
 package net.andydvorak.intellij.lessc.file;
 
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 import org.lesscss.LessCompiler;
@@ -24,7 +25,11 @@ public class LessFileUtils {
         lessCompiler = new LessCompiler();
     }
 
-    public boolean isFileWatchable(final VirtualFileEvent virtualFileEvent) {
+    public static synchronized LessFileUtils getInstance() {
+        return ServiceManager.getService(LessFileUtils.class);
+    }
+
+    public boolean isSupported(final VirtualFileEvent virtualFileEvent) {
         return  virtualFileEvent.getFileName().endsWith(".less") &&
                 virtualFileEvent.getFile().getCanonicalPath().startsWith(LESS_DIR);
     }
