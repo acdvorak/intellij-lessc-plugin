@@ -14,7 +14,7 @@
     <project-components>
         <!-- Add your project components here -->
         <component>
-            <implementation-class>net.andydvorak.intellij.lessc.file.FileWatcherServiceImpl</implementation-class>
+            <implementation-class>net.andydvorak.intellij.lessc.file.LessFileWatcherServiceImpl</implementation-class>
         </component>
     </project-components>
 
@@ -24,7 +24,6 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <projectConfigurable implementation="net.andydvorak.intellij.lessc.ui.ProjectConfigForm"></projectConfigurable>
     </extensions>
 
     <module-components>

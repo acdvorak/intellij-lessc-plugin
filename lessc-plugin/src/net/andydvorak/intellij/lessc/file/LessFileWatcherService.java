@@ -4,7 +4,7 @@ import com.intellij.openapi.vfs.VirtualFileCopyEvent;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 
-public interface FileWatcherService {
+public interface LessFileWatcherService {
 
     void handleFileEvent(final VirtualFileEvent virtualFileEvent);
     void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent);

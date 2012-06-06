@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FileUtils {
+public class LessFileUtils {
 
     // TODO: Get these values dynamically from the current Module or Project config
     private static final String LESS_DIR = "/Users/tkmax82/kiosk/Applications/Kiosk/Kiosk-Web/src/main/less";
@@ -19,7 +19,7 @@ public class FileUtils {
     private final Map<String, File> fileMap;
     private final LessCompiler lessCompiler;
 
-    public FileUtils() {
+    public LessFileUtils() {
         fileMap = new HashMap<String, File>();
         lessCompiler = new LessCompiler();
     }

@@ -18,15 +18,15 @@ import org.lesscss.LessException;
 import java.io.File;
 import java.io.IOException;
 
-public class FileWatcherServiceImpl implements ProjectComponent, FileWatcherService {
+public class LessFileWatcherServiceImpl implements ProjectComponent, LessFileWatcherService {
 
     private final Project project;
-    private final FileUtils fileUtils;
+    private final LessFileUtils lessFileUtils;
     private final VirtualFileListenerImpl virtualFileListener;
 
-    public FileWatcherServiceImpl(final Project project) {
+    public LessFileWatcherServiceImpl(final Project project) {
         this.project = project;
-        this.fileUtils = new FileUtils();
+        this.lessFileUtils = new LessFileUtils();
         this.virtualFileListener = new VirtualFileListenerImpl(this);
     }
 
@@ -40,7 +40,7 @@ public class FileWatcherServiceImpl implements ProjectComponent, FileWatcherServ
 
     @NotNull
     public String getComponentName() {
-        return "FileWatcherServiceImpl";
+        return "LessFileWatcherServiceImpl";
     }
 
     @Override
@@ -54,9 +54,9 @@ public class FileWatcherServiceImpl implements ProjectComponent, FileWatcherServ
     }
 
     public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
-        if ( fileUtils.isFileWatchable(virtualFileEvent) ) {
-            final File lessFile = fileUtils.getLessFile(virtualFileEvent);
-            final File cssFile = fileUtils.getLessFile(virtualFileEvent);
+        if ( lessFileUtils.isFileWatchable(virtualFileEvent) ) {
+            final File lessFile = lessFileUtils.getLessFile(virtualFileEvent);
+            final File cssFile = lessFileUtils.getLessFile(virtualFileEvent);
 
 //            Document document = FileDocumentManager.getInstance().getDocument(virtualFileEvent.getFile());
 //            document.
@@ -66,7 +66,7 @@ public class FileWatcherServiceImpl implements ProjectComponent, FileWatcherServ
 //            RunBackgroundable.run(new Task() {
 
                     try {
-                        fileUtils.compile(lessFile, cssFile);
+                        lessFileUtils.compile(lessFile, cssFile);
                         handleSuccess(lessFile, cssFile);
                     } catch (IOException e) {
                         e.printStackTrace();  // TODO: Use proper logging mechanism
@@ -84,7 +84,7 @@ public class FileWatcherServiceImpl implements ProjectComponent, FileWatcherServ
     public void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
         // TODO: Implement this w/ intelligent cleanup of CSS file
 
-        fileUtils.removeCachedFile(fileUtils.getNewPath(virtualFileMoveEvent));
+        lessFileUtils.removeCachedFile(lessFileUtils.getNewPath(virtualFileMoveEvent));
 
 //        handleFileEvent((VirtualFileEvent) virtualFileMoveEvent);
     }
@@ -98,7 +98,7 @@ public class FileWatcherServiceImpl implements ProjectComponent, FileWatcherServ
     public void handleDeletedFileEvent(final VirtualFileEvent virtualFileEvent) {
         // TODO: Implement this w/ intelligent cleanup of CSS file
 
-        fileUtils.removeCachedFile(virtualFileEvent.getFile().getCanonicalPath());
+        lessFileUtils.removeCachedFile(virtualFileEvent.getFile().getCanonicalPath());
     }
 
     private void handleException(final Exception e, final VirtualFileEvent virtualFileEvent) {
