@@ -1,0 +1,63 @@
+package net.andydvorak.intellij.lessc.ui;
+
+import com.intellij.openapi.fileChooser.FileChooser;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class TextFieldWithBrowseButtonListener extends TextFieldWithBrowseButton {
+
+    private final Project myProject;
+    private String myTitle;
+
+    public TextFieldWithBrowseButtonListener(final Project project) {
+        this(project, null);
+    }
+
+    public TextFieldWithBrowseButtonListener(final Project project, final String title) {
+        super();
+
+        this.myProject = project;
+        this.myTitle = title;
+
+        final TextFieldWithBrowseButtonListener parent = this;
+
+        this.getButton().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                final FileChooserDescriptor d = getFileChooserDescriptor();
+                String initial = parent.getText();
+                VirtualFile initialFile = StringUtil.isNotEmpty(initial) ? LocalFileSystem.getInstance().findFileByPath(initial) : null;
+                VirtualFile file =
+                        myProject != null ? FileChooser.chooseFile(myProject, d, initialFile) : FileChooser.chooseFile(parent, d, initialFile);
+                if (file != null) {
+                    String path = file.getPresentableUrl();
+                    if (SystemInfo.isWindows && path.length() == 2 && Character.isLetter(path.charAt(0)) && path.charAt(1) == ':') {
+                        path += "\\"; // make path absolute
+                    }
+                    parent.setText(path);
+                }
+            }
+        });
+    }
+
+    private FileChooserDescriptor getFileChooserDescriptor() {
+        FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
+        if (myTitle != null) {
+            d.setTitle(myTitle);
+        }
+        d.setShowFileSystemRoots(true);
+        return d;
+    }
+
+    private void setFileChooserTitle(final String title) {
+        this.myTitle = title;
+    }
+
+}

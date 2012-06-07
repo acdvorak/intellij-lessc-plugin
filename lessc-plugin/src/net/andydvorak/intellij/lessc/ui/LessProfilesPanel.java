@@ -14,7 +14,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Conditions;
 import com.intellij.util.PlatformIcons;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.LessProfile;
+import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -28,19 +28,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {
 
-    private final Project myProject;
-    private final LessManager myManager;
-    private final AtomicBoolean myInitialized = new AtomicBoolean(false);
+    private final Project project;
+    private final LessManager lessManager;
+    private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
     public LessProfilesPanel(Project project) {
-        myProject = project;
-        myManager = LessManager.getInstance(project);
+        this.project = project;
+        this.lessManager = LessManager.getInstance(project);
         initTree();
     }
 
     @Override
     protected MasterDetailsStateService getStateService() {
-        return MasterDetailsStateService.getInstance(myProject);
+        return MasterDetailsStateService.getInstance(project);
     }
 
     @Override
@@ -51,18 +51,18 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     protected void processRemovedItems() {
         Map<String, LessProfile> profiles = getAllProfiles();
         final List<LessProfile> deleted = new ArrayList<LessProfile>();
-        for (LessProfile profile : myManager.getProfiles()) {
+        for (LessProfile profile : lessManager.getProfiles()) {
             if (!profiles.containsValue(profile)) {
                 deleted.add(profile);
             }
         }
         for (LessProfile profile : deleted) {
-            myManager.removeProfile(profile);
+            lessManager.removeProfile(profile);
         }
     }
 
     protected boolean wasObjectStored(Object o) {
-        return myManager.getProfiles().contains((LessProfile) o);
+        return lessManager.getProfiles().contains(o);
     }
 
     @Nls
@@ -83,28 +83,31 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     public void apply() throws ConfigurationException {
         final Set<String> profiles = new HashSet<String>();
+
+        // Check for duplicate profile names
         for (int i = 0; i < myRoot.getChildCount(); i++) {
             MyNode node = (MyNode) myRoot.getChildAt(i);
-            final String profileName = ((CssConfigurablePanel) node.getConfigurable()).getEditableObject().getName();
+            final String profileName = ((CssConfigurableForm) node.getConfigurable()).getEditableObject().getName();
             if (profiles.contains(profileName)) {
                 selectNodeInTree(profileName);
                 throw new ConfigurationException("Duplicate LESS profile name: \'" + profileName + "\'");
             }
             profiles.add(profileName);
         }
+
         super.apply();
     }
 
     public Map<String, LessProfile> getAllProfiles() {
         final Map<String, LessProfile> profiles = new com.intellij.util.containers.HashMap<String, LessProfile>();
-        if (!myInitialized.get()) {
-            for (LessProfile profile : myManager.getProfiles()) {
+        if (!isInitialized.get()) {
+            for (LessProfile profile : lessManager.getProfiles()) {
                 profiles.put(profile.getName(), profile);
             }
         } else {
             for (int i = 0; i < myRoot.getChildCount(); i++) {
                 MyNode node = (MyNode) myRoot.getChildAt(i);
-                final LessProfile lessProfile = ((CssConfigurablePanel) node.getConfigurable()).getEditableObject();
+                final LessProfile lessProfile = ((CssConfigurableForm) node.getConfigurable()).getEditableObject();
                 profiles.put(lessProfile.getName(), lessProfile);
             }
         }
@@ -114,7 +117,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @Override
     public void disposeUIResources() {
         super.disposeUIResources();
-        myInitialized.set(false);
+        isInitialized.set(false);
     }
 
     @Nullable
@@ -171,7 +174,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     private void addProfileNode(LessProfile lessProfile) {
-        final CssConfigurablePanel configurablePanel = new CssConfigurablePanel(myProject, lessProfile, TREE_UPDATER);
+        final CssConfigurableForm configurablePanel = new CssConfigurableForm(project, lessProfile, this, TREE_UPDATER);
         configurablePanel.setModified(true);
         final MyNode node = new MyNode(configurablePanel);
         addNode(node, myRoot);
@@ -180,13 +183,13 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     private void reloadTree() {
         myRoot.removeAllChildren();
-        Collection<LessProfile> collection = myManager.getProfiles();
+        Collection<LessProfile> collection = lessManager.getProfiles();
         for (LessProfile profile : collection) {
             LessProfile clone = new LessProfile();
             clone.copyFrom(profile);
-            addNode(new MyNode(new CssConfigurablePanel(myProject, clone, TREE_UPDATER)), myRoot);
+            addNode(new MyNode(new CssConfigurableForm(project, clone, this, TREE_UPDATER)), myRoot);
         }
-        myInitialized.set(true);
+        isInitialized.set(true);
     }
 
     public void reset() {
