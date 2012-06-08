@@ -38,14 +38,6 @@ public class LessProfile /* extends ProfileEx */ {
         this.cssDirectories = cssDirectories;
     }
 
-    public void addCssDirectory(final CssDirectory cssDirectory) {
-        cssDirectories.add(cssDirectory);
-    }
-
-    public void removeCssDirectory(final CssDirectory cssDirectory) {
-        cssDirectories.remove(cssDirectory);
-    }
-
     public boolean isCompressOutput() {
         return compressOutput;
     }

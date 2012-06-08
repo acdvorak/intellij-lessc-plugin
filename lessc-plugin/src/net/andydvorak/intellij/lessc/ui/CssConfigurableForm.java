@@ -21,6 +21,7 @@ import javax.swing.event.EventListenerList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
@@ -61,6 +62,8 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     private final TableView<CssDirectory> profileMappingTable;
     private final ListTableModel<CssDirectory> profileMappingModel;
 
+    private List<CssDirectory> cssDirectories;
+
     public CssConfigurableForm(final Project project, final LessProfile lessProfile, final LessProfilesPanel lessProfilesPanel, final Runnable updater) {
         super(true, updater);
 
@@ -68,10 +71,12 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
         this.lessManager = LessManager.getInstance(project);
         this.lessProfile = lessProfile;
         this.lessProfilesPanel = lessProfilesPanel;
-        this.lessProfileName = this.lessProfile.getName();
+        this.lessProfileName = lessProfile.getName();
+
+        this.cssDirectories = new ArrayList<CssDirectory>(lessProfile.getCssDirectories());
 
         final ColumnInfo[] columns = { new CssDirectoryColumn(project) };
-        profileMappingModel = new ListTableModel<CssDirectory>(columns, lessProfile.getCssDirectories(), 0);
+        profileMappingModel = new ListTableModel<CssDirectory>(columns, cssDirectories, 0);
         profileMappingTable = new TableView<CssDirectory>(profileMappingModel);
     }
 
@@ -137,12 +142,16 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     public boolean isModified() {
         return modified ||
-                !Comparing.strEqual(lessProfileName, lessProfile.getName());
+                !Comparing.strEqual(lessProfileName, lessProfile.getName()) ||
+                !Comparing.strEqual(lessDirTextField.getText(), lessProfile.getLessDir()) ||
+                !Comparing.equal(compressCssCheckbox.isSelected(), lessProfile.isCompressOutput()) ||
+                !Comparing.equal(cssDirectories, lessProfile.getCssDirectories());
     }
 
     public void apply() throws ConfigurationException {
         lessProfile.setLessDir(lessDirTextField.getText());
         lessProfile.setCompressOutput(compressCssCheckbox.isSelected());
+        lessProfile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
 
         LessManager.getInstance(project).replaceProfile(lessProfileName, lessProfile);
 
