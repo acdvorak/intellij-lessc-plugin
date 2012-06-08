@@ -2,7 +2,7 @@
     <name>LESS CSS Compiler</name>
     <description>This plugin watches LESS directories for changes and compiles changed files to CSS.</description>
     <version>1.8.2</version>
-    <vendor>AndyDvorak.net</vendor>
+    <vendor>Andrew C. Dvorak</vendor>
 
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
     <idea-version since-build="107.105"/>
