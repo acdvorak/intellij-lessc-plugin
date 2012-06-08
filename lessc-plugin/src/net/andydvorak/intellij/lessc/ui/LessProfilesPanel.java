@@ -12,6 +12,7 @@ import com.intellij.openapi.ui.MasterDetailsComponent;
 import com.intellij.openapi.ui.MasterDetailsStateService;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Conditions;
+import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
 import com.intellij.util.PlatformIcons;
 import net.andydvorak.intellij.lessc.LessManager;
 import net.andydvorak.intellij.lessc.state.LessProfile;
@@ -123,7 +124,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @Nullable
     protected ArrayList<AnAction> createActions(boolean fromPopup) {
         ArrayList<AnAction> result = new ArrayList<AnAction>();
-        result.add(new AnAction("Add", "Add", PlatformIcons.ADD_ICON) {
+        result.add(new AnAction("Add", "Add a new LESS profile", PlatformIcons.ADD_ICON) {
             {
                 registerCustomShortcutSet(CommonShortcuts.INSERT, myTree);
             }
@@ -137,15 +138,15 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
         });
         result.add(new MyDeleteAction(forAll(Conditions.alwaysTrue())));
-        result.add(new AnAction("Copy", "Copy", PlatformIcons.COPY_ICON) {
+        result.add(new AnAction("Copy", "Copy the selected LESS profile", PlatformIcons.COPY_ICON) {
             {
                 registerCustomShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_MASK)), myTree);
             }
             public void actionPerformed(AnActionEvent event) {
                 final String profileName = askForProfileName("Copy LESS Profile", "");
                 if (profileName == null) return;
-                final LessProfile clone = new LessProfile();
-                clone.copyFrom((LessProfile) getSelectedObject());
+                final LessProfile clone = new LessProfile((LessProfile) getSelectedObject());
+//                clone.copyFrom((LessProfile) getSelectedObject());
                 clone.setName(profileName);
                 addProfileNode(clone);
             }
@@ -185,8 +186,8 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         myRoot.removeAllChildren();
         Collection<LessProfile> collection = lessManager.getProfiles();
         for (LessProfile profile : collection) {
-            LessProfile clone = new LessProfile();
-            clone.copyFrom(profile);
+            LessProfile clone = new LessProfile(profile);
+//            clone.copyFrom(profile);
             addNode(new MyNode(new CssConfigurableForm(project, clone, this, TREE_UPDATER)), myRoot);
         }
         isInitialized.set(true);

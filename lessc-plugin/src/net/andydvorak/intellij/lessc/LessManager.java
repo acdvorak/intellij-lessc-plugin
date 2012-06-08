@@ -80,11 +80,11 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     public Collection<LessProfile> getProfiles() {
         return state.lessProfiles.values();
     }
-
+/** Used to determine if the state has changed, and thus whether IntelliJ needs to write out to the .xml file. */
     public LessProjectState getState() {
         return state;
     }
-
+/** Import state from external .xml file */
     public void loadState(final LessProjectState state) {
         XmlSerializerUtil.copyBean(state, this.state);
     }
@@ -161,5 +161,4 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                     .show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
         }
     }
-
 }

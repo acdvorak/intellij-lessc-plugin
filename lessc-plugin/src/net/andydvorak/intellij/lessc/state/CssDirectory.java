@@ -33,4 +33,21 @@ public class CssDirectory {
     public void setPath(final String path) {
         this.cssDirPath = path;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CssDirectory that = (CssDirectory) o;
+
+        if (cssDirPath != null ? !cssDirPath.equals(that.cssDirPath) : that.cssDirPath != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return cssDirPath != null ? cssDirPath.hashCode() : 0;
+    }
 }
