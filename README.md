@@ -55,6 +55,12 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 5.  Add one or more CSS output directories
 6.  Click OK
 
+# Known Issues
+
+*  The first time you update a ```.less``` file it will take several seconds to compile.
+   This is because the LESS compiler needs to initialize, so be patient; after the initial compilation
+   all future updates will be nearly instantaneous.
+
 # TODO
 
 1.  **Re-compile when an imported file is updated**
@@ -62,8 +68,28 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 3.  Add include / exclude filename pattern
 4.  Integrate with Maven LESS plugin (extension points and config)
 
-# Known Issues
+# LESS CSS Compiler Version
 
-*  The first time you update a ```.less``` file it will take several seconds to compile.
-   This is because the LESS compiler needs to initialize, so be patient; after the initial compilation
-   all future updates will be nearly instantaneous.
+This plugin includes the [Official LESS CSS Compiler for Java](https://github.com/marceloverdijk/lesscss-java) version 1.3.0.
+
+# Authors
+
+**Andrew C. Dvorak**
+
+*  https://github.com/acdvorak
+
+# Copyright and License
+
+Copyright 2012 Andrew C. Dvorak.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
