@@ -1,35 +1,71 @@
 # What Does This Plugin Do?
 
-This plugin monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
+```LESS Compiler``` monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
 It also notifies IntelliJ when the corresponding CSS file changes so that you don't have to manually synchronize
-and upload them to your deployment target every time you update a LESS file.
+and upload them to your deployment target every time you update a LESS file.  You can configure ```lessc``` to
+copy the compiled CSS file to any number of output directories.
 
-The goal is to eventually be able to maintain arbitrarily complex directory structures, unlike external tools such as
+```LESS Compiler``` allows you to maintain arbitrarily complex directory structures, unlike external tools such as
 [SimpLESS](http://wearekiss.com/simpless) (which can only output to ```./``` or ```../css/```).
+For example, suppose we have a project with the following directory structure
+([LESS CSS Maven Plugin](https://github.com/marceloverdijk/lesscss-maven-plugin)'s default layout):
+
+    projectRoot/
+      +  src/main/
+      |  +  less/
+      |  |  +  common/
+      |  |  |  -  common.less
+      |  |  |  -  layout.less
+      |  |  |  -  reset.less
+      |  |  +  home/
+      |  |  |  -  home.less
+      |  |  +  checkout/
+      |  |  |  -  checkout.less
+      |  |  |  -  billing.less
+      |  |  |  -  payment.less
+      |  +  webapp/
+      |  |  +  media/
+      |  |  |  +  css/
+      |  |  |  |  +  common/
+      |  |  |  |  +  home/
+      |  |  |  |  +  checkout/
+      +  target/
+      |  +  media/
+      |  |  +  css/
+      |  |  |  +  v2/
+      |  |  |  |  +  common/
+      |  |  |  |  +  home/
+      |  |  |  |  +  checkout/
+
+Such a structure would be impossible to maintain using other tools.  With ```LESS Compiler```, it's a breeze.
 
 # Getting Started
 
-1.  Create a new project in IntelliJ with a "Plugin" module
-2.  Go to File > Project Structure:
-
-    1.  Under "Libraries", add a new library from Maven: "org.lesscss:lesscss:1.3.0"
-    2.  Under "Modules", add that library to the plugin module's dependencies
-
-2.  Add a Run / Debug configuration for the plugin module
-3.  Change the hard-coded paths in FileWatcherServiceImpl.java
+1.  ```git clone git://github.com/acdvorak/intellij-lessc-plugin.git```
+2.  In IntelliJ, go to File > Open Project... and select ```$PROJECT_DIR/lessc-plugin/lessc-plugin.iml```
+3.  Create a Run / Debug configuration for the plugin module
 4.  Test the plugin by going to Run > Run lessc-plugin
+
+# Configuring the Plugin
+
+1.  Go to File > Settings (IntelliJ IDEA > Preferences or CMD + , on Mac)
+2.  Under Project Settings, select LESS Compiler
+3.  Click the "+" button to add a new LESS profile
+4.  Select the LESS source directory
+5.  Add one or more CSS output directories
+6.  Click OK
 
 # TODO
 
-1.  **Make LESS & CSS paths configurable (per module or project if possible)**
-2.  **Re-compile when an imported file is updated**
-3.  Show progress indicator during compilation
-4.  Move compilation to non-UI thread (if possible - IDEA's threading model may not permit this)
-5.  Integrate with Maven LESS plugin (extension points and config)
-6.  Add per-file config options as LESS comments
+1.  **Re-compile when an imported file is updated**
+2.  Show progress indicator during compilation
+3.  Move compilation to non-UI thread (if possible - IDEA's threading model may not permit this)
+4.  Add per-file config options as LESS comments
+5.  Add include / exclude filename pattern
+6.  Integrate with Maven LESS plugin (extension points and config)
 
 # Known Issues
 
 *  The first time you update a ```.less``` file it will take several seconds to compile.
-   This is because IntelliJ lazy loads plugins, so be patient; all updates after the initial one
-   will be nearly instantaneous.
+   This is because the LESS compiler needs to initialize, so be patient; after the initial compilation
+   all future updates will be nearly instantaneous.
