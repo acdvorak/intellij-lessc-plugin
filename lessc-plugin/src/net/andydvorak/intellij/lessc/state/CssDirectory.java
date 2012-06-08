@@ -1,12 +1,13 @@
 package net.andydvorak.intellij.lessc.state;
 
+import java.io.File;
+
 public class CssDirectory {
 
     private String cssDirPath;
 
     // For XML serialization
     public CssDirectory() {
-
     }
 
     public CssDirectory(final String path) {
@@ -30,7 +31,7 @@ public class CssDirectory {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 

@@ -12,7 +12,6 @@ import com.intellij.openapi.ui.MasterDetailsComponent;
 import com.intellij.openapi.ui.MasterDetailsStateService;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Conditions;
-import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
 import com.intellij.util.PlatformIcons;
 import net.andydvorak.intellij.lessc.LessManager;
 import net.andydvorak.intellij.lessc.state.LessProfile;
@@ -24,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
-import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {

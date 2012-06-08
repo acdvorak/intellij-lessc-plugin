@@ -8,7 +8,9 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import com.intellij.uiDesigner.core.GridConstraints;
-import com.intellij.util.ui.*;
+import com.intellij.util.ui.ColumnInfo;
+import com.intellij.util.ui.ElementProducer;
+import com.intellij.util.ui.ListTableModel;
 import net.andydvorak.intellij.lessc.LessManager;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
@@ -94,7 +96,6 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     public JComponent createOptionsPanel() {
         lessDirTextField = new TextFieldWithBrowseButtonListener(project, "Choose a LESS source directory");
-        lessDirTextField.setText("/Users/tkmax82/lessc-test/less");
 
         lessDirPanel.add(lessDirTextField, GRIDCONSTRAINTS_FILL_ALL);
 
@@ -143,13 +144,13 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     public boolean isModified() {
         return modified ||
                 !Comparing.strEqual(lessProfileName, lessProfile.getName()) ||
-                !Comparing.strEqual(lessDirTextField.getText(), lessProfile.getLessDir()) ||
+                !Comparing.strEqual(lessDirTextField.getText(), lessProfile.getLessDirPath()) ||
                 !Comparing.equal(compressCssCheckbox.isSelected(), lessProfile.isCompressOutput()) ||
                 !Comparing.equal(cssDirectories, lessProfile.getCssDirectories());
     }
 
     public void apply() throws ConfigurationException {
-        lessProfile.setLessDir(lessDirTextField.getText());
+        lessProfile.setLessDirPath(lessDirTextField.getText());
         lessProfile.setCompressOutput(compressCssCheckbox.isSelected());
         lessProfile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
 
@@ -162,7 +163,7 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     public void reset() {
         lessProfileName = lessProfile.getName();
 
-        lessDirTextField.setText(lessProfile.getLessDir());
+        lessDirTextField.setText(lessProfile.getLessDirPath());
         compressCssCheckbox.setSelected(lessProfile.isCompressOutput());
     }
 

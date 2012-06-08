@@ -1,10 +1,11 @@
 package net.andydvorak.intellij.lessc.state;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LessProfile /* extends ProfileEx */ {
-    private String lessDir;
+public class LessProfile {
+    private String lessDirPath;
     private List<CssDirectory> cssDirectories = new ArrayList<CssDirectory>();
     private boolean compressOutput = false;
     private String name = "";
@@ -13,28 +14,32 @@ public class LessProfile /* extends ProfileEx */ {
     public LessProfile() {
     }
 
-    public LessProfile(String profileName) {
+    public LessProfile(final String profileName) {
         this.name = profileName;
     }
 
     // Clone
-    public LessProfile(LessProfile other) {
+    public LessProfile(final LessProfile other) {
         this.copyFrom(other);
     }
 
-    public String getLessDir() {
-        return lessDir;
+    public String getLessDirPath() {
+        return lessDirPath;
     }
 
-    public void setLessDir(String lessDir) {
-        this.lessDir = lessDir;
+    public void setLessDirPath(final String lessDirPath) {
+        this.lessDirPath = lessDirPath;
+    }
+
+    public File getLessDir() {
+        return new File(lessDirPath);
     }
 
     public List<CssDirectory> getCssDirectories() {
         return cssDirectories;
     }
 
-    public void setCssDirectories(List<CssDirectory> cssDirectories) {
+    public void setCssDirectories(final List<CssDirectory> cssDirectories) {
         this.cssDirectories = cssDirectories;
     }
 
@@ -42,7 +47,7 @@ public class LessProfile /* extends ProfileEx */ {
         return compressOutput;
     }
 
-    public void setCompressOutput(boolean compressOutput) {
+    public void setCompressOutput(final boolean compressOutput) {
         this.compressOutput = compressOutput;
     }
 
@@ -54,8 +59,8 @@ public class LessProfile /* extends ProfileEx */ {
         this.name = name;
     }
 
-    public void copyFrom(LessProfile lessProfile) {
-        this.lessDir = new String(lessProfile.lessDir);
+    public void copyFrom(final LessProfile lessProfile) {
+        this.lessDirPath = new String(lessProfile.lessDirPath);
         this.cssDirectories.clear();
 
         for ( CssDirectory cssDirectory : lessProfile.cssDirectories ) {
@@ -67,7 +72,7 @@ public class LessProfile /* extends ProfileEx */ {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -76,7 +81,7 @@ public class LessProfile /* extends ProfileEx */ {
         if (compressOutput != that.compressOutput) return false;
         if (cssDirectories != null ? !cssDirectories.equals(that.cssDirectories) : that.cssDirectories != null)
             return false;
-        if (lessDir != null ? !lessDir.equals(that.lessDir) : that.lessDir != null) return false;
+        if (lessDirPath != null ? !lessDirPath.equals(that.lessDirPath) : that.lessDirPath != null) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
 
         return true;
@@ -84,7 +89,7 @@ public class LessProfile /* extends ProfileEx */ {
 
     @Override
     public int hashCode() {
-        int result = lessDir != null ? lessDir.hashCode() : 0;
+        int result = lessDirPath != null ? lessDirPath.hashCode() : 0;
         result = 31 * result + (cssDirectories != null ? cssDirectories.hashCode() : 0);
         result = 31 * result + (compressOutput ? 1 : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
