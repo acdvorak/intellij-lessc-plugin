@@ -127,11 +127,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return null;
     }
 
-    private void compile(final File lessFile, final File cssFile) throws IOException, LessException {
+    private void compile(final File lessFile, final File cssFile, final LessProfile lessProfile) throws IOException, LessException {
         LOG.info("contentsChanged: " + lessFile.getName());
         LOG.info("\t" + "lessPath: " + lessFile.getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
 
+        lessCompiler.setCompress(lessProfile.isCompressOutput());
         lessCompiler.compile(lessFile, cssFile);
     }
 
@@ -165,19 +166,19 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
-        if ( virtualFileEvent.getFileName().endsWith(".less") ) {
-            System.out.println(isSupported(virtualFileEvent) + " - " + virtualFileEvent.getFile().getCanonicalPath());
-        }
         if ( isSupported(virtualFileEvent) ) {
             try {
-                final File lessFile = getLessFile(virtualFileEvent);
-                final File cssTempFile = getCssTempFile(virtualFileEvent);
                 final LessProfile lessProfile = getLessProfile(virtualFileEvent);
 
-                compile(lessFile, cssTempFile);
-                copyCssFile(lessFile, cssTempFile, lessProfile);
+                if ( ! lessProfile.getCssDirectories().isEmpty() ) {
+                    final File lessFile = getLessFile(virtualFileEvent);
+                    final File cssTempFile = getCssTempFile(virtualFileEvent);
 
-                handleSuccess(lessFile, cssTempFile);
+                    compile(lessFile, cssTempFile, lessProfile);
+                    copyCssFile(lessFile, cssTempFile, lessProfile);
+
+                    handleSuccess(lessFile, cssTempFile);
+                }
             } catch (IOException e) {
                 handleException(e, virtualFileEvent);
             } catch (LessException e) {
