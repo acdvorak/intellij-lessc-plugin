@@ -125,7 +125,7 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
         final ElementProducer<CssDirectory> producer = new ElementProducer<CssDirectory>() {
             @Override
             public CssDirectory createElement() {
-                return new CssDirectory("/Users/tkmax82/lessc-test/css");
+                return new CssDirectory("Click the button on the right to browse...");
             }
 
             @Override
