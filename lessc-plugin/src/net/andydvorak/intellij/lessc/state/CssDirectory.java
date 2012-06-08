@@ -1,29 +1,20 @@
 package net.andydvorak.intellij.lessc.state;
 
-import com.intellij.util.xmlb.annotations.Transient;
-import org.jetbrains.annotations.NotNull;
-
 public class CssDirectory {
-    @Transient
-    private LessProfile lessProfile;
 
     private String cssDirPath;
 
-    public CssDirectory(final String path, final LessProfile profile) {
+    // For XML serialization
+    public CssDirectory() {
+
+    }
+
+    public CssDirectory(final String path) {
         cssDirPath = path;
-        lessProfile = profile;
     }
 
-    public LessProfile getProfile() {
-        return lessProfile;
-    }
-
-    public void setProfile(@NotNull final LessProfile profile) {
-        lessProfile = profile;
-    }
-
-    public String getProfileName() {
-        return lessProfile.getName();
+    public CssDirectory(final CssDirectory other) {
+        this.copyFrom(other);
     }
 
     public String getPath() {
@@ -32,6 +23,10 @@ public class CssDirectory {
 
     public void setPath(final String path) {
         this.cssDirPath = path;
+    }
+
+    public void copyFrom(final CssDirectory other) {
+        this.cssDirPath = other.cssDirPath;
     }
 
     @Override

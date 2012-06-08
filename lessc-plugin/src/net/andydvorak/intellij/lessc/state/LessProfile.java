@@ -1,9 +1,5 @@
 package net.andydvorak.intellij.lessc.state;
 
-import com.intellij.openapi.project.Project;
-import com.intellij.profile.ProfileEx;
-import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +34,9 @@ public class LessProfile /* extends ProfileEx */ {
         return cssDirectories;
     }
 
-    // TODO: this causes a "com.intellij.util.xmlb.XmlSerializationException: java.lang.InstantiationException" that prevents serialization from succeeding
-//    public void setCssDirectories(List<CssDirectory> cssDirectories) {
-//        this.cssDirectories = cssDirectories;
-//    }
+    public void setCssDirectories(List<CssDirectory> cssDirectories) {
+        this.cssDirectories = cssDirectories;
+    }
 
     public void addCssDirectory(final CssDirectory cssDirectory) {
         cssDirectories.add(cssDirectory);
@@ -70,7 +65,11 @@ public class LessProfile /* extends ProfileEx */ {
     public void copyFrom(LessProfile lessProfile) {
         this.lessDir = new String(lessProfile.lessDir);
         this.cssDirectories.clear();
-        this.cssDirectories.addAll(lessProfile.cssDirectories);
+
+        for ( CssDirectory cssDirectory : lessProfile.cssDirectories ) {
+            this.cssDirectories.add(new CssDirectory(cssDirectory));
+        }
+
         this.compressOutput = lessProfile.compressOutput;
         this.name = new String(lessProfile.name);
     }
