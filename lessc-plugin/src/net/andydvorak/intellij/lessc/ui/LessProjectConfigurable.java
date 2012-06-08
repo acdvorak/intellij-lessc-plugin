@@ -11,15 +11,12 @@ import javax.swing.*;
 
 public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstract implements Configurable.NoScroll {
 
-    private static final Icon icon = null; // IconLoader.getIcon("/resources/copyright32x32.png");
+    private static final Icon icon = null; // IconLoader.getIcon("/resources/lessc32x32.png");
     private static final Logger logger = Logger.getInstance(LessProjectConfigurable.class.getName());
 
-    private Project project;
     private LessProfilesPanel profilesPanel;
 
-
     public LessProjectConfigurable(final Project project) {
-        this.project = project;
         this.profilesPanel = new LessProfilesPanel(project);
     }
 
@@ -32,7 +29,12 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
     }
 
     public String getHelpTopic() {
-        return getId();
+        return "reference.projectsettings.compiler.lessc";
+    }
+
+    @NotNull
+    public String getId() {
+        return "lessc";
     }
 
     public JComponent createComponent() {
@@ -78,17 +80,16 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
         return true;
     }
 
-    @NotNull
-    public String getId() {
-        return "lessc";
-    }
-
     public Runnable enableSearch(String option) {
         return null;
     }
 
+    /**
+     * Child configurables
+     * @return
+     */
     protected Configurable[] buildConfigurables() {
-        return new Configurable[] { /* profilesPanel */ /*, new CopyrightFormattingConfigurable(project) */ };
+        return new Configurable[] {  };
     }
     
 }
