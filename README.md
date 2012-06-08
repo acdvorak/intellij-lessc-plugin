@@ -58,11 +58,9 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 # TODO
 
 1.  **Re-compile when an imported file is updated**
-2.  Show progress indicator during compilation
-3.  Move compilation to non-UI thread (if possible - IDEA's threading model may not permit this)
-4.  Add per-file config options as LESS comments
-5.  Add include / exclude filename pattern
-6.  Integrate with Maven LESS plugin (extension points and config)
+2.  Add per-file config options as LESS comments
+3.  Add include / exclude filename pattern
+4.  Integrate with Maven LESS plugin (extension points and config)
 
 # Known Issues
 

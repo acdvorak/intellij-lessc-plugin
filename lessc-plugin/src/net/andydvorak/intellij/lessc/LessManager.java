@@ -1,7 +1,11 @@
 package net.andydvorak.intellij.lessc;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
@@ -10,6 +14,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.*;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
@@ -45,9 +50,6 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     @Transient
     private final VirtualFileListenerImpl virtualFileListener;
-
-    @Transient
-    private final LessCompiler lessCompiler = new LessCompiler();
 
     public LessManager(final Project project) {
         super(project);
@@ -132,6 +134,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         LOG.info("\t" + "lessPath: " + lessFile.getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
 
+        final LessCompiler lessCompiler = new LessCompiler();
+
         lessCompiler.setCompress(lessProfile.isCompressOutput());
         lessCompiler.compile(lessFile, cssFile);
     }
@@ -167,23 +171,37 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
         if ( isSupported(virtualFileEvent) ) {
-            try {
-                final LessProfile lessProfile = getLessProfile(virtualFileEvent);
+            PsiDocumentManager.getInstance(project).performWhenAllCommitted(new Runnable() {
+                @Override
+                public void run() {
+                    ProgressManager.getInstance().run(new Task.Backgroundable(project, "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS", false) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator) {
+                            indicator.setFraction(0);
 
-                if ( ! lessProfile.getCssDirectories().isEmpty() ) {
-                    final File lessFile = getLessFile(virtualFileEvent);
-                    final File cssTempFile = getCssTempFile(virtualFileEvent);
+                            try {
+                                final LessProfile lessProfile = getLessProfile(virtualFileEvent);
 
-                    compile(lessFile, cssTempFile, lessProfile);
-                    copyCssFile(lessFile, cssTempFile, lessProfile);
+                                if ( ! lessProfile.getCssDirectories().isEmpty() ) {
+                                    final File lessFile = getLessFile(virtualFileEvent);
+                                    final File cssTempFile = getCssTempFile(virtualFileEvent);
 
-                    handleSuccess(lessFile, cssTempFile);
+                                    compile(lessFile, cssTempFile, lessProfile);
+                                    copyCssFile(lessFile, cssTempFile, lessProfile);
+
+                                    handleSuccess(lessFile, cssTempFile);
+                                }
+                            } catch (IOException e) {
+                                handleException(e, virtualFileEvent);
+                            } catch (LessException e) {
+                                handleException(e, virtualFileEvent);
+                            }
+
+                            indicator.setFraction(1);
+                        }
+                    });
                 }
-            } catch (IOException e) {
-                handleException(e, virtualFileEvent);
-            } catch (LessException e) {
-                handleException(e, virtualFileEvent);
-            }
+            });
         }
     }
 
@@ -215,14 +233,19 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void showBalloon(final String message, final MessageType messageType) {
-        final StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                final StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
 
-        if ( statusBar != null ) {
-            JBPopupFactory.getInstance()
-                    .createHtmlTextBalloonBuilder(message, messageType, null)
-                    .setFadeoutTime(7500)
-                    .createBalloon()
-                    .show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
-        }
+                if ( statusBar != null ) {
+                    JBPopupFactory.getInstance()
+                            .createHtmlTextBalloonBuilder(message, messageType, null)
+                            .setFadeoutTime(7500)
+                            .createBalloon()
+                            .show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
+                }
+            }
+        });
     }
 }
