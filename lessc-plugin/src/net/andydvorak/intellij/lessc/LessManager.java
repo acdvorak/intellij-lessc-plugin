@@ -145,7 +145,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return null;
     }
 
-    private void compile(final File lessFile, final File cssFile, final LessProfile lessProfile) throws IOException, LessException {
+    private boolean compile(final File lessFile, final File cssFile, final LessProfile lessProfile) throws IOException, LessException {
         LOG.info("contentsChanged: " + lessFile.getName());
         LOG.info("\t" + "lessPath: " + lessFile.getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
@@ -154,6 +154,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
         lessCompiler.setCompress(lessProfile.isCompressOutput());
         lessCompiler.compile(lessFile, cssFile);
+
+        return copyCssFile(lessFile, cssFile, lessProfile);
     }
 
     private File getLessFile(final VirtualFileEvent virtualFileEvent) {
@@ -164,7 +166,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return FileUtil.createTempFile("intellij-lessc-plugin.", ".css", true);
     }
 
-    private void copyCssFile(final File lessFile, final File cssTempFile, final LessProfile lessProfile) throws IOException {
+    private boolean copyCssFile(final File lessFile, final File cssTempFile, final LessProfile lessProfile) throws IOException {
+        if ( cssTempFile.length() == 0 ) {
+            FileUtil.delete(cssTempFile);
+            return false;
+        }
+
         final String relativeLessPath = FileUtil.getRelativePath(lessProfile.getLessDir(), lessFile.getCanonicalFile());
         final String relativeCssPath = relativeLessPath.replaceFirst("\\.less$", ".css");
 
@@ -183,6 +190,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
 
         FileUtil.delete(cssTempFile);
+
+        return true;
     }
 
     public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
@@ -202,10 +211,9 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                                     final File lessFile = getLessFile(virtualFileEvent);
                                     final File cssTempFile = getCssTempFile(virtualFileEvent);
 
-                                    compile(lessFile, cssTempFile, lessProfile);
-                                    copyCssFile(lessFile, cssTempFile, lessProfile);
-
-                                    handleSuccess(lessFile, cssTempFile);
+                                    if ( compile(lessFile, cssTempFile, lessProfile) ) {
+                                        handleSuccess(lessFile, cssTempFile);
+                                    }
                                 }
                             } catch (IOException e) {
                                 handleException(e, virtualFileEvent);

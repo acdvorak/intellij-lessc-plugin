@@ -1,11 +1,15 @@
 <idea-plugin version="2">
     <name>LESS CSS Compiler</name>
     <description>This plugin watches LESS directories for changes and compiles changed files to CSS.</description>
-    <version>1.8.3</version>
+    <version>1.8.4</version>
     <vendor>Andrew C. Dvorak</vendor>
 
     <change-notes>
         <![CDATA[
+<h3>1.8.4</h3>
+<ul>
+  <li>[enhancement] Don't output empty CSS files</li>
+</ul>
 <h3>1.8.3</h3>
 <ul>
   <li>[bugfix] Fixed MethodNotFoundException</li>
