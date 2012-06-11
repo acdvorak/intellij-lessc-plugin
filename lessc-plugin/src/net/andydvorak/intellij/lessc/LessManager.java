@@ -136,7 +136,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private LessProfile getLessProfile(final VirtualFileEvent virtualFileEvent) {
         for ( LessProfile lessProfile : getProfiles() ) {
-            final File lessFile = new File(virtualFileEvent.getFile().getCanonicalPath());
+            final File lessFile = getLessFile(virtualFileEvent);
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
             if ( FileUtil.isAncestor(lessProfileDir, lessFile, false) ) {
                 return lessProfile;
@@ -157,7 +157,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private File getLessFile(final VirtualFileEvent virtualFileEvent) {
-        return new File(virtualFileEvent.getFile().getCanonicalPath());
+        return new File(virtualFileEvent.getFile().getPath());
     }
 
     private File getCssTempFile(final VirtualFileEvent virtualFileEvent) throws IOException {
