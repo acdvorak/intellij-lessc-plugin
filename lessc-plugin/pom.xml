@@ -7,7 +7,7 @@
     <name>IntelliJ IDEA LESS CSS Plugin</name>
     <groupId>net.andydvorak</groupId>
     <artifactId>lessc-plugin</artifactId>
-    <version>1.8.4</version>
+    <version>1.9.0</version>
 
     <dependencies>
         <dependency>

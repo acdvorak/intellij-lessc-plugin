@@ -63,10 +63,12 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 
 # TODO
 
-1.  **Re-compile when an imported file is updated**
-2.  Add per-file config options as LESS comments
-3.  Add include / exclude filename pattern
-4.  Integrate with Maven LESS plugin (extension points and config)
+1.  **Compatibility with IntelliJ IDEA 10**
+2.  Allow extensionless import paths (e.g., @import "some-file" = @import "some-file.less")
+3.  Include / exclude filename patterns
+4.  Per-file config options as LESS comments
+5.  Catch circular @imports
+6.  Integrate with Maven LESS plugin (extension points and config)
 
 # LESS CSS Compiler Version
 

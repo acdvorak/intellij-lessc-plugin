@@ -59,6 +59,10 @@ public class LessProfile {
         this.cssDirectories = cssDirectories;
     }
 
+    public boolean hasCssDirectories() {
+        return ! cssDirectories.isEmpty();
+    }
+
     public boolean isCompressOutput() {
         return compressOutput;
     }
