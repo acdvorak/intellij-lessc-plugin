@@ -2,7 +2,7 @@
 
 ```LESS Compiler``` monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
 It also notifies IntelliJ when the corresponding CSS file changes so that you don't have to manually synchronize
-and upload them to your deployment target every time you update a LESS file.  You can configure ```lessc``` to
+and upload them to your deployment target every time you update a LESS file.  You can configure ```LESS Compiler``` to
 copy the compiled CSS file to any number of output directories.
 
 ```LESS Compiler``` allows you to maintain arbitrarily complex directory structures, unlike external tools such as
@@ -57,9 +57,16 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 
 # Known Issues
 
-*  The first time you update a ```.less``` file it will take several seconds to compile.
-   This is because the LESS compiler needs to initialize, so be patient; after the initial compilation
-   all future updates will be nearly instantaneous.
+*   **Slow First Compile**
+
+    The first time you update a ```.less``` file it will take several seconds to compile.
+    This is because the LESS compiler needs to initialize, so be patient; after the initial compilation
+    all future updates will be nearly instantaneous.
+
+*  **Incorrect line number for errors when using imports**
+
+    This is due to how [lesscss-java][lessc-java], the official LESS compiler for Java (which this plugin uses),
+    handles imports: it merges them all into a single string and compiles the result.
 
 # TODO
 
@@ -72,7 +79,7 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 
 # LESS CSS Compiler Version
 
-This plugin includes the [Official LESS CSS Compiler for Java](https://github.com/marceloverdijk/lesscss-java) version 1.3.0.
+This plugin includes the [Official LESS CSS Compiler for Java][lessc-java] version 1.3.0.
 
 # Authors
 
@@ -95,3 +102,5 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+[lessc-java]: https://github.com/marceloverdijk/lesscss-java "The Official LESS CSS Compiler for Java"
