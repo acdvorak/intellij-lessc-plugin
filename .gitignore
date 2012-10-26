@@ -1,2 +1,6 @@
 .idea
 /out
+target
+build
+build-archive
+

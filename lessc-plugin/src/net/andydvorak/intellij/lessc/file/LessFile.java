@@ -16,11 +16,11 @@
 
 package net.andydvorak.intellij.lessc.file;
 
+import com.asual.lesscss.LessEngine;
+import com.asual.lesscss.LessException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import net.andydvorak.intellij.lessc.state.LessProfile;
-import org.lesscss.LessCompiler;
-import org.lesscss.LessException;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,13 +54,14 @@ public class LessFile extends File implements Comparable<File> {
         super(uri);
     }
 
-    public void compile(final LessCompiler lessCompiler, final File cssFile, final boolean compress)  throws IOException, LessException {
+    public void compile(final LessEngine engine, final File cssFile, final boolean compress) throws IOException, LessException, com.asual.lesscss.LessException {
         LOG.info("Compiling LESS file: " + getName());
         LOG.info("\t" + "lessPath: " + getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
 
-        lessCompiler.setCompress(compress);
-        lessCompiler.compile(this, cssFile);
+        final String compiled = engine.compile(this, compress);
+
+        FileUtil.writeToFile(cssFile, compiled);
     }
 
     public LessProfile getLessProfile(Collection<LessProfile> lessProfiles) {

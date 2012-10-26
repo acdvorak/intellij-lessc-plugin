@@ -16,7 +16,14 @@
 
 package net.andydvorak.intellij.lessc;
 
+import com.asual.lesscss.LessException;
+import com.intellij.compiler.impl.CompileContextImpl;
+import com.intellij.compiler.impl.ProjectCompileScope;
+import com.intellij.compiler.progress.CompilerTask;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.compiler.CompileScope;
+import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -41,9 +48,10 @@ import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessCompileJob;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
+import net.andydvorak.intellij.lessc.ui.LessErrorMessage;
+import net.andydvorak.intellij.lessc.ui.Notifier;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.lesscss.LessException;
 
 import java.io.File;
 import java.io.IOException;
@@ -212,12 +220,17 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         for ( String importerPath : importerPaths ) {
             final LessFile importerLessFile = new LessFile(importerPath);
             final LessCompileJob importerCompileJob = new LessCompileJob(lessCompileJob, importerLessFile);
+
+            String lessFilePath = "UNKNOWN INPUT FILE PATH";
+            String lessFileName = "UNKNOWN INPUT FILE NAME";
+
             try {
+                lessFilePath = importerLessFile.getCanonicalPath();
+                lessFileName = importerLessFile.getName();
+
                 compile(importerCompileJob);
-            } catch (IOException e) {
-                handleException(e, importerLessFile);
-            } catch (LessException e) {
-                handleException(e, importerLessFile);
+            } catch (Exception e) {
+                handleException(e, lessFilePath, lessFileName);
             }
         }
     }
@@ -227,25 +240,63 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             PsiDocumentManager.getInstance(project).performWhenAllCommitted(new Runnable() {
                 @Override
                 public void run() {
+
                     ProgressManager.getInstance().run(new Task.Backgroundable(project, "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS", false) {
                         @Override
                         public void run(@NotNull ProgressIndicator indicator) {
                             indicator.setFraction(0);
 
+                            String lessFilePath = "UNKNOWN INPUT FILE PATH";
+                            String lessFileName = "UNKNOWN INPUT FILE NAME";
+
                             try {
-                                handleSuccess(compile(virtualFileEvent));
-                            } catch (IOException e) {
-                                handleException(e, virtualFileEvent);
-                            } catch (LessException e) {
-                                handleException(e, virtualFileEvent);
+                                final LessFile lessFile = getLessFile(virtualFileEvent);
+
+                                lessFilePath = lessFile.getCanonicalPath();
+                                lessFileName = lessFile.getName();
+
+                                final LessCompileJob lessCompileJob = compile(virtualFileEvent);
+
+                                handleSuccess(lessCompileJob);
+                            } catch (Exception e) {
+                                handleException(e, lessFilePath, lessFileName);
                             }
 
                             indicator.setFraction(1);
                         }
                     });
+
+
+//                    new Compile
                 }
             });
         }
+    }
+
+    private void compileWithNotifier(final VirtualFileEvent virtualFileEvent, final Runnable onTaskFinished) {
+        final String sourceFilePath = virtualFileEvent.getFile().getCanonicalPath();
+        final CompilerTask compilerTask = new CompilerTask(myProject, true, sourceFilePath, false);
+        final CompileScope compileScope = new ProjectCompileScope(myProject);
+        final CompileContext compileContext = new CompileContextImpl(myProject, compilerTask, compileScope, null, false, false);
+
+        final CompileTask task;
+/*
+        compilerTask.start(new Runnable() {
+            public void run() {
+                try {
+                    task.execute(compileContext);
+                }
+                catch (ProcessCanceledException ex) {
+                    // suppressed
+                }
+                finally {
+                    if (onTaskFinished != null) {
+                        onTaskFinished.run();
+                    }
+                }
+            }
+        }, null);
+*/
     }
 
     public void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
@@ -264,13 +315,16 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         // TODO: Implement this w/ intelligent cleanup of CSS file
     }
 
-    private void handleException(final Exception e, final VirtualFileEvent virtualFileEvent) {
-        showBalloon(virtualFileEvent.getFileName() + ": " + e.getLocalizedMessage(), MessageType.ERROR);
-        LOG.warn(e);
-    }
+    private void handleException(final @NotNull Exception e, @NotNull final String lessFilePath, @NotNull final String lessFileName) {
+        final LessErrorMessage message = new LessErrorMessage(lessFilePath, lessFileName, e);
 
-    private void handleException(final Exception e, final LessFile lessFile) {
-        showBalloon(lessFile.getName() + ": " + e.getLocalizedMessage(), MessageType.ERROR);
+        final int line = message.getLine();
+        final int column = message.getColumn();
+
+        Notifier.getInstance(myProject).notifyError(message);
+
+//        showBalloon(lessFileName + ": " + e.getLocalizedMessage(), MessageType.ERROR);
+
         LOG.warn(e);
     }
 
@@ -302,6 +356,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                             .createBalloon()
                             .show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
                 }
+
+//                EventLog.getEventLog(project).
             }
         });
     }

@@ -16,10 +16,10 @@
 
 package net.andydvorak.intellij.lessc.state;
 
+import com.asual.lesscss.LessEngine;
+import com.asual.lesscss.LessException;
 import com.intellij.openapi.util.io.FileUtil;
 import net.andydvorak.intellij.lessc.file.LessFile;
-import org.lesscss.LessCompiler;
-import org.lesscss.LessException;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,29 +28,23 @@ import java.util.Set;
 
 public class LessCompileJob {
 
-    private final LessCompiler lessCompiler;
     private final LessFile lessFile;
     private final LessProfile lessProfile;
     private final Set<String> modifiedLessFileNames;
 
     private File cssTempFile = null;
+    private LessEngine lessEngine;
 
     public LessCompileJob(LessFile lessFile, LessProfile lessProfile) {
-        this.lessCompiler = new LessCompiler();
         this.lessFile = lessFile;
         this.lessProfile = lessProfile;
         this.modifiedLessFileNames = new LinkedHashSet<String>();
     }
 
     public LessCompileJob(final LessCompileJob otherCompileJob, final LessFile lessFile) {
-        this.lessCompiler = otherCompileJob.getLessCompiler();
         this.lessFile = lessFile;
         this.lessProfile = otherCompileJob.getLessProfile();
         this.modifiedLessFileNames = otherCompileJob.getModifiedLessFileNames();
-    }
-
-    public LessCompiler getLessCompiler() {
-        return lessCompiler;
     }
 
     public LessFile getLessFile() {
@@ -77,6 +71,9 @@ public class LessCompileJob {
     }
 
     public void compile() throws IOException, LessException {
-        lessFile.compile(lessCompiler, getCssTempFile(), lessProfile.isCompressOutput());
+        if (lessEngine == null) {
+            lessEngine = new LessEngine();
+        }
+        lessFile.compile(lessEngine, getCssTempFile(), lessProfile.isCompressOutput());
     }
 }
