@@ -80,7 +80,7 @@ public class LessProfile {
     }
 
     public void copyFrom(final LessProfile lessProfile) {
-        this.lessDirPath = new String(lessProfile.lessDirPath);
+        this.lessDirPath = lessProfile.lessDirPath;
         this.cssDirectories.clear();
 
         for ( CssDirectory cssDirectory : lessProfile.cssDirectories ) {
@@ -88,7 +88,7 @@ public class LessProfile {
         }
 
         this.compressOutput = lessProfile.compressOutput;
-        this.name = new String(lessProfile.name);
+        this.name = lessProfile.name;
     }
 
     @Override
