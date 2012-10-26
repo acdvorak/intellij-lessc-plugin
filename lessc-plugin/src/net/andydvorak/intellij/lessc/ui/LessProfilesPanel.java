@@ -93,7 +93,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @Nullable
     @NonNls
     public String getHelpTopic() {
-        return "lessc.profiles";
+        return null;
     }
 
     public void apply() throws ConfigurationException {
@@ -229,7 +229,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     @NotNull
     public String getId() {
-        return getHelpTopic();
+        return "lessc.profiles";
     }
 
     public Runnable enableSearch(String option) {
