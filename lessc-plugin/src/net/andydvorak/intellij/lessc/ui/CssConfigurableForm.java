@@ -91,7 +91,12 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
         this.lessProfilesPanel = lessProfilesPanel;
         this.lessProfileName = lessProfile.getName();
 
-        this.cssDirectories = new ArrayList<CssDirectory>(lessProfile.getCssDirectories());
+        cssDirectories = new ArrayList<CssDirectory>();
+
+        // Deep clone
+        for (CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
+            cssDirectories.add(new CssDirectory(cssDirectory));
+        }
 
         final ColumnInfo[] columns = { new CssDirectoryColumn(project) };
         profileMappingModel = new ListTableModel<CssDirectory>(columns, cssDirectories, 0);
