@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.notification;
 
 import com.intellij.notification.*;
 import com.intellij.openapi.project.Project;

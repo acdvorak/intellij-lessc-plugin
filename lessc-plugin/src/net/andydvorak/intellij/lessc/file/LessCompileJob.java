@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.state;
+package net.andydvorak.intellij.lessc.file;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
 import com.intellij.openapi.util.io.FileUtil;
-import net.andydvorak.intellij.lessc.file.LessFile;
+import net.andydvorak.intellij.lessc.state.LessProfile;
 
 import java.io.File;
 import java.io.IOException;
