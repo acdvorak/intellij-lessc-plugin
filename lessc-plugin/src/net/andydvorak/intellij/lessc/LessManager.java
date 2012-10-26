@@ -41,15 +41,15 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
+import net.andydvorak.intellij.lessc.file.LessCompileJob;
 import net.andydvorak.intellij.lessc.file.LessFile;
 import net.andydvorak.intellij.lessc.file.LessFileWatcherService;
 import net.andydvorak.intellij.lessc.file.VirtualFileListenerImpl;
+import net.andydvorak.intellij.lessc.notification.LessErrorMessage;
+import net.andydvorak.intellij.lessc.notification.Notifier;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
-import net.andydvorak.intellij.lessc.state.LessCompileJob;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
-import net.andydvorak.intellij.lessc.ui.LessErrorMessage;
-import net.andydvorak.intellij.lessc.ui.Notifier;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 

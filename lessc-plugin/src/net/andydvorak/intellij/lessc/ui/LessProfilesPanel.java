@@ -160,7 +160,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
                 final String profileName = askForProfileName("Copy LESS Profile", "");
                 if (profileName == null) return;
                 final LessProfile clone = new LessProfile((LessProfile) getSelectedObject());
-//                clone.copyFrom((LessProfile) getSelectedObject());
                 clone.setName(profileName);
                 addProfileNode(clone);
             }
@@ -201,7 +200,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         Collection<LessProfile> collection = lessManager.getProfiles();
         for (LessProfile profile : collection) {
             LessProfile clone = new LessProfile(profile);
-//            clone.copyFrom(profile);
             addNode(new MyNode(new CssConfigurableForm(project, clone, this, TREE_UPDATER)), myRoot);
         }
         isInitialized.set(true);

@@ -17,6 +17,7 @@ package com.asual.lesscss;
 import com.asual.lesscss.loader.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.Nullable;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.tools.shell.Global;
 
@@ -121,11 +122,10 @@ public class LessEngine {
 		return compile(input, location, false);
 	}
 	
-	public String compile(String input, String location, boolean compress) throws LessException {
+	public String compile(String input, @Nullable String location, boolean compress) throws LessException {
 		try {
 			long time = System.currentTimeMillis();
-			String result = call(compile, new Object[] { input,
-					location == null ? "" : location, compress });
+			String result = call(compile, new Object[] { input, location == null ? "" : location, compress });
 			logger.debug("The compilation of '" + input + "' took " + (System.currentTimeMillis () - time) + " ms.");
 			return result;
 		} catch (Exception e) {
