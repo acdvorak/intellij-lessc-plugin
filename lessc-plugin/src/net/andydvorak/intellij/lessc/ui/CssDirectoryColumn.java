@@ -16,24 +16,19 @@
 
 package net.andydvorak.intellij.lessc.ui;
 
-import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.ColumnInfo;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.File;
 
 public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
 
-    private Project project;
-
-    public CssDirectoryColumn(final Project project) {
+    public CssDirectoryColumn() {
         super("CSS Output Directory");
-        this.project = project;
     }
 
     public TableCellRenderer getRenderer(final CssDirectory cssDirectory) {
@@ -56,10 +51,6 @@ public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
         };
     }
 
-    public TableCellEditor getEditor(final CssDirectory cssDirectory) {
-        return new CssDirectoryCellEditor(project, cssDirectory);
-    }
-
     public String valueOf(final CssDirectory cssDirectory) {
         return cssDirectory.getPath();
     }
@@ -70,7 +61,7 @@ public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
 
     @Override
     public boolean isCellEditable(final CssDirectory item) {
-        return true;
+        return false;
     }
 
 }

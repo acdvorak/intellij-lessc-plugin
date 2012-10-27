@@ -16,16 +16,24 @@
 
 package net.andydvorak.intellij.lessc.ui;
 
+import com.intellij.openapi.fileChooser.FileChooser;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.NamedConfigurable;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
+import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.AnActionButton;
+import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.ToolbarDecorator;
-import com.intellij.ui.table.TableView;
+import com.intellij.ui.table.JBTable;
 import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.util.containers.OrderedSet;
 import com.intellij.util.ui.ColumnInfo;
-import com.intellij.util.ui.ElementProducer;
 import com.intellij.util.ui.ListTableModel;
 import net.andydvorak.intellij.lessc.LessManager;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
@@ -38,8 +46,11 @@ import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
@@ -77,7 +88,7 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     private TextFieldWithBrowseButton lessDirTextField;
 
-    private final TableView<CssDirectory> profileMappingTable;
+    private final JBTable profileMappingTable;
     private final ListTableModel<CssDirectory> profileMappingModel;
 
     private List<CssDirectory> cssDirectories;
@@ -98,9 +109,9 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
             cssDirectories.add(new CssDirectory(cssDirectory));
         }
 
-        final ColumnInfo[] columns = { new CssDirectoryColumn(project) };
+        final ColumnInfo[] columns = { new CssDirectoryColumn() };
         profileMappingModel = new ListTableModel<CssDirectory>(columns, cssDirectories, 0);
-        profileMappingTable = new TableView<CssDirectory>(profileMappingModel);
+        profileMappingTable = new JBTable(profileMappingModel);
     }
 
     public void setDisplayName(String displayName) {
@@ -127,23 +138,99 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
             }
         });
 
-        final ElementProducer<CssDirectory> producer = new ElementProducer<CssDirectory>() {
-            @Override
-            public CssDirectory createElement() {
-                return new CssDirectory("Click the button on the right to browse...");
+        profileMappingTable.addMouseListener(new MouseListener() {
+            @Override public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2 && !mouseEvent.isConsumed()) {
+                    mouseEvent.consume();
+                    editRow();
+                }
             }
+            @Override public void mousePressed(MouseEvent mouseEvent) {}
+            @Override public void mouseReleased(MouseEvent mouseEvent) {}
+            @Override public void mouseEntered(MouseEvent mouseEvent) {}
+            @Override public void mouseExited(MouseEvent mouseEvent) {}
+        });
 
-            @Override
-            public boolean canCreateElement() {
-                return !lessProfilesPanel.getAllProfiles().isEmpty();
-            }
-        };
-
-        final ToolbarDecorator decorator = ToolbarDecorator.createDecorator(profileMappingTable, producer);
+        final ToolbarDecorator decorator = ToolbarDecorator.createDecorator(profileMappingTable);
+        decorator
+                .setAddAction(new AnActionButtonRunnable() {
+                    @Override
+                    public void run(AnActionButton button) {
+                        addRow();
+                    }
+                })
+                .setEditAction(new AnActionButtonRunnable() {
+                    @Override
+                    public void run(AnActionButton button) {
+                        editRow();
+                    }
+                })
+                .disableUpDownActions();
 
         cssDirPanel.add(decorator.createPanel(), GRIDCONSTRAINTS_FILL_ALL);
 
         return rootPanel;
+    }
+
+    private void addRow() {
+        final String path = promptForFilePath();
+
+        if (StringUtil.isNotEmpty(path)) {
+            profileMappingModel.addRow(new CssDirectory(path));
+            removeDuplicateRows();
+        }
+    }
+
+    private void editRow() {
+        if (profileMappingTable.getSelectedRowCount() != 1) {
+            return;
+        }
+
+        final CssDirectory cssDirectory = (CssDirectory) profileMappingModel.getItem(profileMappingTable.getSelectedRow());
+
+        if (cssDirectory == null)
+            return;
+
+        final String newPath = promptForFilePath(cssDirectory.getPath());
+
+        if (StringUtil.isNotEmpty(newPath)) {
+            cssDirectory.setPath(newPath);
+            removeDuplicateRows();
+        }
+    }
+
+    private void removeDuplicateRows() {
+        final Set<CssDirectory> withoutDups = new OrderedSet<CssDirectory>();
+        withoutDups.addAll(profileMappingModel.getItems());
+        cssDirectories = new ArrayList<CssDirectory>(withoutDups);
+        profileMappingModel.setItems(cssDirectories);
+    }
+
+    @Nullable
+    private String promptForFilePath() {
+        return promptForFilePath(null);
+    }
+
+    @Nullable
+    private String promptForFilePath(final @Nullable String initial) {
+        final FileChooserDescriptor d = getFileChooserDescriptor();
+        final VirtualFile initialFile = StringUtil.isNotEmpty(initial) ? LocalFileSystem.getInstance().findFileByPath(initial) : null;
+        final VirtualFile file = project != null ? FileChooser.chooseFile(project, d, initialFile) : FileChooser.chooseFile(profileMappingTable, d, initialFile);
+        String path = null;
+        if (file != null) {
+            path = file.getPresentableUrl();
+            if (SystemInfo.isWindows && path.length() == 2 && Character.isLetter(path.charAt(0)) && path.charAt(1) == ':') {
+                path += "\\"; // make path absolute
+            }
+        }
+        return path;
+    }
+
+    private FileChooserDescriptor getFileChooserDescriptor() {
+        FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
+        d.setTitle("Choose a CSS output directory");
+        d.setShowFileSystemRoots(true);
+        return d;
     }
 
     @Nls
