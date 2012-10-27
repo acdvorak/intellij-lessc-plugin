@@ -50,4 +50,11 @@
         <projectConfigurable instance="net.andydvorak.intellij.lessc.ui.LessProjectConfigurable" />
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter" />
     </extensions>
+    <actions>
+        <action id="CompileLess" class="net.andydvorak.intellij.lessc.ui.CompileLessAction" text="Compile to CSS"
+                description="Compile selected LESS files to CSS">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>
