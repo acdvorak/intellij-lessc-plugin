@@ -1,9 +1,31 @@
 # What Does This Plugin Do?
 
 ```LESS Compiler``` monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
-It also notifies IntelliJ when the corresponding CSS file changes so that you don't have to manually synchronize
-and upload them to your deployment target every time you update a LESS file.  You can configure ```LESS Compiler``` to
-copy the compiled CSS file to any number of output directories.
+
+# Features
+
+1.  **Directory Monitoring**
+
+    Monitors directories (and subdirectories) for changes to LESS files and automatically compiles them to CSS whenever they change.
+
+    You can monitor as many LESS directories as you like.  You can also specify as many output directories as you like
+    so that compiled CSS files will be copied to multiple locations (e.g., a ```src``` directory under source control
+    and a ```target``` directory on a remote server).
+
+    The directory structure of output CSS directories is the same as that of the source LESS directory.
+
+2.  **Dependency Resolution**
+
+    Re-compiles dependent files that ```@import``` a modified LESS file.
+
+    For example, if ```home.less```, ```about.less```, and ```contact.less``` all ```@import "common.less"```,
+    modifying ```common.less``` will cause all three dependent files to be re-compiled as well.
+
+3.  **Context Menu Support**
+
+    If a LESS file is modified when IntelliJ isn't running, it won't be automatically compiled (obviously).
+    The next time you run IntelliJ, simply right-click anywhere in the editor or Project tree and select
+    "Compile to CSS" to compile it.
 
 ```LESS Compiler``` allows you to maintain arbitrarily complex directory structures, unlike external tools such as
 [SimpLESS](http://wearekiss.com/simpless) (which can only output to ```./``` or ```../css/```).
@@ -60,26 +82,21 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 *   **Slow First Compile**
 
     The first time you update a ```.less``` file it will take several seconds to compile.
-    This is because the LESS compiler needs to initialize, so be patient; after the initial compilation
-    all future updates will be nearly instantaneous.
-
-*  **Incorrect line number for errors when using imports**
-
-    This is due to how [lesscss-java][lessc-java], the official LESS compiler for Java (which this plugin uses),
-    handles imports: it merges them all into a single string and compiles the result.
+    This is because the LESS compiler uses the [Rhino][rhino] JavaScript engine to run ```less.js```, and Rhino
+    takes a while to initialize.  But worry not: after the initial compilation, all future updates will be nearly instantaneous.
 
 # TODO
 
-1.  **Compatibility with IntelliJ IDEA 10**
-2.  Allow extensionless import paths (e.g., @import "some-file" = @import "some-file.less")
-3.  Include / exclude filename patterns
-4.  Per-file config options as LESS comments
-5.  Catch circular @imports
-6.  Integrate with Maven LESS plugin (extension points and config)
+1.  Allow extension-less import paths (e.g., @import "some-file" = @import "some-file.less")
+2.  Include / exclude filename patterns
+3.  Per-file config options as LESS comments
+4.  Catch circular @imports
+5.  Integrate with Maven LESS plugin (extension points and config) (?)
 
 # LESS CSS Compiler Version
 
-This plugin includes the [Official LESS CSS Compiler for Java][lessc-java] version 1.3.0.
+This plugin includes a modified version of [asual][asual]'s [LESS CSS Engine][less-css-engine] and uses the official
+```less.js``` compiler from [lesscss.org][lesscss-org].
 
 # Authors
 
@@ -103,4 +120,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-[lessc-java]: https://github.com/marceloverdijk/lesscss-java "The Official LESS CSS Compiler for Java"
+[lesscss-org]: http://lesscss.org/
+[asual]: http://www.asual.com/lesscss
+[less-css-engine]: https://github.com/asual/lesscss-engine
+[rhino]: https://developer.mozilla.org/en-US/docs/Rhino
