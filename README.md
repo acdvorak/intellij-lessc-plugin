@@ -9,7 +9,7 @@
     Monitors directories (and subdirectories) for changes to LESS files and automatically compiles them to CSS whenever they change.
 
     You can monitor as many LESS directories as you like.  You can also specify as many output directories as you like
-    so that compiled CSS files will be copied to multiple locations (e.g., a ```src``` directory under source control
+    so that compiled CSS files will be copied to multiple locations (e.g., a ```src``` directory under version control
     and a ```target``` directory on a remote server).
 
     The directory structure of output CSS directories is the same as that of the source LESS directory.
@@ -83,7 +83,7 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 
     The first time you update a ```.less``` file it will take several seconds to compile.
     This is because the LESS compiler uses the [Rhino][rhino] JavaScript engine to run ```less.js```, and Rhino
-    takes a while to initialize.  But worry not: after the initial compilation, all future updates will be nearly instantaneous.
+    takes a while to initialize.  But don't worry - after the initial compilation, all future compiles will be fairly quick.
 
 # TODO
 
