@@ -10,18 +10,22 @@
 <p>10.x compatibility is NOT planned for a future release.</p>
         ]]>
     </description>
-    <version>2.1.0</version>
+    <version>2.1.1</version>
     <vendor>Andrew C. Dvorak</vendor>
 
     <change-notes>
         <![CDATA[
+<h3>2.1.1</h3>
+<ul>
+  <li>[enhancement] Added icon to "Compile to CSS" Action in context menu</li>
+</ul>
 <h3>2.1.0</h3>
 <ul>
   <li>[enhancement] issue #5 - Make CSS output directories more user friendly in preference pane</li>
 </ul>
 <h3>2.0.0</h3>
 <ul>
-  <li>[bugfix] fixed #2 - Add "Compile to CSS" Action to context menu for .less files</li>
+  <li>[enhancement] issue #2 - Add "Compile to CSS" Action to context menu for .less files</li>
 </ul>
 <h3>1.9.5</h3>
 <ul>
