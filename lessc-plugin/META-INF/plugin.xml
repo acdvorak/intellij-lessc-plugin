@@ -60,7 +60,7 @@
     </extensions>
     <actions>
         <action id="CompileLess" class="net.andydvorak.intellij.lessc.ui.CompileLessAction" text="Compile to CSS"
-                description="Compile selected LESS files to CSS">
+                description="Compile selected LESS files to CSS" icon="/css-icon_18x18.png">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
