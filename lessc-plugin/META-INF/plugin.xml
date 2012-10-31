@@ -10,11 +10,15 @@
 <p>10.x compatibility is NOT planned for a future release.</p>
         ]]>
     </description>
-    <version>2.1.2</version>
+    <version>2.2.0</version>
     <vendor>Andrew C. Dvorak</vendor>
 
     <change-notes>
         <![CDATA[
+<h3>2.2.0</h3>
+<ul>
+  <li>[enhancement] improved notifications and event logging</li>
+</ul>
 <h3>2.1.2</h3>
 <ul>
   <li>[bugfix] fixed #13 / #12 - java.io.IOException thrown for Windows file paths</li>
