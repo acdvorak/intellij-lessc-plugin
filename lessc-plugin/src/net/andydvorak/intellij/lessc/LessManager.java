@@ -17,7 +17,13 @@
 package net.andydvorak.intellij.lessc;
 
 import com.asual.lesscss.LessException;
+import com.intellij.compiler.impl.CompileContextImpl;
+import com.intellij.compiler.impl.ProjectCompileScope;
+import com.intellij.compiler.progress.CompilerTask;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.compiler.CompileScope;
+import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -45,7 +51,6 @@ import net.andydvorak.intellij.lessc.notification.Notifier;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -180,7 +185,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final File lessProfileDir = lessCompileJob.getLessProfile().getLessDir();
         final File lessFile = lessCompileJob.getLessFile().getCanonicalFile();
 
-        final String relativeLessPath = StringUtils.defaultString(FileUtil.getRelativePath(lessProfileDir, lessFile));
+        final String relativeLessPath = FileUtil.getRelativePath(lessProfileDir, lessFile);
         final String relativeCssPath = relativeLessPath.replaceFirst("\\.less$", ".css");
 
         final String cssTempFileContent = FileUtil.loadFile(lessCompileJob.getCssTempFile());
@@ -212,7 +217,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return numUpdated > 0;
     }
 
-    private void compileImporters(final LessCompileJob lessCompileJob) throws IOException {
+    private void compileImporters(final LessCompileJob lessCompileJob) throws IOException, LessException {
         final Set<String> importerPaths = LessFile.getImporterPaths(lessCompileJob.getLessFile(), lessCompileJob.getLessProfile());
 
         for ( String importerPath : importerPaths ) {
@@ -273,6 +278,32 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                 }
             });
         }
+    }
+
+    private void compileWithNotifier(final VirtualFileEvent virtualFileEvent, final Runnable onTaskFinished) {
+        final String sourceFilePath = virtualFileEvent.getFile().getCanonicalPath();
+        final CompilerTask compilerTask = new CompilerTask(myProject, true, sourceFilePath, false);
+        final CompileScope compileScope = new ProjectCompileScope(myProject);
+        final CompileContext compileContext = new CompileContextImpl(myProject, compilerTask, compileScope, null, false, false);
+
+        final CompileTask task;
+/*
+        compilerTask.start(new Runnable() {
+            public void run() {
+                try {
+                    task.execute(compileContext);
+                }
+                catch (ProcessCanceledException ex) {
+                    // suppressed
+                }
+                finally {
+                    if (onTaskFinished != null) {
+                        onTaskFinished.run();
+                    }
+                }
+            }
+        }, null);
+*/
     }
 
     public void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {

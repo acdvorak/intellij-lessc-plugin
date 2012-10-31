@@ -24,7 +24,6 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,7 +37,7 @@ public class TextFieldWithBrowseButtonListener extends TextFieldWithBrowseButton
         this(project, null);
     }
 
-    public TextFieldWithBrowseButtonListener(@Nullable final Project project, @Nullable final String title) {
+    public TextFieldWithBrowseButtonListener(final Project project, final String title) {
         super();
 
         this.myProject = project;
