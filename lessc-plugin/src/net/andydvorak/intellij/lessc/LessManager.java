@@ -334,11 +334,11 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     private void notifyMultiple(final Set<LessFile> modifiedLessFiles) {
         final Notifier notifier = Notifier.getInstance(myProject);
         final String messageShortText = modifiedLessFiles.size() + " " + "LESS files successfully compiled to CSS";
-        final StringBuilder messageFullText = new StringBuilder(messageShortText);
+        final StringBuilder messageFullText = new StringBuilder(messageShortText + ":");
         final StringBuilder messageFilesHtml = new StringBuilder(messageShortText + " " + IGNORE_LINK + ":");
         for (LessFile lessFile : modifiedLessFiles) {
             messageFullText.append('\n');
-            messageFullText.append(String.format("\t%s %s", lessFile.getName(), "successfully compiled to CSS"));
+            messageFullText.append(String.format("\t%s %s", lessFile.getCanonicalPathSafe(), "successfully compiled to CSS"));
             messageFilesHtml.append(String.format("<p>%s %s</p>", createLink(lessFile), "successfully compiled to CSS"));
         }
         final FileNotificationListener listener = new FileNotificationListener(myProject);
