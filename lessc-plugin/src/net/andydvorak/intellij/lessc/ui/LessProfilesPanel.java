@@ -77,7 +77,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     protected boolean wasObjectStored(Object o) {
-        return lessManager.getProfiles().contains(o);
+        return o instanceof LessProfile && lessManager.getProfiles().contains(o);
     }
 
     @Nls

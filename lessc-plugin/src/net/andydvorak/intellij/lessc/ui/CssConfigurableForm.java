@@ -38,8 +38,10 @@ import com.intellij.util.ui.ListTableModel;
 import net.andydvorak.intellij.lessc.LessManager;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -213,8 +215,10 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     @Nullable
     private String promptForFilePath(final @Nullable String initial) {
+        @NotNull
+        final String initialNN = StringUtils.defaultString(initial);
         final FileChooserDescriptor d = getFileChooserDescriptor();
-        final VirtualFile initialFile = StringUtil.isNotEmpty(initial) ? LocalFileSystem.getInstance().findFileByPath(initial) : null;
+        final VirtualFile initialFile = StringUtil.isNotEmpty(initialNN) ? LocalFileSystem.getInstance().findFileByPath(initialNN) : null;
         final VirtualFile file = project != null ? FileChooser.chooseFile(project, d, initialFile) : FileChooser.chooseFile(profileMappingTable, d, initialFile);
         String path = null;
         if (file != null) {

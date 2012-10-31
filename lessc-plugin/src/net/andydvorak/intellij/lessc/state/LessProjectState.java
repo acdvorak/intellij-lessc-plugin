@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class LessProjectState {
-    public Map<String, LessProfile> lessProfiles = new LinkedHashMap<String, LessProfile>();
+    public final Map<String, LessProfile> lessProfiles = new LinkedHashMap<String, LessProfile>();
 
     @Override
     public boolean equals(Object o) {
@@ -29,9 +29,7 @@ public class LessProjectState {
 
         LessProjectState that = (LessProjectState) o;
 
-        if (lessProfiles != null ? !lessProfiles.equals(that.lessProfiles) : that.lessProfiles != null) return false;
-
-        return true;
+        return !(lessProfiles != null ? !lessProfiles.equals(that.lessProfiles) : that.lessProfiles != null);
     }
 
     @Override
