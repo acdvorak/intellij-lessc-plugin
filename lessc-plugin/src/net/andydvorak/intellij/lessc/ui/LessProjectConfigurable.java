@@ -45,7 +45,7 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
     }
 
     public String getHelpTopic() {
-        return "reference.projectsettings.compiler.lessc";
+        return null;
     }
 
     @NotNull
