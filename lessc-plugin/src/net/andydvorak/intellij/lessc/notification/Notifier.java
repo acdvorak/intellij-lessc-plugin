@@ -23,25 +23,27 @@ import com.intellij.openapi.vcs.changes.ui.ChangesViewContentManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.event.HyperlinkEvent;
-
 /**
  * @author Andrew C. Dvorak
  * @since 10/25/12
  */
 public class Notifier {
 
-    public static final NotificationGroup NOTIFICATION_GROUP_ID = NotificationGroup.toolWindowGroup(
+    public static final NotificationGroup LOG_ONLY = NotificationGroup.logOnlyGroup(
+            "Less Compiler Log");
+
+    public static final NotificationGroup CHANGES_TOOLWINDOW_BALLOON = NotificationGroup.toolWindowGroup(
             "Less Compiler Messages", ChangesViewContentManager.TOOLWINDOW_ID, true);
-    public static final NotificationGroup IMPORTANT_ERROR_NOTIFICATION = new NotificationGroup(
-            "Less Compiler Important Messages", NotificationDisplayType.STICKY_BALLOON, true);
+
     public static final NotificationGroup MINOR_NOTIFICATION = new NotificationGroup(
             "Less Compiler Minor Notifications", NotificationDisplayType.BALLOON, true);
+
+    public static final NotificationGroup IMPORTANT_ERROR_NOTIFICATION = new NotificationGroup(
+            "Less Compiler Important Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
     private final @NotNull Project myProject;
 
     public static Notifier getInstance(@NotNull Project project) {
-//        return ServiceManager.getService(project, Notifier.class);
         return new Notifier(project);
     }
 
@@ -63,6 +65,10 @@ public class Notifier {
         return notificationGroup.createNotification(title, message, type, listener);
     }
 
+    /*
+     * Generic
+     */
+
     public void notify(@NotNull Notification notification) {
         notification.notify(myProject);
     }
@@ -77,21 +83,57 @@ public class Notifier {
         notify(notificationGroup, title, message, type, null);
     }
 
-    public void notifyError(@NotNull String title, @NotNull String message) {
-        notifyError(title, message, null);
+    /*
+     * Log Only
+     */
+
+    public void logInfo(@NotNull String title, @NotNull String message) {
+        logInfo(title, message, null);
     }
 
-    public void notifyError(@NotNull LessErrorMessage message) {
-        notify(message.getNotification(myProject, IMPORTANT_ERROR_NOTIFICATION, NotificationType.ERROR));
+    public void logInfo(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
+        notify(LOG_ONLY, title, message, NotificationType.INFORMATION, listener);
+    }
+
+    /*
+     * Error
+     */
+
+    public void notifyError(@NotNull String title, @NotNull String message) {
+        notifyError(title, message, null);
     }
 
     public void notifyError(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
         notify(IMPORTANT_ERROR_NOTIFICATION, title, message, NotificationType.ERROR, listener);
     }
 
-    public void notifySuccess(@NotNull String title, @NotNull String message) {
-        notify(NOTIFICATION_GROUP_ID, title, message, NotificationType.INFORMATION,  null);
+    public void notifyError(@NotNull LessErrorMessage message) {
+        notify(message.getNotification(myProject, IMPORTANT_ERROR_NOTIFICATION, NotificationType.ERROR));
     }
+
+    /*
+     * Success
+     */
+
+    public void notifySuccess(@NotNull String title, @NotNull String message) {
+        notifySuccess(title, message, null);
+    }
+
+    public void notifySuccess(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
+        notify(MINOR_NOTIFICATION, title, message, NotificationType.INFORMATION,  listener);
+    }
+
+    public void notifySuccessBalloon(@NotNull String title, @NotNull String message) {
+        notifySuccessBalloon(title, message, null);
+    }
+
+    public void notifySuccessBalloon(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
+        notify(CHANGES_TOOLWINDOW_BALLOON, title, message, NotificationType.INFORMATION, listener);
+    }
+
+    /*
+     * Warning
+     */
 
     public void notifyWeakWarning(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
         notify(MINOR_NOTIFICATION, title, message, NotificationType.WARNING, listener);
@@ -99,27 +141,6 @@ public class Notifier {
 
     public void notifyStrongWarning(@NotNull String title, @NotNull String content, @Nullable NotificationListener listener) {
         notify(IMPORTANT_ERROR_NOTIFICATION, title, content, NotificationType.WARNING, listener);
-    }
-
-    private static class MyNotificationListener implements NotificationListener {
-
-        @NotNull private final Project myProject;
-
-        private MyNotificationListener(@NotNull Project project) {
-            myProject = project;
-        }
-
-        @Override
-        public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-            if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                if (event.getDescription().equals("configure") && !myProject.isDisposed()) {
-
-                }
-                else if (event.getDescription().equals("ignore")) {
-                    notification.expire();
-                }
-            }
-        }
     }
 
 }

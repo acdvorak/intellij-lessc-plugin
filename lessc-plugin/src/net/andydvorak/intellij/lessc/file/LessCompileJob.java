@@ -30,7 +30,8 @@ public class LessCompileJob {
 
     private final LessFile lessFile;
     private final LessProfile lessProfile;
-    private final Set<String> modifiedLessFileNames;
+    private final Set<LessFile> modifiedLessFiles;
+    private final Set<String> modifiedLessFilePaths;
 
     private File cssTempFile = null;
     private LessEngine lessEngine;
@@ -38,13 +39,15 @@ public class LessCompileJob {
     public LessCompileJob(LessFile lessFile, LessProfile lessProfile) {
         this.lessFile = lessFile;
         this.lessProfile = lessProfile;
-        this.modifiedLessFileNames = new LinkedHashSet<String>();
+        this.modifiedLessFiles = new LinkedHashSet<LessFile>();
+        this.modifiedLessFilePaths = new LinkedHashSet<String>();
     }
 
     public LessCompileJob(final LessCompileJob otherCompileJob, final LessFile lessFile) {
         this.lessFile = lessFile;
         this.lessProfile = otherCompileJob.getLessProfile();
-        this.modifiedLessFileNames = otherCompileJob.getModifiedLessFileNames();
+        this.modifiedLessFiles = new LinkedHashSet<LessFile>(otherCompileJob.getModifiedLessFiles());
+        this.modifiedLessFilePaths = new LinkedHashSet<String>(otherCompileJob.getModifiedLessFilePaths());
     }
 
     public LessFile getLessFile() {
@@ -55,12 +58,27 @@ public class LessCompileJob {
         return lessProfile;
     }
 
-    public Set<String> getModifiedLessFileNames() {
-        return modifiedLessFileNames;
+    public void addModifiedLessFile(LessFile lessFile) throws IOException {
+        modifiedLessFiles.add(lessFile);
+        modifiedLessFilePaths.add(lessFile.getCanonicalPath());
+    }
+
+    /**
+     * @return a copy of the set of modified LESS files
+     */
+    public Set<LessFile> getModifiedLessFiles() {
+        return new LinkedHashSet<LessFile>(modifiedLessFiles);
+    }
+
+    /**
+     * @return a copy of the set of modified LESS files
+     */
+    public Set<String> getModifiedLessFilePaths() {
+        return new LinkedHashSet<String>(modifiedLessFilePaths);
     }
 
     public int getNumModified() {
-        return getModifiedLessFileNames().size();
+        return getModifiedLessFiles().size();
     }
 
     public File getCssTempFile() throws IOException {

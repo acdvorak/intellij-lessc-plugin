@@ -45,6 +45,7 @@ import net.andydvorak.intellij.lessc.file.LessCompileJob;
 import net.andydvorak.intellij.lessc.file.LessFile;
 import net.andydvorak.intellij.lessc.file.LessFileWatcherService;
 import net.andydvorak.intellij.lessc.file.VirtualFileListenerImpl;
+import net.andydvorak.intellij.lessc.notification.FileNotificationListener;
 import net.andydvorak.intellij.lessc.notification.LessErrorMessage;
 import net.andydvorak.intellij.lessc.notification.Notifier;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
@@ -68,6 +69,8 @@ import java.util.Set;
 public class LessManager extends AbstractProjectComponent implements PersistentStateComponent<LessProjectState>, LessFileWatcherService {
 
     private static final Logger LOG = Logger.getInstance("#" + LessManager.class.getName());
+    private static final String NOTIFICATION_TITLE = "LESS CSS Compiler";
+    private static final String IGNORE_LINK = "(<a href='ignore'>ignore</a>)";
 
     private final LessProjectState state = new LessProjectState();
 
@@ -160,7 +163,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         lessCompileJob.compile();
 
         if ( updateCssFiles(lessCompileJob) ) {
-            lessCompileJob.getModifiedLessFileNames().add(lessCompileJob.getLessFile().getName());
+            lessCompileJob.addModifiedLessFile(lessCompileJob.getLessFile());
             LOG.info("Successfully compiled " + lessCompileJob.getLessFile().getCanonicalPath() + " to CSS");
         }
 
@@ -229,6 +232,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                 lessFileName = importerLessFile.getName();
 
                 compile(importerCompileJob);
+
+                for(LessFile curModifiedLessFile : importerCompileJob.getModifiedLessFiles()) {
+                    lessCompileJob.addModifiedLessFile(curModifiedLessFile);
+                }
             } catch (Exception e) {
                 handleException(e, lessFilePath, lessFileName);
             }
@@ -317,30 +324,62 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private void handleException(final @NotNull Exception e, @NotNull final String lessFilePath, @NotNull final String lessFileName) {
         final LessErrorMessage message = new LessErrorMessage(lessFilePath, lessFileName, e);
-
-        final int line = message.getLine();
-        final int column = message.getColumn();
-
         Notifier.getInstance(myProject).notifyError(message);
-
-//        showBalloon(lessFileName + ": " + e.getLocalizedMessage(), MessageType.ERROR);
-
         LOG.warn(e);
     }
 
     private void handleSuccess(final LessCompileJob lessCompileJob) {
         final int numModified = lessCompileJob.getNumModified();
-        String message = null;
 
-        if ( numModified == 1 )
-            message = lessCompileJob.getModifiedLessFileNames().iterator().next() + " successfully compiled to CSS";
-        else if ( numModified > 1 )
-            message = numModified + " LESS files successfully compiled to CSS";
-
-        if ( message != null ) {
-            showBalloon(message, MessageType.INFO);
-            LOG.info(message);
+        if (numModified == 0) {
+            notifyNone(lessCompileJob.getLessFile());
+        } else if (numModified == 1) {
+            notifySingle(lessCompileJob.getModifiedLessFiles().iterator().next());
+        } else {
+            notifyMultiple(lessCompileJob.getModifiedLessFiles());
         }
+    }
+
+    private void notifyNone(final LessFile lessFile) {
+        final Notifier notifier = Notifier.getInstance(myProject);
+        final String filename = lessFile.getName();
+        final String messagePart = "was modified, but didn't change any CSS files";
+        final String messageText = filename + " " + messagePart;
+        final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
+        final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
+        notifier.logInfo(NOTIFICATION_TITLE, messageHtml, listener);
+        LOG.info(messageText);
+    }
+
+    private void notifySingle(final LessFile lessFile) {
+        final Notifier notifier = Notifier.getInstance(myProject);
+        final String filename = lessFile.getName();
+        final String messagePart = "successfully compiled to CSS";
+        final String messageText = filename + " " + messagePart;
+        final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
+        final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
+        notifier.notifySuccessBalloon(NOTIFICATION_TITLE, messageHtml, listener);
+        LOG.info(messageText);
+    }
+
+    private void notifyMultiple(final Set<LessFile> modifiedLessFiles) {
+        final Notifier notifier = Notifier.getInstance(myProject);
+        final String messageShortText = modifiedLessFiles.size() + " " + "LESS files successfully compiled to CSS";
+        final StringBuilder messageFullText = new StringBuilder(messageShortText);
+        final StringBuilder messageFilesHtml = new StringBuilder(messageShortText + " " + IGNORE_LINK + ":");
+        for (LessFile lessFile : modifiedLessFiles) {
+            messageFullText.append('\n');
+            messageFullText.append(String.format("\t%s %s", lessFile.getName(), "successfully compiled to CSS"));
+            messageFilesHtml.append(String.format("<p>%s %s</p>", createLink(lessFile), "successfully compiled to CSS"));
+        }
+        final FileNotificationListener listener = new FileNotificationListener(myProject);
+        notifier.logInfo(NOTIFICATION_TITLE, messageFilesHtml.toString(), listener);
+        notifier.notifySuccessBalloon(NOTIFICATION_TITLE, messageShortText + " " + IGNORE_LINK, listener);
+        LOG.info(messageFullText.toString());
+    }
+
+    private String createLink(final LessFile lessFile) {
+        return String.format("<a href='%s'>%s</a>", lessFile.getCanonicalPathSafeHtmlEscaped(), lessFile.getName());
     }
 
     private void showBalloon(final String message, final MessageType messageType) {

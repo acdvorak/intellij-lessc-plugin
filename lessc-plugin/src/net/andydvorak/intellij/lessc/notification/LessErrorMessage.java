@@ -18,18 +18,10 @@ package net.andydvorak.intellij.lessc.notification;
 
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationGroup;
-import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.LogicalPosition;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.event.HyperlinkEvent;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +47,7 @@ public class LessErrorMessage extends Exception {
         matcher = Pattern.compile("line ([0-9]+), column ([0-9]+)", Pattern.CASE_INSENSITIVE).matcher(message);
 
         if (matcher.find()) {
-            message_html = matcher.replaceFirst("<a href='line_col'>$0</a>");
+            message_html = matcher.replaceFirst("<a href='file'>$0</a>");
             line = Integer.parseInt(matcher.group(1));
             column = Integer.parseInt(matcher.group(2));
         } else {
@@ -85,51 +77,12 @@ public class LessErrorMessage extends Exception {
     }
 
     public String getHtml() {
-        return "<a href='line_col'>" + getFileName() + "</a>" + ": " + message_html;
+        return "<a href='file'>" + getFileName() + "</a>" + ": " + message_html;
     }
 
     public Notification getNotification(@NotNull final Project project, @NotNull final NotificationGroup group, @NotNull final NotificationType type) {
-        final MyNotificationListener listener = new MyNotificationListener(project, getFilePath(), getLine(), getColumn());
+        final FileNotificationListener listener = new FileNotificationListener(project, getFilePath(), getLine(), getColumn());
         return Notifier.createNotification(group, title, getHtml(), type, listener);
-    }
-
-    private static class MyNotificationListener implements NotificationListener {
-
-        @NotNull private final Project myProject;
-        @NotNull private final String filePath;
-        private final int line;
-        private final int column;
-
-        private MyNotificationListener(@NotNull final Project project, @NotNull final String filePath, final int line, final int column) {
-            this.myProject = project;
-            this.filePath = filePath;
-            this.line = line - 1; // for visual placement only
-            this.column = column;
-        }
-
-        @Override
-        public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-            if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                if (event.getDescription().equals("line_col") && !myProject.isDisposed()) {
-                    final VirtualFile file = LocalFileSystem.getInstance().findFileByPath(filePath);
-                    if (file != null) {
-                        final FileEditorManager editorManager = FileEditorManager.getInstance(myProject);
-                        final Editor editor = editorManager.openTextEditor(new OpenFileDescriptor(myProject, file, line - 1, column), true);
-
-                        assert editor != null;
-
-                        // Set correct caret position
-                        // See https://github.com/johnlindquist/open-source-plugins/blob/master/QuickJump/src/com/johnlindquist/quickjump/QuickJumpAction.java
-                        editor.getCaretModel().moveToVisualPosition(editor.logicalToVisualPosition(new LogicalPosition(line, column)));
-
-                        notification.expire();
-                    }
-                }
-                else if (event.getDescription().equals("ignore")) {
-                    notification.expire();
-                }
-            }
-        }
     }
 
 }

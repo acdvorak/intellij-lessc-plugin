@@ -21,6 +21,7 @@ import com.asual.lesscss.LessException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,28 @@ public class LessFile extends File implements Comparable<File> {
         super(uri);
     }
 
-    public void compile(final LessEngine engine, final File cssFile, final boolean compress) throws IOException, LessException, com.asual.lesscss.LessException {
+    /**
+     * Similar to {@link #getCanonicalPath()}, but returns {@code null} instead of throwing an {@link IOException}.
+     * @return the canonical path to the {@code File} if it exists; otherwise {@code null}
+     */
+    public String getCanonicalPathSafe() {
+        String canonicalPath = null;
+        try {
+            canonicalPath = super.getCanonicalPath();
+        } catch (IOException ignored) {}
+        return canonicalPath;
+    }
+
+    /**
+     * Similar to {@link #getCanonicalPath()}, but returns {@code null} instead of throwing an {@link IOException}.
+     * Any HTML Entities in the resulting path will be escaped (encoded) so that the path is safe to insert into HTML code.
+     * @return the canonical, HTML-encoded path to the {@code File} if it exists; otherwise {@code null}
+     */
+    public String getCanonicalPathSafeHtmlEscaped() {
+        return StringEscapeUtils.escapeHtml4(getCanonicalPathSafe());
+    }
+
+    public void compile(final LessEngine engine, final File cssFile, final boolean compress) throws IOException, LessException {
         LOG.info("Compiling LESS file: " + getName());
         LOG.info("\t" + "lessPath: " + getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
