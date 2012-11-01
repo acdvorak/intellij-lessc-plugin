@@ -37,7 +37,7 @@ public class FileLocationChangeDialog {
     public synchronized boolean shouldMoveCssFile(final VirtualFileEvent virtualFileEvent) {
         if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
             result = Messages.showYesNoDialog(myProject,
-                    virtualFileEvent.getFileName() + " has moved.  Would you like to move corresponding CSS files as well?",
+                    virtualFileEvent.getFileName() + " has moved.  Would you like to move the corresponding CSS files as well?",
                     "LESS File Moved", // Title
                     "Move CSS file(s)", // "Yes" button text
                     "Don't move CSS file(s)", // "No" button text
@@ -50,10 +50,23 @@ public class FileLocationChangeDialog {
     public synchronized boolean shouldCopyCssFile(final VirtualFileEvent virtualFileEvent) {
         if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
             result = Messages.showYesNoDialog(myProject,
-                    virtualFileEvent.getFileName() + " has been copied.  Would you like to copy corresponding CSS files as well?",
+                    virtualFileEvent.getFileName() + " has been copied.  Would you like to copy the corresponding CSS files as well?",
                     "LESS File Copied", // Title
                     "Copy CSS file(s)", // "Yes" button text
                     "Don't copy CSS file(s)", // "No" button text
+                    Messages.getQuestionIcon());
+        }
+        lastPrompt = System.currentTimeMillis();
+        return result == 0; // 0 = yes, 1 = no
+    }
+
+    public synchronized boolean shouldDeleteCssFile(final VirtualFileEvent virtualFileEvent) {
+        if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
+            result = Messages.showYesNoDialog(myProject,
+                    virtualFileEvent.getFileName() + " was deleted.  Would you like to delete the corresponding CSS files as well?",
+                    "LESS File Deleted", // Title
+                    "Delete CSS file(s)", // "Yes" button text
+                    "Don't delete CSS file(s)", // "No" button text
                     Messages.getQuestionIcon());
         }
         lastPrompt = System.currentTimeMillis();

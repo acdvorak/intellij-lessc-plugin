@@ -304,7 +304,14 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
-        // TODO: Implement this w/ intelligent cleanup of CSS file
+        if ( isSupported(virtualFileEvent) ) {
+            final LessProfile lessProfile = getLessProfile(virtualFileEvent);
+            try {
+                VFSLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, fileLocationChangeDialog);
+            } catch (IOException e) {
+                LOG.warn(e);
+            }
+        }
     }
 
     private void handleException(final @NotNull Exception e, @NotNull final String lessFilePath, @NotNull final String lessFileName) {

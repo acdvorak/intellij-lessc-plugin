@@ -63,6 +63,11 @@ public class VFSLocationChange {
         refresh();
     }
 
+    public void delete() throws IOException {
+        oldFile.delete(this);
+        refresh();
+    }
+
     private void deleteExisting() throws IOException {
         final File newFile = new File(newParent.getPath() + File.separator + oldFile.getName());
         if (newFile.exists()) {
@@ -142,6 +147,21 @@ public class VFSLocationChange {
 
         for (VFSLocationChange vfsLocationChange : changes) {
             vfsLocationChange.move();
+        }
+
+        return changes.size();
+    }
+
+    public static int deleteCssFiles(@NotNull final VirtualFileEvent virtualFileEvent,
+                                     @Nullable final LessProfile lessProfile,
+                                     @NotNull final FileLocationChangeDialog fileLocationChangeDialog) throws IOException {
+        final Set<VFSLocationChange> changes = getChanges(lessProfile, virtualFileEvent.getFile(), virtualFileEvent.getFile().getParent());
+
+        if (changes.isEmpty() || !fileLocationChangeDialog.shouldDeleteCssFile(virtualFileEvent))
+            return 0;
+
+        for (VFSLocationChange vfsLocationChange : changes) {
+            vfsLocationChange.delete();
         }
 
         return changes.size();
