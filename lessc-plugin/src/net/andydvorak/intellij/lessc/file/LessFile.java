@@ -22,6 +22,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,11 +82,12 @@ public class LessFile extends File implements Comparable<File> {
         LOG.info("\t" + "lessPath: " + getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
 
-        final String compiled = engine.compile(this.toURI().toURL(), compress);
+        final String compiled = engine.compile(toURI().toURL(), compress);
 
         FileUtil.writeToFile(cssFile, compiled);
     }
 
+    @Nullable
     public LessProfile getLessProfile(Collection<LessProfile> lessProfiles) {
         for ( LessProfile lessProfile : lessProfiles ) {
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
@@ -111,7 +113,7 @@ public class LessFile extends File implements Comparable<File> {
      * @return
      * @throws IOException
      */
-    public static Set<String> getImporterPaths(final LessFile lessFile, final LessProfile lessProfile) throws IOException {
+    public static Set<String> getDependentPaths(final LessFile lessFile, final LessProfile lessProfile) throws IOException {
         final String lessParentPath = lessFile.getParent();
         final Set<String> lessFiles = new LinkedHashSet<String>();
         final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher("");
