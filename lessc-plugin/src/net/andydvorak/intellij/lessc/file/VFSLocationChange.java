@@ -50,6 +50,7 @@ public class VFSLocationChange {
     }
 
     public void copy() throws IOException {
+        deleteExisting();
         final String name = oldFile.getName();
         oldFile.copy(this, newParent, name);
 //        FileUtil.copy(new File(oldFile.getPath()), new File(newParent.getPath() + File.separator + oldFile.getName()));
@@ -57,8 +58,20 @@ public class VFSLocationChange {
     }
 
     public void move() throws IOException {
+        deleteExisting();
         oldFile.move(this, newParent);
         refresh();
+    }
+
+    private void deleteExisting() throws IOException {
+        final File newFile = new File(newParent.getPath() + File.separator + oldFile.getName());
+        if (newFile.exists()) {
+            final VirtualFile newVirtualFile = getVirtualFile(newFile);
+            if (newVirtualFile != null) {
+                newVirtualFile.delete(this);
+                refresh();
+            }
+        }
     }
 
     public void refresh() {
