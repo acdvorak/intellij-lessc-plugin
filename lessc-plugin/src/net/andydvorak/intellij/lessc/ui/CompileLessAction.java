@@ -40,7 +40,7 @@ public class CompileLessAction extends AnAction {
 
         for (VirtualFile file : files) {
             final VirtualFileEvent virtualFileEvent = new VirtualFileEvent(this, file, file.getName(), file.getParent());
-            LessManager.getInstance(e.getProject()).handleFileEvent(virtualFileEvent);
+            LessManager.getInstance(e.getProject()).handleChangeEvent(virtualFileEvent);
         }
     }
 

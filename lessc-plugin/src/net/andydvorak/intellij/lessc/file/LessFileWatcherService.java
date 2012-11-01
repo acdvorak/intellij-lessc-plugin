@@ -22,9 +22,9 @@ import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 
 public interface LessFileWatcherService {
 
-    void handleFileEvent(final VirtualFileEvent virtualFileEvent);
-    void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent);
-    void handleFileEvent(final VirtualFileCopyEvent virtualFileCopyEvent);
-    void handleDeletedFileEvent(final VirtualFileEvent virtualFileEvent);
+    void handleChangeEvent(final VirtualFileEvent virtualFileEvent);
+    void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent);
+    void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent);
+    void handleDeleteEvent(final VirtualFileEvent virtualFileEvent);
 
 }

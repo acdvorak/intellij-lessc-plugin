@@ -27,23 +27,23 @@ public class VirtualFileListenerImpl implements VirtualFileListener {
     }
 
     public void contentsChanged(final VirtualFileEvent virtualFileEvent) {
-        lessFileWatcherService.handleFileEvent(virtualFileEvent);
+        lessFileWatcherService.handleChangeEvent(virtualFileEvent);
     }
 
     public void fileCreated(final VirtualFileEvent virtualFileEvent) {
-        lessFileWatcherService.handleFileEvent(virtualFileEvent);
+        lessFileWatcherService.handleChangeEvent(virtualFileEvent);
     }
 
     public void fileDeleted(final VirtualFileEvent virtualFileEvent) {
-        lessFileWatcherService.handleDeletedFileEvent(virtualFileEvent);
+        lessFileWatcherService.handleDeleteEvent(virtualFileEvent);
     }
 
     public void fileMoved(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        lessFileWatcherService.handleFileEvent(virtualFileMoveEvent);
+        lessFileWatcherService.handleMoveEvent(virtualFileMoveEvent);
     }
 
     public void fileCopied(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        lessFileWatcherService.handleFileEvent(virtualFileCopyEvent);
+        lessFileWatcherService.handleCopyEvent(virtualFileCopyEvent);
     }
 
     public void propertyChanged(final VirtualFilePropertyEvent virtualFilePropertyEvent) {}

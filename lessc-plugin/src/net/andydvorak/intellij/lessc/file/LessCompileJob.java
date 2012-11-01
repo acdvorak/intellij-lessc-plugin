@@ -94,4 +94,8 @@ public class LessCompileJob {
         }
         lessFile.compile(lessEngine, getCssTempFile(), lessProfile.isCompressOutput());
     }
+
+    public void refreshVFS() {
+        VFSLocationChange.refresh(lessProfile.getCssDirectories());
+    }
 }

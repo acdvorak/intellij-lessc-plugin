@@ -25,7 +25,6 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.io.FileUtil;
@@ -36,16 +35,14 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
-import net.andydvorak.intellij.lessc.file.LessCompileJob;
-import net.andydvorak.intellij.lessc.file.LessFile;
-import net.andydvorak.intellij.lessc.file.LessFileWatcherService;
-import net.andydvorak.intellij.lessc.file.VirtualFileListenerImpl;
+import net.andydvorak.intellij.lessc.file.*;
 import net.andydvorak.intellij.lessc.notification.FileNotificationListener;
 import net.andydvorak.intellij.lessc.notification.LessErrorMessage;
 import net.andydvorak.intellij.lessc.notification.Notifier;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
+import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -70,17 +67,15 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     private static final String IGNORE_LINK = "(<a href='ignore'>ignore</a>)";
 
     private final LessProjectState state = new LessProjectState();
-
-    @Transient
-    private final Project project;
+    private final FileLocationChangeDialog fileLocationChangeDialog;
 
     @Transient
     private final VirtualFileListenerImpl virtualFileListener;
 
     public LessManager(final Project project) {
         super(project);
-        this.project = project;
         this.virtualFileListener = new VirtualFileListenerImpl(this);
+        this.fileLocationChangeDialog = new FileLocationChangeDialog(project);
     }
     
     public static LessManager getInstance(final Project project) {
@@ -89,6 +84,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     public void initComponent() {
         VirtualFileManager.getInstance().addVirtualFileListener(virtualFileListener);
+
+        // TODO: See http://confluence.jetbrains.net/display/IDEADEV/IntelliJ+IDEA+Virtual+File+System
+        // "This API gives you all the changes detected during the refresh operation in one list, and lets you process them in batch."
+//        BulkFileListener
     }
 
     public void disposeComponent() {
@@ -169,6 +168,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
 
         compileDependents(lessCompileJob);
+
+        lessCompileJob.refreshVFS();
     }
 
     /**
@@ -209,69 +210,16 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
             if ( virtualCssFile != null ) {
                 // TODO: performance of synchronous vs. asynchronous?
-                virtualCssFile.getParent().refresh(false, false);
+                virtualCssFile.getParent().refresh(true, false);
+                virtualCssFile.getParent().getParent().refresh(true, false);
             }
+
+            lessCompileJob.refreshVFS();
         }
 
         FileUtil.delete(lessCompileJob.getCssTempFile());
 
         return numUpdated > 0;
-    }
-
-    private String toCssPath(final String lessPath) {
-        return lessPath == null ? null : lessPath.replaceFirst("\\.less$", ".css");
-    }
-
-    private void moveCssFiles(@NotNull final LessProfile lessProfile, @NotNull final VirtualFile newVirtualLessFile,
-                              @NotNull final VirtualFile oldVirtualLessParent) throws IOException {
-        // TODO: Make sure new (and old?) directories are in the LESS profile dir
-        final File lessRootDir = lessProfile.getLessDir();
-
-        final File newLessFile = new File(newVirtualLessFile.getPath());
-        final String newRelativeCssPath = toCssPath(FileUtil.getRelativePath(lessRootDir, newLessFile));
-
-        if (newRelativeCssPath == null)
-            return;
-
-        final File oldLessFile = new File(oldVirtualLessParent.getPath() + File.separator + newLessFile.getName());
-        final String oldRelativeCssPath = toCssPath(FileUtil.getRelativePath(lessRootDir, oldLessFile));
-
-        if (oldRelativeCssPath == null)
-            return;
-
-        for(CssDirectory cssRootDir : lessProfile.getCssDirectories()) {
-            FileUtil.createParentDirs(getCssFile(cssRootDir, newRelativeCssPath));
-
-            final VirtualFile oldVirtualCssFile = getVirtualFile(cssRootDir, oldRelativeCssPath);
-
-            if (oldVirtualCssFile == null)
-                continue;
-
-            final VirtualFile newVirtualCssFileParent = getVirtualFile(getCssFile(cssRootDir, newRelativeCssPath).getParentFile());
-
-            if (newVirtualCssFileParent == null)
-                return;
-
-            oldVirtualCssFile.move(this, newVirtualCssFileParent);
-
-            newVirtualCssFileParent.refresh(false, false);
-        }
-    }
-
-    private static File getCssFile(final CssDirectory cssRootDir, final String relativeCssPath) {
-        return new File(getAbsolutePath(cssRootDir, relativeCssPath));
-    }
-
-    private static String getAbsolutePath(CssDirectory cssRootDir, String relativeCssPath) {
-        return cssRootDir.getPath() + File.separator + relativeCssPath;
-    }
-
-    private static VirtualFile getVirtualFile(final File file) {
-        return LocalFileSystem.getInstance().findFileByIoFile(file);
-    }
-
-    private static VirtualFile getVirtualFile(final CssDirectory cssRootDir, final String relativeCssPath) {
-        return getVirtualFile(getCssFile(cssRootDir, relativeCssPath));
     }
 
     private void compileDependents(final LessCompileJob lessCompileJob) throws IOException {
@@ -299,13 +247,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
     }
 
-    public void handleFileEvent(final VirtualFileEvent virtualFileEvent) {
+    public void handleChangeEvent(final VirtualFileEvent virtualFileEvent) {
         if ( isSupported(virtualFileEvent) ) {
-            PsiDocumentManager.getInstance(project).performWhenAllCommitted(new Runnable() {
+            PsiDocumentManager.getInstance(myProject).performWhenAllCommitted(new Runnable() {
                 @Override
                 public void run() {
-
-                    ProgressManager.getInstance().run(new Task.Backgroundable(project, "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS", false) {
+                    ProgressManager.getInstance().run(new Task.Backgroundable(myProject, "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS", false) {
                         @Override
                         public void run(@NotNull ProgressIndicator indicator) {
                             indicator.setFraction(0);
@@ -329,52 +276,34 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                             indicator.setFraction(1);
                         }
                     });
-
-
-//                    new Compile
                 }
             });
         }
     }
 
-    public void handleFileEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        // TODO: Implement this w/ intelligent cleanup of CSS file
+    public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
         if ( isSupported(virtualFileMoveEvent) ) {
-            int result = Messages.showYesNoDialog(myProject, virtualFileMoveEvent.getFileName() + " has moved.  Would you like to move corresponding CSS files as well?",
-                    "LESS File Moved", "Move CSS file(s)", "Don't move CSS file(s)", Messages.getQuestionIcon());
-
-            switch (result) {
-                case 0:  // yes
-//                    Messages.showInfoMessage(myProject, "Moving CSS files...", "Moving CSS Files");
-                    try {
-                        final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
-                        if (lessProfile != null) {
-                            moveCssFiles(lessProfile, virtualFileMoveEvent.getFile(), virtualFileMoveEvent.getOldParent());
-
-                            // TODO: Save and recompile LESS file?  (Needs to be saved in case @import paths change but file hasn't been saved in the VFS)
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                    }
-                    break;
-                case 1: // no
-//                    Messages.showInfoMessage(myProject, "NOT Moving CSS files...", "NOT Moving CSS Files");
-                    break;
-                default: // cancel
-                    break;
+            final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
+            try {
+                VFSLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, fileLocationChangeDialog);
+            } catch (IOException e) {
+                LOG.warn(e);
             }
         }
-
-//        handleFileEvent((VirtualFileEvent) virtualFileMoveEvent);
     }
 
-    public void handleFileEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        // TODO: Implement this
-
-//        handleFileEvent((VirtualFileEvent) virtualFileCopyEvent);
+    public void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
+        if ( isSupported(virtualFileCopyEvent) ) {
+            final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
+            try {
+                VFSLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, fileLocationChangeDialog);
+            } catch (IOException e) {
+                LOG.warn(e);
+            }
+        }
     }
 
-    public void handleDeletedFileEvent(final VirtualFileEvent virtualFileEvent) {
+    public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
         // TODO: Implement this w/ intelligent cleanup of CSS file
     }
 
@@ -442,7 +371,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                final StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
+                final StatusBar statusBar = WindowManager.getInstance().getStatusBar(myProject);
 
                 if ( statusBar != null ) {
                     JBPopupFactory.getInstance()
