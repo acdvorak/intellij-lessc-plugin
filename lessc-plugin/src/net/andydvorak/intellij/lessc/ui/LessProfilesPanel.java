@@ -37,17 +37,21 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {
 
-    private final Project project;
-    private final LessManager lessManager;
-    private final AtomicBoolean isInitialized = new AtomicBoolean(false);
+    @NotNull private final Project project;
+    @NotNull private final LessManager lessManager;
+    @NotNull private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
-    public LessProfilesPanel(Project project) {
+    public LessProfilesPanel(@NotNull final Project project) {
         this.project = project;
         this.lessManager = LessManager.getInstance(project);
         initTree();
@@ -78,6 +82,30 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     protected boolean wasObjectStored(Object o) {
         return lessManager.getProfiles().contains(o);
+    }
+
+    @Override
+    public JComponent createComponent() {
+        final JPanel component = new JPanel();
+        component.setLayout(new BoxLayout(component, BoxLayout.PAGE_AXIS));
+
+        final JPanel buttonPanel = new JPanel(new BorderLayout());
+        final JButton resetPromptsButton = new JButton("Reset prompts");
+        resetPromptsButton.setMnemonic('r');
+        resetPromptsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                lessManager.getState().resetPrompts();
+                resetPromptsButton.setEnabled(false);
+            }
+        });
+        resetPromptsButton.setEnabled(!lessManager.getState().hasDefaultPromptSettings());
+        buttonPanel.add(resetPromptsButton, BorderLayout.LINE_END);
+
+        component.add(super.createComponent());
+        component.add(buttonPanel);
+
+        return component;
     }
 
     @Nls

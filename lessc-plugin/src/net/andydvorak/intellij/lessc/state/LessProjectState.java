@@ -80,6 +80,21 @@ public class LessProjectState {
         this.promptOnDelete = promptOnDelete;
     }
 
+    public void resetPrompts() {
+        moveCssFiles = true;
+        promptOnMove = true;
+
+        copyCssFiles = true;
+        promptOnCopy = true;
+
+        deleteCssFiles = true;
+        promptOnDelete = true;
+    }
+
+    public boolean hasDefaultPromptSettings() {
+        return moveCssFiles && promptOnMove && copyCssFiles && promptOnCopy && deleteCssFiles && promptOnDelete;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

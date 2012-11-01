@@ -66,8 +66,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     private static final String NOTIFICATION_TITLE = "LESS CSS Compiler";
     private static final String IGNORE_LINK = "(<a href='ignore'>ignore</a>)";
 
-    private final LessProjectState state = new LessProjectState();
-    private final FileLocationChangeDialog fileLocationChangeDialog;
+    @NotNull private final LessProjectState state = new LessProjectState();
+    @NotNull private final FileLocationChangeDialog fileLocationChangeDialog;
 
     @Transient
     private final VirtualFileListenerImpl virtualFileListener;
@@ -121,6 +121,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     /** Used to determine if the state has changed, and thus whether IntelliJ needs to write out to the .xml file. */
+    @NotNull
     public LessProjectState getState() {
         return state;
     }
