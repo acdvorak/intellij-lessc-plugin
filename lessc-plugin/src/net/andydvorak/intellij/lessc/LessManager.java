@@ -75,7 +75,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     public LessManager(final Project project) {
         super(project);
         this.virtualFileListener = new VirtualFileListenerImpl(this);
-        this.fileLocationChangeDialog = new FileLocationChangeDialog(project);
+        this.fileLocationChangeDialog = new FileLocationChangeDialog(project, state);
     }
     
     public static LessManager getInstance(final Project project) {
