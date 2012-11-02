@@ -57,11 +57,7 @@
             </p>
         ]]>
     </description>
-    <vendor>
-        <![CDATA[
-            Andrew C. Dvorak (<a href="https://github.com/acdvorak/intellij-lessc-plugin">GitHub</a>)
-        ]]>
-    </vendor>
+    <vendor>Andrew C. Dvorak</vendor>
     <version>2.3.1</version>
     <change-notes>
         <![CDATA[
