@@ -62,9 +62,13 @@
             Andrew C. Dvorak (<a href="https://github.com/acdvorak/intellij-lessc-plugin">GitHub</a>)
         ]]>
     </vendor>
-    <version>2.3.0</version>
+    <version>2.3.1</version>
     <change-notes>
         <![CDATA[
+<h3>2.3.1</h3>
+<ul>
+  <li>[enhancement] Updated README.md and plugin.xml</li>
+</ul>
 <h3>2.3.0</h3>
 <ul>
   <li>[enhancement] issue #10 - Move, Copy, and Delete support</li>
