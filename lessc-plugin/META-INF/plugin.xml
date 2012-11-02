@@ -2,17 +2,67 @@
     <name>LESS CSS Compiler</name>
     <description>
         <![CDATA[
-<p>This plugin watches directories for changes to LESS files and compiles changed files to CSS.</p>
-<p>
-  <strong>NOTE</strong>: This plugin is <strong>ONLY</strong> compatible with IntelliJ IDEA 11.x.<br/>
-  It is <strong>NOT</strong> compatible with IntelliJ IDEA 10.x.
-</p>
-<p>10.x compatibility is NOT planned for a future release.</p>
+            <p>Watches directories for changes to LESS files and compiles changed files to CSS.</p>
+
+            <h2>Important:</h2>
+            <p>
+                You need to <strong>SAVE ALL FILES</strong> (CTRL + S) before compiling to avoid "Name Error" exceptions
+                because of how IntelliJ saves files: Changes are NOT committed to disk until you manually Save All or switch to another application.
+            </p>
+
+            <h2>Features:</h2>
+            <h3>Recursive directory monitoring</h3>
+            <p>
+                When a LESS file in a watched directory (or one of its subdirectories) is modified and saved, it is automatically
+                compiled to CSS and copied to the same relative path in one or more output directories.
+            </p>
+            <h3><code>@import</code> dependency resolution</h3>
+            <p>
+                Files that <code>@import</code> a modified LESS file are also recompiled automatically.
+            </p>
+            <h3>Move, copy, and delete detection</h3>
+            <p>
+                When a LESS file is moved, copied, or deleted, the plugin will offer to perform the same operation on the corresponding CSS file(s).
+            </p>
+            <h3>Virtual filesystem notification</h3>
+            <p>
+                Unlike other solutions, this plugin is smart enough to notify IntelliJ when CSS files are changed, moved, copied, or deleted.
+                In most cases, updated CSS files will be immediately reflected in the editor and Project tree view.
+            </p>
+            <h3>Selective compilation</h3>
+            <p>
+                If the plugin somehow fails to catch changes to a LESS file, simply right-click anywhere in the editor or Project tree
+                and select "Compile to CSS".  You can also compile an entire directory by right-clicking on it in the Project tree.
+            </p>
+            <h3>Error notifications</h3>
+            <p>
+                Any errors encountered during the compilation process will produce an error notification balloon in the IDE
+                containing a link to the file and the line number that caused the error.
+            </p>
+
+            <h2>Screenshots:</h2>
+            <p>
+                Screenshots are available at the <a href="http://plugins.intellij.net/plugin?pr=&pluginId=7059">LESS CSS Compiler</a>
+                page on the IntelliJ Plugin Repository website.
+            </p>
+
+            <h2>Source Code:</h2>
+            <p>
+                <a href="https://github.com/acdvorak/intellij-lessc-plugin">GitHub project</a>
+            </p>
+
+            <h2>Compatibility:</h2>
+            <p>
+                <strong>NOTE</strong>: This plugin is <strong>ONLY</strong> compatible with IntelliJ IDEA 11+.
+            </p>
         ]]>
     </description>
+    <vendor>
+        <![CDATA[
+            Andrew C. Dvorak (<a href="https://github.com/acdvorak/intellij-lessc-plugin">GitHub</a>)
+        ]]>
+    </vendor>
     <version>2.3.0</version>
-    <vendor>Andrew C. Dvorak</vendor>
-
     <change-notes>
         <![CDATA[
 <h3>2.3.0</h3>
@@ -21,7 +71,7 @@
 </ul>
 <h3>2.2.0</h3>
 <ul>
-  <li>[enhancement] improved notifications and event logging</li>
+  <li>[enhancement] Improved notifications and event logging</li>
 </ul>
 <h3>2.1.2</h3>
 <ul>
