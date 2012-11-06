@@ -109,7 +109,7 @@ public class LessEngine {
 			compile = (Function) scope.get("compile", scope);
 			Context.exit();
 		} catch (Exception e) {
-			logger.error("LESS Engine intialization failed.", e);
+			logger.error("LESS Engine initialization failed.", e);
 		}
 	}
 	
