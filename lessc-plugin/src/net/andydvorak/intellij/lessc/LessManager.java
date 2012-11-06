@@ -20,6 +20,7 @@ import com.asual.lesscss.LessException;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -44,6 +45,7 @@ import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -152,7 +154,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final LessProfile lessProfile = getLessProfile(virtualFileEvent);
         final LessCompileJob lessCompileJob = new LessCompileJob(lessFile, lessProfile);
 
-        if ( lessProfile.hasCssDirectories() ) {
+        if (lessProfile != null && lessProfile.hasCssDirectories()) {
             compile(lessCompileJob);
         }
 
@@ -248,38 +250,70 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
     }
 
+    private boolean areUnsavedDocuments() {
+        return !ArrayUtils.isEmpty(FileDocumentManager.getInstance().getUnsavedDocuments());
+    }
+
+    private void saveAllDocuments() {
+        FileDocumentManager.getInstance().saveAllDocuments();
+    }
+
+    private void waitForSave() {
+        if (areUnsavedDocuments())
+            saveAllDocuments();
+
+        // Wait for all files to be saved
+        while (areUnsavedDocuments()) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException ignored) {
+
+            }
+        }
+    }
+
     public void handleChangeEvent(final VirtualFileEvent virtualFileEvent) {
         if ( isSupported(virtualFileEvent) ) {
+            waitForSave();
+
+            final String title = "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS";
+
             PsiDocumentManager.getInstance(myProject).performWhenAllCommitted(new Runnable() {
                 @Override
                 public void run() {
-                    ProgressManager.getInstance().run(new Task.Backgroundable(myProject, "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS", false) {
+                    ProgressManager.getInstance().run(new Task.Backgroundable(myProject, title, false) {
                         @Override
                         public void run(@NotNull ProgressIndicator indicator) {
-                            indicator.setFraction(0);
-
-                            String lessFilePath = "UNKNOWN INPUT FILE PATH";
-                            String lessFileName = "UNKNOWN INPUT FILE NAME";
-
-                            try {
-                                final LessFile lessFile = getLessFile(virtualFileEvent);
-
-                                lessFilePath = lessFile.getCanonicalPath();
-                                lessFileName = lessFile.getName();
-
-                                final LessCompileJob lessCompileJob = compile(virtualFileEvent);
-
-                                handleSuccess(lessCompileJob);
-                            } catch (Exception e) {
-                                handleException(e, lessFilePath, lessFileName);
-                            }
-
-                            indicator.setFraction(1);
+                            // TODO: Update progress title when multiple files are being compiled (e.g., "Compiling file 1 of 3...")
+//                            this.setTitle()
+                            compileWithProgress(indicator, virtualFileEvent);
                         }
                     });
                 }
             });
         }
+    }
+
+    private void compileWithProgress(@NotNull final ProgressIndicator indicator, @NotNull final VirtualFileEvent virtualFileEvent) {
+        indicator.setFraction(0);
+
+        String lessFilePath = "UNKNOWN INPUT FILE PATH";
+        String lessFileName = "UNKNOWN INPUT FILE NAME";
+
+        try {
+            final LessFile lessFile = getLessFile(virtualFileEvent);
+
+            lessFilePath = lessFile.getCanonicalPath();
+            lessFileName = lessFile.getName();
+
+            final LessCompileJob lessCompileJob = compile(virtualFileEvent);
+
+            handleSuccess(lessCompileJob);
+        } catch (Exception e) {
+            handleException(e, lessFilePath, lessFileName);
+        }
+
+        indicator.setFraction(1);
     }
 
     public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
