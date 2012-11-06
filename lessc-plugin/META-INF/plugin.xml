@@ -67,7 +67,7 @@
 </ul>
 <h3>2.3.0</h3>
 <ul>
-  <li>[enhancement] issue #10 - Move, Copy, and Delete support</li>
+  <li>[enhancement] Issue #10 - Move, Copy, and Delete support</li>
 </ul>
 <h3>2.2.0</h3>
 <ul>
@@ -75,7 +75,7 @@
 </ul>
 <h3>2.1.2</h3>
 <ul>
-  <li>[bugfix] fixed #13 / #12 - java.io.IOException thrown for Windows file paths</li>
+  <li>[bugfix] Fixed #13 / #12 - java.io.IOException thrown for Windows file paths</li>
 </ul>
 <h3>2.1.1</h3>
 <ul>
@@ -83,15 +83,15 @@
 </ul>
 <h3>2.1.0</h3>
 <ul>
-  <li>[enhancement] issue #5 - Make CSS output directories more user friendly in preference pane</li>
+  <li>[enhancement] Issue #5 - Make CSS output directories more user friendly in preference pane</li>
 </ul>
 <h3>2.0.0</h3>
 <ul>
-  <li>[enhancement] issue #2 - Add "Compile to CSS" Action to context menu for .less files</li>
+  <li>[enhancement] Issue #2 - Add "Compile to CSS" Action to context menu for .less files</li>
 </ul>
 <h3>1.9.5</h3>
 <ul>
-  <li>[bugfix] fixed #1 - Incorrect line number for errors when using imports</li>
+  <li>[bugfix] Fixed #1 - Incorrect line number for errors when using imports</li>
 </ul>
 <h3>1.9.0</h3>
 <ul>
