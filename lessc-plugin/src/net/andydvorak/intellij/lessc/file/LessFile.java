@@ -82,7 +82,7 @@ public class LessFile extends File implements Comparable<File> {
         LOG.info("\t" + "lessPath: " + getCanonicalPath());
         LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
 
-        final String compiled = engine.compile(toURI().toURL(), compress);
+        final String compiled = engine.compile(toURL(), compress);
 
         FileUtil.writeToFile(cssFile, compiled);
     }
