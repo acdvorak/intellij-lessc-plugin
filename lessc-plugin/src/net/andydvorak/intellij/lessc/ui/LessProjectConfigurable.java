@@ -54,31 +54,31 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
     }
 
     public JComponent createComponent() {
-        logger.info("createComponent()");
+        logger.debug("createComponent()");
         return profilesPanel.createComponent();
     }
 
     public boolean isModified() {
-        logger.info("isModified()");
+        logger.debug("isModified()");
         boolean res = false;
         if (profilesPanel != null) {
             res = profilesPanel.isModified();
         }
 
-        logger.info("isModified() = " + res);
+        logger.debug("isModified() = " + res);
 
         return res;
     }
 
     public void apply() throws ConfigurationException {
-        logger.info("apply()");
+        logger.debug("apply()");
         if (profilesPanel != null) {
             profilesPanel.apply();
         }
     }
 
     public void reset() {
-        logger.info("reset()");
+        logger.debug("reset()");
         if (profilesPanel != null) {
             profilesPanel.reset();
         }
