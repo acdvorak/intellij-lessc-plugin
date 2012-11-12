@@ -163,7 +163,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     // TODO: Refactor/combine compile() methods
     private void compile(final LessCompileJob lessCompileJob) throws IOException, LessException {
-        lessCompileJob.compile();
+        if (lessCompileJob.getLessFile().shouldCompile(lessCompileJob.getLessProfile()))
+            lessCompileJob.compile();
 
         if ( updateCssFiles(lessCompileJob) ) {
             lessCompileJob.addModifiedLessFile(lessCompileJob.getLessFile());

@@ -83,10 +83,14 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     private JPanel rootPanel;
     private JCheckBox compressCssCheckbox;
     private JPanel cssDirPanel;
-    private JPanel optionsPanel;
-    private JPanel compressCssPanel;
     private JPanel lessDirPanelWrap;
     private JPanel lessDirPanel;
+    private JButton resetPromptsButton;
+    private JTextField includePatternTextField;
+    private JTextField excludePatternTextField;
+    private JPanel inputPanel;
+    private JPanel buttonPanel;
+    private JPanel outputPanel;
 
     private TextFieldWithBrowseButton lessDirTextField;
 
@@ -94,6 +98,12 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     private final ListTableModel<CssDirectory> profileMappingModel;
 
     private List<CssDirectory> cssDirectories;
+    private ActionListener actionListener = new ActionListener() {
+        public void actionPerformed(ActionEvent actionEvent) {
+            fireChangeEvent();
+            updateBox();
+        }
+    };
 
     public CssConfigurableForm(final Project project, final LessProfile lessProfile, final LessProfilesPanel lessProfilesPanel, final Runnable updater) {
         super(true, updater);
@@ -133,12 +143,9 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
         lessDirPanel.add(lessDirTextField, GRIDCONSTRAINTS_FILL_ALL);
 
-        compressCssCheckbox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                fireChangeEvent();
-                updateBox();
-            }
-        });
+        includePatternTextField.addActionListener(actionListener);
+        excludePatternTextField.addActionListener(actionListener);
+        compressCssCheckbox.addActionListener(actionListener);
 
         profileMappingTable.addMouseListener(new MouseListener() {
             @Override public void mouseClicked(MouseEvent mouseEvent) {
@@ -170,6 +177,16 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
                 .disableUpDownActions();
 
         cssDirPanel.add(decorator.createPanel(), GRIDCONSTRAINTS_FILL_ALL);
+
+        resetPromptsButton.setMnemonic('r');
+        resetPromptsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                lessManager.getState().resetPrompts();
+                resetPromptsButton.setEnabled(false);
+            }
+        });
+        resetPromptsButton.setEnabled(!lessManager.getState().hasDefaultPromptSettings());
 
         return rootPanel;
     }
@@ -257,12 +274,16 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
         return modified ||
                 !Comparing.strEqual(lessProfileName, lessProfile.getName()) ||
                 !Comparing.strEqual(lessDirTextField.getText(), lessProfile.getLessDirPath()) ||
+                !Comparing.strEqual(includePatternTextField.getText(), lessProfile.getIncludePattern()) ||
+                !Comparing.strEqual(excludePatternTextField.getText(), lessProfile.getExcludePattern()) ||
                 !Comparing.equal(compressCssCheckbox.isSelected(), lessProfile.isCompressOutput()) ||
                 !Comparing.equal(cssDirectories, lessProfile.getCssDirectories());
     }
 
     public void apply() throws ConfigurationException {
         lessProfile.setLessDirPath(lessDirTextField.getText());
+        lessProfile.setIncludePattern(includePatternTextField.getText());
+        lessProfile.setExcludePattern(excludePatternTextField.getText());
         lessProfile.setCompressOutput(compressCssCheckbox.isSelected());
         lessProfile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
 
@@ -274,8 +295,9 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     public void reset() {
         lessProfileName = lessProfile.getName();
-
         lessDirTextField.setText(lessProfile.getLessDirPath());
+        includePatternTextField.setText(lessProfile.getIncludePattern());
+        excludePatternTextField.setText(lessProfile.getExcludePattern());
         compressCssCheckbox.setSelected(lessProfile.isCompressOutput());
     }
 
@@ -301,5 +323,4 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     private void updateBox() {
     }
-
 }

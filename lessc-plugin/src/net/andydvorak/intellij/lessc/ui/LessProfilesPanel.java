@@ -37,12 +37,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {
@@ -82,30 +78,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     protected boolean wasObjectStored(Object o) {
         return lessManager.getProfiles().contains(o);
-    }
-
-    @Override
-    public JComponent createComponent() {
-        final JPanel component = new JPanel();
-        component.setLayout(new BoxLayout(component, BoxLayout.PAGE_AXIS));
-
-        final JPanel buttonPanel = new JPanel(new BorderLayout());
-        final JButton resetPromptsButton = new JButton("Reset prompts");
-        resetPromptsButton.setMnemonic('r');
-        resetPromptsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                lessManager.getState().resetPrompts();
-                resetPromptsButton.setEnabled(false);
-            }
-        });
-        resetPromptsButton.setEnabled(!lessManager.getState().hasDefaultPromptSettings());
-        buttonPanel.add(resetPromptsButton, BorderLayout.LINE_END);
-
-        component.add(super.createComponent());
-        component.add(buttonPanel);
-
-        return component;
     }
 
     @Nls
@@ -176,8 +148,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
                 final LessProfile lessProfile = new LessProfile(name);
                 addProfileNode(lessProfile);
             }
-
-
         });
         result.add(new MyDeleteAction(forAll(Conditions.alwaysTrue())));
         result.add(new AnAction("Copy", "Copy the selected LESS profile", PlatformIcons.COPY_ICON) {
@@ -199,8 +169,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         });
         return result;
     }
-
-
 
     @Nullable
     private String askForProfileName(String title, String initialName) {

@@ -21,15 +21,15 @@ import com.asual.lesscss.LessException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,7 +88,7 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     @Nullable
-    public LessProfile getLessProfile(Collection<LessProfile> lessProfiles) {
+    public LessProfile getLessProfile(final Collection<LessProfile> lessProfiles) {
         for ( LessProfile lessProfile : lessProfiles ) {
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
             if ( FileUtil.isAncestor(lessProfileDir, this, false) ) {
@@ -96,6 +96,44 @@ public class LessFile extends File implements Comparable<File> {
             }
         }
         return null;
+    }
+
+    public boolean shouldCompile(@Nullable final LessProfile lessProfile) {
+        if (lessProfile == null)
+            return false;
+
+        final List<String> includePatterns = getNormalizePatterns(lessProfile.getIncludePattern());
+        final List<String> excludePatterns = getNormalizePatterns(lessProfile.getExcludePattern());
+
+        boolean include = includePatterns.isEmpty();
+        boolean exclude = false;
+
+        for (String includePattern : includePatterns) {
+            include |= matches(includePattern);
+        }
+
+        for (String excludePattern : excludePatterns) {
+            exclude |= matches(excludePattern);
+        }
+
+        return include && !exclude;
+    }
+
+    private List<String> getNormalizePatterns(final String patterns) {
+        final Set<String> normalized = new HashSet<String>();
+        for (String pattern : StringUtils.defaultString(patterns).split(";")) {
+            if (StringUtils.isNotEmpty(pattern))
+                normalized.add(makePatternAbsolute(pattern));
+        }
+        return new ArrayList<String>(normalized);
+    }
+
+    private boolean matches(final String pattern) {
+        return FilenameUtils.wildcardMatchOnSystem(getCanonicalPathSafe(), makePatternAbsolute(pattern));
+    }
+
+    private String makePatternAbsolute(final String pattern) {
+        return FileUtil.isAbsoluteFilePath(pattern) ? pattern : "*" + File.separator + pattern;
     }
 
     public static boolean isLessFile(final String filename) {
@@ -108,25 +146,26 @@ public class LessFile extends File implements Comparable<File> {
 
     /**
      * Returns a list of paths to all LESS files in the profile directory that @import the given LESS file.
-     * @param lessFile
+     * @param sourceLessFile
      * @param lessProfile
      * @return
      * @throws IOException
      */
-    public static Set<String> getDependentPaths(final LessFile lessFile, final LessProfile lessProfile) throws IOException {
-        final String lessParentPath = lessFile.getParent();
+    public static Set<String> getDependentPaths(final LessFile sourceLessFile, final LessProfile lessProfile) throws IOException {
+        final String lessParentPath = sourceLessFile.getParent();
         final Set<String> lessFiles = new LinkedHashSet<String>();
         final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher("");
 
-        for ( File otherLessFile : FileUtil.findFilesByMask(LESS_FILENAME_PATTERN, lessProfile.getLessDir()) ) {
-            if ( ! isSameFile(lessFile, otherLessFile) ) {
-                importMatcher.reset(FileUtil.loadFile(otherLessFile));
+        final List<File> filesByMask = FileUtil.findFilesByMask(LESS_FILENAME_PATTERN, lessProfile.getLessDir());
+        for ( File dependentLessFile : filesByMask) {
+            if ( ! isSameFile(sourceLessFile, dependentLessFile) ) {
+                importMatcher.reset(FileUtil.loadFile(dependentLessFile));
 
                 while ( importMatcher.find() ) {
                     final LessFile importedLessFile = new LessFile(lessParentPath, importMatcher.group(1));
 
-                    if ( isSameFile(lessFile, importedLessFile) ) {
-                        lessFiles.add(otherLessFile.getCanonicalPath());
+                    if ( isSameFile(sourceLessFile, importedLessFile) && new LessFile(dependentLessFile.getAbsolutePath()).shouldCompile(lessProfile) ) {
+                        lessFiles.add(dependentLessFile.getCanonicalPath());
                     }
                 }
             }
