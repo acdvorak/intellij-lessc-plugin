@@ -260,12 +260,15 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void waitForSave() {
-        if (areUnsavedDocuments())
+        if (areUnsavedDocuments()) {
+            LOG.debug("Saving unsaved documents");
             saveAllDocuments();
+        }
 
         // Wait for all files to be saved
         while (areUnsavedDocuments()) {
             try {
+                LOG.debug("Waiting 250 ms for all documents to be saved (committed to disk)...");
                 Thread.sleep(250);
             } catch (InterruptedException ignored) {
 
