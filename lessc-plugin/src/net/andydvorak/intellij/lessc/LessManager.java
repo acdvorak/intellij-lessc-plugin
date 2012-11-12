@@ -173,7 +173,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
         compileDependents(lessCompileJob);
 
-        lessCompileJob.refreshVFS();
+        lessCompileJob.refreshVFS();  // TODO: Only call this once - not for every file
     }
 
     /**
