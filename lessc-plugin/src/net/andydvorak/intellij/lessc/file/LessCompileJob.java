@@ -58,9 +58,9 @@ public class LessCompileJob {
         return lessProfile;
     }
 
-    public void addModifiedLessFile(LessFile lessFile) throws IOException {
+    public void addModifiedLessFile(LessFile lessFile) {
         modifiedLessFiles.add(lessFile);
-        modifiedLessFilePaths.add(lessFile.getCanonicalPath());
+        modifiedLessFilePaths.add(lessFile.getCanonicalPathSafe());
     }
 
     /**
