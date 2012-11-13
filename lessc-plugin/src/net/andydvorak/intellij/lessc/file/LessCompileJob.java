@@ -28,56 +28,56 @@ import java.util.Set;
 
 public class LessCompileJob {
 
-    private final LessFile lessFile;
+    private final LessFile sourceLessFile;
     private final LessProfile lessProfile;
-    private final Set<LessFile> modifiedLessFiles;
-    private final Set<String> modifiedLessFilePaths;
+    private final Set<LessFile> updatedLessFiles;
+    private final Set<String> updatedLessFilePaths;
     private File cssTempFile;
     private LessEngine lessEngine;
 
-    public LessCompileJob(LessFile lessFile, LessProfile lessProfile) {
-        this.lessFile = lessFile;
+    public LessCompileJob(final LessFile sourceLessFile, final LessProfile lessProfile) {
+        this.sourceLessFile = sourceLessFile;
         this.lessProfile = lessProfile;
-        this.modifiedLessFiles = new LinkedHashSet<LessFile>();
-        this.modifiedLessFilePaths = new LinkedHashSet<String>();
+        this.updatedLessFiles = new LinkedHashSet<LessFile>();
+        this.updatedLessFilePaths = new LinkedHashSet<String>();
     }
 
-    public LessCompileJob(final LessCompileJob otherCompileJob, final LessFile lessFile) {
-        this.lessFile = lessFile;
+    public LessCompileJob(final LessCompileJob otherCompileJob, final LessFile sourceLessFile) {
+        this.sourceLessFile = sourceLessFile;
         this.lessProfile = otherCompileJob.getLessProfile();
-        this.modifiedLessFiles = new LinkedHashSet<LessFile>(otherCompileJob.getModifiedLessFiles());
-        this.modifiedLessFilePaths = new LinkedHashSet<String>(otherCompileJob.getModifiedLessFilePaths());
+        this.updatedLessFiles = new LinkedHashSet<LessFile>(otherCompileJob.getUpdatedLessFiles());
+        this.updatedLessFilePaths = new LinkedHashSet<String>(otherCompileJob.getUpdatedLessFilePaths());
     }
 
-    public LessFile getLessFile() {
-        return lessFile;
+    public LessFile getSourceLessFile() {
+        return sourceLessFile;
     }
 
     public LessProfile getLessProfile() {
         return lessProfile;
     }
 
-    public void addModifiedLessFile(LessFile lessFile) {
-        modifiedLessFiles.add(lessFile);
-        modifiedLessFilePaths.add(lessFile.getCanonicalPathSafe());
+    public void addUpdatedLessFile(LessFile lessFile) {
+        updatedLessFiles.add(lessFile);
+        updatedLessFilePaths.add(lessFile.getCanonicalPathSafe());
     }
 
     /**
-     * @return a copy of the set of modified LESS files
+     * @return set of LESS {@code File}s that produced new or updated CSS files after being compiled
      */
-    public Set<LessFile> getModifiedLessFiles() {
-        return new LinkedHashSet<LessFile>(modifiedLessFiles);
+    public Set<LessFile> getUpdatedLessFiles() {
+        return new LinkedHashSet<LessFile>(updatedLessFiles);
     }
 
     /**
-     * @return a copy of the set of modified LESS files
+     * @return set of paths to LESS {@code File}s that produced new or updated CSS files after being compiled
      */
-    public Set<String> getModifiedLessFilePaths() {
-        return new LinkedHashSet<String>(modifiedLessFilePaths);
+    public Set<String> getUpdatedLessFilePaths() {
+        return new LinkedHashSet<String>(updatedLessFilePaths);
     }
 
-    public int getNumModified() {
-        return getModifiedLessFiles().size();
+    public int getNumUpdated() {
+        return getUpdatedLessFiles().size();
     }
 
     public File getCssTempFile() throws IOException {
@@ -91,7 +91,7 @@ public class LessCompileJob {
         if (lessEngine == null) {
             lessEngine = new LessEngine();
         }
-        lessFile.compile(lessEngine, getCssTempFile(), lessProfile.isCompressOutput());
+        sourceLessFile.compile(lessEngine, getCssTempFile(), lessProfile.isCompressOutput());
     }
 
     public void refreshVFS() {

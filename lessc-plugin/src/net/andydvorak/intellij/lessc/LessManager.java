@@ -163,12 +163,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     // TODO: Refactor/combine compile() methods
     private void compile(final LessCompileJob lessCompileJob) throws IOException, LessException {
-        if (lessCompileJob.getLessFile().shouldCompile(lessCompileJob.getLessProfile()))
+        if (lessCompileJob.getSourceLessFile().shouldCompile(lessCompileJob.getLessProfile()))
             lessCompileJob.compile();
 
         if ( updateCssFiles(lessCompileJob) ) {
-            lessCompileJob.addModifiedLessFile(lessCompileJob.getLessFile());
-            LOG.info("Successfully compiled " + lessCompileJob.getLessFile().getCanonicalPath() + " to CSS");
+            lessCompileJob.addUpdatedLessFile(lessCompileJob.getSourceLessFile());
+            LOG.info("Successfully compiled " + lessCompileJob.getSourceLessFile().getCanonicalPath() + " to CSS");
         }
 
         compileDependents(lessCompileJob);
@@ -189,7 +189,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
 
         final File lessProfileDir = lessCompileJob.getLessProfile().getLessDir();
-        final File lessFile = lessCompileJob.getLessFile().getCanonicalFile();
+        final File lessFile = lessCompileJob.getSourceLessFile().getCanonicalFile();
 
         final String relativeLessPath = StringUtils.defaultString(FileUtil.getRelativePath(lessProfileDir, lessFile));
         final String relativeCssPath = relativeLessPath.replaceFirst("\\.less$", ".css");
@@ -227,7 +227,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void compileDependents(final LessCompileJob lessCompileJob) throws IOException {
-        final Set<String> dependentPaths = LessFile.getDependentPaths(lessCompileJob.getLessFile(), lessCompileJob.getLessProfile());
+        final Set<String> dependentPaths = LessFile.getDependentPaths(lessCompileJob.getSourceLessFile(), lessCompileJob.getLessProfile());
 
         for ( String dependentPath : dependentPaths ) {
             final LessFile dependentLessFile = new LessFile(dependentPath);
@@ -242,8 +242,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
                 compile(dependentCompileJob);
 
-                for(LessFile curModifiedLessFile : dependentCompileJob.getModifiedLessFiles()) {
-                    lessCompileJob.addModifiedLessFile(curModifiedLessFile);
+                for(LessFile curModifiedLessFile : dependentCompileJob.getUpdatedLessFiles()) {
+                    lessCompileJob.addUpdatedLessFile(curModifiedLessFile);
                 }
             } catch (Exception e) {
                 handleException(e, lessFilePath, lessFileName);
@@ -360,14 +360,14 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void handleSuccess(final LessCompileJob lessCompileJob) {
-        final int numModified = lessCompileJob.getNumModified();
+        final int numModified = lessCompileJob.getNumUpdated();
 
         if (numModified == 0) {
-            notifyNone(lessCompileJob.getLessFile());
+            notifyNone(lessCompileJob.getSourceLessFile());
         } else if (numModified == 1) {
-            notifySingle(lessCompileJob.getModifiedLessFiles().iterator().next());
+            notifySingle(lessCompileJob.getUpdatedLessFiles().iterator().next());
         } else {
-            notifyMultiple(lessCompileJob.getModifiedLessFiles());
+            notifyMultiple(lessCompileJob.getUpdatedLessFiles());
         }
     }
 
