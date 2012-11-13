@@ -114,6 +114,12 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
     This is because ```LESS Compiler``` uses the [Rhino][rhino] JavaScript engine to run ```less.js```, and Rhino
     takes a while to initialize.  But don't worry - after the initial compilation, all future compiles should complete in < 1 sec.
 
+# Alternatives
+
+Notable alternatives to this plugin:
+
+*  [SimpLESS][simpless] (Win / Mac) - free
+
 # Developers
 
 ## Running / Debugging the Plugin
