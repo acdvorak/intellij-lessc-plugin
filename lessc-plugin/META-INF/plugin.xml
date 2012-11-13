@@ -4,12 +4,6 @@
         <![CDATA[
             <p>Watches directories for changes to LESS files and compiles changed files to CSS.</p>
 
-            <h2>Important:</h2>
-            <p>
-                You need to <strong>SAVE ALL FILES</strong> (CTRL + S) before compiling to avoid "Name Error" exceptions
-                because of how IntelliJ saves files: Changes are NOT committed to disk until you manually Save All or switch to another application.
-            </p>
-
             <h2>Features:</h2>
             <h3>Recursive directory monitoring</h3>
             <p>
@@ -19,6 +13,11 @@
             <h3><code>@import</code> dependency resolution</h3>
             <p>
                 Files that <code>@import</code> a modified LESS file are also recompiled automatically.
+            </p>
+            <h3>Include / exclude files by pattern</h3>
+            <p>
+                Prevent specific LESS files from being compiled by specifying include / exclude patterns (glob) that match
+                against filename, folder name, or any part of the complete path to the LESS file.
             </p>
             <h3>Move, copy, and delete detection</h3>
             <p>

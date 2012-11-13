@@ -22,21 +22,26 @@
     For example, if ```home.less```, ```about.less```, and ```contact.less``` all ```@import "common.less"```,
     modifying ```common.less``` will cause all three dependents to be re-compiled as well.
 
-3.  **Move, Copy, and Delete Detection**
+3.  **Include / Exclude File Patterns**
+
+    Prevent specific LESS files from being compiled by specifying include / exclude patterns (glob) that match
+    against filename, folder name, or any part of the complete path to the LESS file.
+
+4.  **Move, Copy, and Delete Detection**
 
     When a LESS file is moved, copied, or deleted, ```LESS Compiler``` will offer to do the same to the corresponding CSS file(s).
 
-4.  **Virtual Filesystem Notifications**
+5.  **Virtual Filesystem Notifications**
 
     Unlike other solutions, this plugin is smart enough to notify IntelliJ when CSS files are changed, moved, copied, or deleted.
     In most cases, updated CSS files will be immediately reflected in the editor and Project tree view.
 
-5.  **Selective Compilation**
+6.  **Selective Compilation**
 
     If the plugin somehow fails to catch changes to a LESS file, simply right-click anywhere in the editor or Project tree
     and select "Compile to CSS".  You can also compile an entire directory by right-clicking on it in the Project tree.
 
-6.  ***Error Notifications***
+7.  ***Error Notifications***
 
     Any errors encountered during the compilation process will produce an error notification balloon in the IDE
     containing a link to the file and the line number that caused the error.
@@ -95,24 +100,18 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
 
 # Known Issues
 
-*   **```Name Error``` When Compiling**
-
-    If you encounter errors such as ```Name Error: variable @some-variable is undefined```, you probably forgot
-    to save all files (File > Save All, or CTRL + S) before compiling.
-
-    IntelliJ doesn't save changes to your files until you A) switch to another application, or B) save them manually.
-    So if you add a variable or mixin in one file and reference it in another file without saving, you'll get an error
-    because the changes were never actually committed to disk.  The compiler reads the file contents from disk
-    (as opposed to the IntelliJ editor buffer), so if you don't manually save all files the compiler won't be able
-    to find the variable you referenced because it's not in the physical filesystem yet.
-
-    _**Always press CTRL + S after making changes to your LESS files!**_  :-)
-
 *   **Slow First Compile**
 
     The first time you update a ```.less``` file it will take a few seconds to compile.
     This is because ```LESS Compiler``` uses the [Rhino][rhino] JavaScript engine to run ```less.js```, and Rhino
     takes a while to initialize.  But don't worry - after the initial compilation, all future compiles should complete in < 1 sec.
+
+*  **PhpStorm / WebStorm Support**
+
+    ```LESS Compiler``` does not "officially" support PhpStorm or WebStorm - _**yet**_!  Support for these IDEs is coming soon.
+    In the mean time, you can install the plugin manually by downloading the ZIP archive from the
+    [IntelliJ plugin repository][plugin].  It _should_ work for the most part, but be aware that you may see strange or
+    buggy behavior until the final version with "official" support is released.
 
 # Alternatives
 
