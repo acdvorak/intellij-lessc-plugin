@@ -61,8 +61,7 @@
 
 ## Directory Structure
 
-```LESS Compiler``` allows you to maintain arbitrarily complex directory structures, unlike external tools such as
-[SimpLESS][simpless] (which only output to ```./``` or ```../css/```).
+```LESS Compiler``` allows you to maintain arbitrarily complex directory structures with ease.
 For example, suppose we have a project with the following directory structure ([LESS CSS Maven Plugin][lesscss-maven-source]'s default layout):
 
     projectRoot/
