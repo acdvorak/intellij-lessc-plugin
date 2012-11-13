@@ -57,15 +57,15 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     /**
-     * Similar to {@link #getCanonicalPath()}, but returns {@code null} instead of throwing an {@link IOException}.
-     * @return the canonical path to the {@code File} if it exists; otherwise {@code null}
+     * Similar to {@link #getCanonicalPath()}, but falls back to returning {@link #getAbsolutePath()} instead of throwing an {@link IOException}.
+     * @return the canonical path to the {@code File} if it exists; otherwise the absolute path
      */
     public String getCanonicalPathSafe() {
-        String canonicalPath = null;
         try {
-            canonicalPath = super.getCanonicalPath();
-        } catch (IOException ignored) {}
-        return canonicalPath;
+            return super.getCanonicalPath();
+        } catch (IOException ignored) {
+            return getAbsolutePath();
+        }
     }
 
     /**
