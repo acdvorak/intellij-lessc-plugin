@@ -56,6 +56,10 @@ public class LessFile extends File implements Comparable<File> {
         super(uri);
     }
 
+    public LessFile(final File file) {
+        super(file.getAbsolutePath());
+    }
+
     /**
      * Similar to {@link #getCanonicalPath()}, but falls back to returning {@link #getAbsolutePath()} instead of throwing an {@link IOException}.
      * @return the canonical path to the {@code File} if it exists; otherwise the absolute path
