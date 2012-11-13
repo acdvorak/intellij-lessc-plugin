@@ -113,68 +113,68 @@ public class LessEngine {
 		}
 	}
 	
-	public String compile(String input) throws LessException {
-		return compile(input, null, false);
+	public String compile(String inputLessCode) throws LessException {
+		return compile(inputLessCode, null, false);
 	}
 	
-	public String compile(String input, String location) throws LessException {
-		return compile(input, location, false);
+	public String compile(String inputLessCode, String location) throws LessException {
+		return compile(inputLessCode, location, false);
 	}
 	
-	public String compile(String input, String location, boolean compress) throws LessException {
+	public String compile(String inputLessCode, String location, boolean compress) throws LessException {
 		try {
 			long time = System.currentTimeMillis();
-			String result = call(compile, new Object[] { input, location == null ? "" : location, compress });
-			logger.debug("The compilation of '" + input + "' took " + (System.currentTimeMillis () - time) + " ms.");
+			String result = call(compile, new Object[] { inputLessCode, location == null ? "" : location, compress });
+			logger.debug("The compilation of '" + inputLessCode + "' took " + (System.currentTimeMillis () - time) + " ms.");
 			return result;
 		} catch (Exception e) {
 			throw parseLessException(e);
 		}
 	}
 	
-	public String compile(URL input) throws LessException {
-		return compile(input, false);
+	public String compile(URL inputLessFile) throws LessException {
+		return compile(inputLessFile, false);
 	}
 	
-	public String compile(URL input, boolean compress) throws LessException {
+	public String compile(URL inputLessFile, boolean compress) throws LessException {
 		try {
 			long time = System.currentTimeMillis();
-			String location = input.toString();
+			String location = inputLessFile.toString();
 			logger.debug("Compiling URL: " + location);
 			String source = loader.load(location, options.getCharset());
 			String result = call(compile, new Object[] {source, location, compress});
-			logger.debug("The compilation of '" + input + "' took " + (System.currentTimeMillis () - time) + " ms.");
+			logger.debug("The compilation of '" + inputLessFile + "' took " + (System.currentTimeMillis () - time) + " ms.");
 			return result;
 		} catch (Exception e) {
 			throw parseLessException(e);
 		}
 	}
 	
-	public String compile(File input) throws LessException {
-		return compile(input, false);
+	public String compile(File inputLessFile) throws LessException {
+		return compile(inputLessFile, false);
 	}
 	
-	public String compile(File input, boolean compress) throws LessException {
+	public String compile(File inputLessFile, boolean compress) throws LessException {
 		try {
 			long time = System.currentTimeMillis();
-			String location = input.getAbsolutePath();
+			String location = inputLessFile.getAbsolutePath();
 			logger.debug("Compiling File: " + "file:" + location);
 			String source = loader.load(location, options.getCharset());
 			String result = call(compile, new Object[] {source, location, compress});
-			logger.debug("The compilation of '" + input + "' took " + (System.currentTimeMillis () - time) + " ms.");
+			logger.debug("The compilation of '" + inputLessFile + "' took " + (System.currentTimeMillis () - time) + " ms.");
 			return result;
 		} catch (Exception e) {
 			throw parseLessException(e);
 		}
 	}
 	
-	public void compile(File input, File output) throws LessException, IOException {
-		compile(input, output, false);
+	public void compile(File inputLessFile, File output) throws LessException, IOException {
+		compile(inputLessFile, output, false);
 	}
 	
-	public void compile(File input, File output, boolean compress) throws LessException, IOException {
+	public void compile(File inputLessFile, File output, boolean compress) throws LessException, IOException {
 		try {
-			String content = compile(input, compress);
+			String content = compile(inputLessFile, compress);
 			if (!output.exists()) {
 				output.createNewFile();
 			}
