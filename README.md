@@ -4,7 +4,8 @@
 
 ## IDE Compatibility
 
-The only "officially" supported IDE at this time is IntelliJ IDEA 11+.  WebStorm and PhpStorm support is coming soon.
+This plugin is **ONLY** compatible with IntelliJ IDEA 11+, PhpStorm 5+, and WebStorm 5+.
+It should also be compatible with RubyMine 4.5+, but has not been tested.
 
 ## Features
 
@@ -109,13 +110,6 @@ Such a structure would be impossible to maintain using other tools.  With ```LES
     The first time you update a ```.less``` file it will take a few seconds to compile.
     This is because ```LESS Compiler``` uses the [Rhino][rhino] JavaScript engine to run ```less.js```, and Rhino
     takes a while to initialize.  But don't worry - after the initial compilation, all future compiles should complete in < 1 sec.
-
-*  **PhpStorm / WebStorm Support**
-
-    ```LESS Compiler``` does not "officially" support PhpStorm or WebStorm - _**yet**_!  Support for these IDEs is coming soon.
-    In the mean time, you can install the plugin manually by downloading the ZIP archive from the
-    [IntelliJ plugin repository][plugin].  It _should_ work for the most part, but be aware that you may see strange or
-    buggy behavior until the final version with "official" support is released.
 
 # Alternatives
 

@@ -52,10 +52,8 @@
 
             <h2>Compatibility:</h2>
             <p>
-                <strong>NOTE</strong>: This plugin is <strong>ONLY</strong> compatible with IntelliJ IDEA 11+.
-            </p>
-            <p>
-                Compatibility with PhpStorm and WebStorm is in progress and will be released soon.
+                <strong>NOTE</strong>: This plugin is <strong>ONLY</strong> compatible with IntelliJ IDEA 11+,
+                PhpStorm 5+, and WebStorm 5+.  It should also be compatible with RubyMine 4.5+, but has not been tested.
             </p>
         ]]>
     </description>
