@@ -125,7 +125,9 @@
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
     <idea-version since-build="107.105"/>
 
-    <depends optional="true" config-file="java.xml">com.intellij.modules.java</depends>
+    <!-- Mark as compatible w/ all products based on the IntelliJ Platform (IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm and AppCode) -->
+    <!-- See http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products -->
+    <depends>com.intellij.modules.platform</depends>
 
     <project-components>
         <component>
