@@ -32,8 +32,7 @@ public class LessCompileJob {
     private final LessProfile lessProfile;
     private final Set<LessFile> modifiedLessFiles;
     private final Set<String> modifiedLessFilePaths;
-
-    private File cssTempFile = null;
+    private File cssTempFile;
     private LessEngine lessEngine;
 
     public LessCompileJob(LessFile lessFile, LessProfile lessProfile) {
@@ -82,7 +81,7 @@ public class LessCompileJob {
     }
 
     public File getCssTempFile() throws IOException {
-        if ( cssTempFile == null ) {
+        if (cssTempFile == null) {
             cssTempFile = FileUtil.createTempFile("intellij-lessc-plugin.", ".css", true);
         }
         return cssTempFile;
