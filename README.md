@@ -2,6 +2,10 @@
 
 ```LESS Compiler``` monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
 
+## IDE Compatibility
+
+The only "officially" supported IDE at this time is IntelliJ IDEA 11+.  WebStorm and PhpStorm support is coming soon.
+
 ## Features
 
 1.  **Recursive Directory Monitoring**

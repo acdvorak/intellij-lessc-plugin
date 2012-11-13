@@ -54,6 +54,9 @@
             <p>
                 <strong>NOTE</strong>: This plugin is <strong>ONLY</strong> compatible with IntelliJ IDEA 11+.
             </p>
+            <p>
+                Compatibility with PhpStorm and WebStorm is in progress and will be released soon.
+            </p>
         ]]>
     </description>
     <vendor>Andrew C. Dvorak</vendor>
