@@ -73,9 +73,9 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     /**
-     * Similar to {@link #getCanonicalPath()}, but returns {@code null} instead of throwing an {@link IOException}.
+     * Similar to {@link #getCanonicalPath()}, but falls back to returning {@link #getAbsolutePath()} instead of throwing an {@link IOException}.
      * Any HTML Entities in the resulting path will be escaped (encoded) so that the path is safe to insert into HTML code.
-     * @return the canonical, HTML-encoded path to the {@code File} if it exists; otherwise {@code null}
+     * @return the canonical, HTML-encoded path to the {@code File} if it exists; otherwise the absolute path
      */
     public String getCanonicalPathSafeHtmlEscaped() {
         return StringEscapeUtils.escapeHtml4(getCanonicalPathSafe());
