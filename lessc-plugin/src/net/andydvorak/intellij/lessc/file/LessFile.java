@@ -18,6 +18,7 @@ package net.andydvorak.intellij.lessc.file;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -225,7 +226,6 @@ public class LessFile extends File implements Comparable<File> {
         final String compiled = engine.compile(inputLessCode, this.toURL().toString(), compressOutput);
 
         FileUtil.writeToFile(cssTempFile, compiled);
-
         updateCssFiles(cssTempFile, lessProfile);
     }
 
@@ -287,33 +287,34 @@ public class LessFile extends File implements Comparable<File> {
             FileUtil.createIfDoesntExist(cssDestFile);
             FileUtil.copy(cssTempFile, cssDestFile);
 
-            final VirtualFile virtualCssFile = LocalFileSystem.getInstance().findFileByIoFile(cssDestFile);
-
-            if (virtualCssFile != null) {
-                // Refresh file
-                virtualCssFile.refresh(false, false);
-
-                // Refresh parent dirs
-                virtualCssFile.getParent().getParent().refresh(true, false);
-                virtualCssFile.getParent().refresh(true, false);
-
-                // Refresh root dir
-                final VirtualFile virtualCssRoot = LocalFileSystem.getInstance().findFileByIoFile(new File(cssDirectory.getPath()));
-
-                if (virtualCssRoot != null) {
-                    virtualCssRoot.refresh(false, true);
-                    virtualCssRoot.refresh(true, true);
-                } else {
-                    System.out.println();
-                }
-
-
-            }
+            refreshCssFile(cssDirectory, cssDestFile);
         }
 
         FileUtil.delete(cssTempFile);
 
         cssChanged.set(numUpdated > 0);
+    }
+
+    private void refreshCssFile(final CssDirectory cssDirectory, final File cssDestFile) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                final LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
+
+                localFileSystem.refresh(false);
+                localFileSystem.refreshAndFindFileByPath(cssDestFile.getAbsolutePath());
+
+                final VirtualFile virtualCssRoot = localFileSystem.findFileByIoFile(new File(cssDirectory.getPath()));
+
+                if (virtualCssRoot != null)
+                    virtualCssRoot.refresh(false, true);
+
+                final VirtualFile virtualCssFile = localFileSystem.findFileByIoFile(cssDestFile);
+
+                if (virtualCssFile != null)
+                    virtualCssFile.refresh(false, false);
+            }
+        });
     }
 
     /*
