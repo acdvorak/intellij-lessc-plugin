@@ -361,7 +361,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final String messageText = filename + " " + messagePart;
         final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
         final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
-        notifier.logInfo(NOTIFICATION_TITLE, messageHtml, listener);
+        notifier.log(NOTIFICATION_TITLE, messageHtml, listener);
         LOG.info(messageText);
     }
 
@@ -372,6 +372,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final String messageText = filename + " " + messagePart;
         final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
         final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
+        notifier.log(NOTIFICATION_TITLE, messageHtml, listener);
         notifier.notifySuccessBalloon(NOTIFICATION_TITLE, messageHtml, listener);
         LOG.info(messageText);
     }
@@ -391,7 +392,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
         messageFilesHtml.append(" ] " + IGNORE_LINK);
         final FileNotificationListener listener = new FileNotificationListener(myProject);
-        notifier.logInfo(NOTIFICATION_TITLE, messageFilesHtml.toString(), listener);
+        notifier.log(NOTIFICATION_TITLE, messageFilesHtml.toString(), listener);
         notifier.notifySuccessBalloon(NOTIFICATION_TITLE, messageShortText + " " + IGNORE_LINK, listener);
         LOG.info(messageFullText.toString());
     }

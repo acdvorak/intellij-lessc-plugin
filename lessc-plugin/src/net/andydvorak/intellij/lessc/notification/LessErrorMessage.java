@@ -56,12 +56,16 @@ public class LessErrorMessage extends Exception {
         }
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
     public String getFilePath() {
         return filePath;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getTitle() {
+        return title;
     }
 
     public int getLine() {
@@ -78,11 +82,6 @@ public class LessErrorMessage extends Exception {
 
     public String getHtml() {
         return "<a href='file'>" + getFileName() + "</a>" + ": " + message_html;
-    }
-
-    public Notification getNotification(@NotNull final Project project, @NotNull final NotificationGroup group, @NotNull final NotificationType type) {
-        final FileNotificationListener listener = new FileNotificationListener(project, getFilePath(), getLine(), getColumn());
-        return Notifier.createNotification(group, title, getHtml(), type, listener);
     }
 
 }

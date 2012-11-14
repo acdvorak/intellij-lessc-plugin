@@ -30,24 +30,21 @@ import org.jetbrains.annotations.Nullable;
 public class Notifier {
 
     public static final NotificationGroup LOG_ONLY = NotificationGroup.logOnlyGroup(
-            "LESS Compiler Debug Log");
+            "LESS Compiler Notices");
 
     public static final NotificationGroup CHANGES_TOOLWINDOW_BALLOON = NotificationGroup.toolWindowGroup(
-            "LESS Compiler Successful Compiles", ChangesViewContentManager.TOOLWINDOW_ID, true);
-
-    public static final NotificationGroup MINOR_NOTIFICATION = new NotificationGroup(
-            "LESS Compiler Minor Notifications", NotificationDisplayType.BALLOON, true);
+            "LESS Compiler Successful Compiles", ChangesViewContentManager.TOOLWINDOW_ID, false);
 
     public static final NotificationGroup IMPORTANT_ERROR_NOTIFICATION = new NotificationGroup(
             "LESS Compiler Error Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
-    private final @NotNull Project myProject;
+    private final Project myProject;
 
-    public static Notifier getInstance(@NotNull Project project) {
+    public static Notifier getInstance(@NotNull final Project project) {
         return new Notifier(project);
     }
 
-    public Notifier(@NotNull Project project) {
+    public Notifier(@NotNull final Project project) {
         myProject = project;
     }
 
@@ -55,7 +52,7 @@ public class Notifier {
     public static Notification createNotification(@NotNull NotificationGroup notificationGroup,
                                                   @NotNull String title, @NotNull String message, @NotNull NotificationType type,
                                                   @Nullable NotificationListener listener) {
-        // title can be empty; description can't be neither null, nor empty
+        // title can be empty; description can't be null or empty
         if (StringUtil.isEmptyOrSpaces(message)) {
             message = title;
             title = "";
@@ -69,29 +66,22 @@ public class Notifier {
      * Generic
      */
 
-    public void notify(@NotNull Notification notification) {
+    public void notify(@NotNull final Notification notification) {
         notification.notify(myProject);
     }
 
-    public void notify(@NotNull NotificationGroup notificationGroup, @NotNull String title, @NotNull String message,
-                       @NotNull NotificationType type, @Nullable NotificationListener listener) {
-        createNotification(notificationGroup, title, message, type, listener).notify(myProject);
-    }
-
-    public void notify(@NotNull NotificationGroup notificationGroup, @NotNull String title, @NotNull String message,
-                       @NotNull NotificationType type) {
-        notify(notificationGroup, title, message, type, null);
+    public void notify(@NotNull final NotificationGroup notificationGroup,
+                       @NotNull final String title, @NotNull final String message,
+                       @NotNull final NotificationType type, @Nullable final NotificationListener listener) {
+        notify(createNotification(notificationGroup, title, message, type, listener));
     }
 
     /*
      * Log Only
      */
 
-    public void logInfo(@NotNull String title, @NotNull String message) {
-        logInfo(title, message, null);
-    }
-
-    public void logInfo(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
+    public void log(@NotNull final String title, @NotNull final String message,
+                    @Nullable final NotificationListener listener) {
         notify(LOG_ONLY, title, message, NotificationType.INFORMATION, listener);
     }
 
@@ -99,48 +89,18 @@ public class Notifier {
      * Error
      */
 
-    public void notifyError(@NotNull String title, @NotNull String message) {
-        notifyError(title, message, null);
-    }
-
-    public void notifyError(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
-        notify(IMPORTANT_ERROR_NOTIFICATION, title, message, NotificationType.ERROR, listener);
-    }
-
-    public void notifyError(@NotNull LessErrorMessage message) {
-        notify(message.getNotification(myProject, IMPORTANT_ERROR_NOTIFICATION, NotificationType.ERROR));
+    public void notifyError(@NotNull final LessErrorMessage m) {
+        final NotificationListener listener = new FileNotificationListener(myProject, m.getFilePath(), m.getLine(), m.getColumn());
+        notify(createNotification(IMPORTANT_ERROR_NOTIFICATION, m.getTitle(), m.getHtml(), NotificationType.ERROR, listener));
     }
 
     /*
      * Success
      */
 
-    public void notifySuccess(@NotNull String title, @NotNull String message) {
-        notifySuccess(title, message, null);
-    }
-
-    public void notifySuccess(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
-        notify(MINOR_NOTIFICATION, title, message, NotificationType.INFORMATION,  listener);
-    }
-
-    public void notifySuccessBalloon(@NotNull String title, @NotNull String message) {
-        notifySuccessBalloon(title, message, null);
-    }
-
-    public void notifySuccessBalloon(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
+    public void notifySuccessBalloon(@NotNull final String title, @NotNull final String message,
+                                     @Nullable final NotificationListener listener) {
         notify(CHANGES_TOOLWINDOW_BALLOON, title, message, NotificationType.INFORMATION, listener);
-    }
-
-    /*
-     * Warning
-     */
-
-    public void notifyWeakWarning(@NotNull String title, @NotNull String message, @Nullable NotificationListener listener) {
-        notify(MINOR_NOTIFICATION, title, message, NotificationType.WARNING, listener);
-    }
-
-    public void notifyStrongWarning(@NotNull String title, @NotNull String content, @Nullable NotificationListener listener) {
-        notify(IMPORTANT_ERROR_NOTIFICATION, title, content, NotificationType.WARNING, listener);
     }
 
 }
