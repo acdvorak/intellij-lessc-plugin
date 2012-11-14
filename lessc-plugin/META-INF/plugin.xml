@@ -58,9 +58,15 @@
         ]]>
     </description>
     <vendor>Andrew C. Dvorak</vendor>
-    <version>2.5.4</version>
+    <version>2.5.5</version>
     <change-notes>
         <![CDATA[
+<h3>2.5.5</h3>
+<ul>
+  <li>[bugfix] Fixed #26 - VFS refresh doesn't work when CSS files don't already exist</li>
+  <li>[enhancement] Issue #20 - Disable all "Reset prompts" buttons</li>
+  <li>[enhancement] Issue #22 - Rename notification groups</li>
+</ul>
 <h3>2.5.4</h3>
 <ul>
   <li>[bugfix] Fixed #23 - Thread safety when saving / compiling</li>
