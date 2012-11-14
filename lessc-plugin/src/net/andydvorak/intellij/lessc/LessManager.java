@@ -200,9 +200,6 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final LessFile lessFile = getLessFile(virtualFileEvent);
         final LessProfile lessProfile = getLessProfile(virtualFileEvent);
 
-        final String lessFilePath = lessFile.getCanonicalPathSafe();
-        final String lessFileName = lessFile.getName();
-
         final LessCompileJob compileJob = new LessCompileJob(lessFile, lessProfile);
         final LessCompileObserver observer = new LessCompileObserverImpl(compileJob, task, indicator);
 
@@ -211,7 +208,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             compileJob.compile();
             handleSuccess(compileJob);
         } catch (Exception e) {
-            handleException(e, lessFilePath, lessFileName);
+            final LessFile curLessFile = compileJob.getCurLessFile();
+            handleException(e, curLessFile.getCanonicalPathSafe(), curLessFile.getName());
         } finally {
             indicator.setFraction(1);
         }
