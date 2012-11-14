@@ -143,7 +143,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     @Nullable
-    private LessProfile getLessProfile(final VirtualFileEvent virtualFileEvent) {
+    public LessProfile getLessProfile(final VirtualFileEvent virtualFileEvent) {
         return getLessFile(virtualFileEvent).getLessProfile(getProfiles());
     }
 
