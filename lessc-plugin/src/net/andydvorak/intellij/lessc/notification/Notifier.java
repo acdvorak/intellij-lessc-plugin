@@ -18,10 +18,14 @@ package net.andydvorak.intellij.lessc.notification;
 
 import com.intellij.notification.*;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vcs.changes.ui.ChangesViewContentManager;
+import com.intellij.util.containers.ConcurrentMultiMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author Andrew C. Dvorak
@@ -29,20 +33,43 @@ import org.jetbrains.annotations.Nullable;
  */
 public class Notifier {
 
+    /**
+     * <p>Adds an entry to the "Event Log" tool window.</p>
+     * <p>Does <strong>NOT</strong> display a notification balloon.</p>
+     */
     public static final NotificationGroup LOG_ONLY = NotificationGroup.logOnlyGroup(
             "LESS Compiler Notices");
 
+    /**
+     * <p>Displays a notification balloon above the "Changes" tool window button.</p>
+     * <p>Does <strong>NOT</strong> create an entry in the "Event Log" tool window.</p>
+     */
     public static final NotificationGroup CHANGES_TOOLWINDOW_BALLOON = NotificationGroup.toolWindowGroup(
             "LESS Compiler Successful Compiles", ChangesViewContentManager.TOOLWINDOW_ID, false);
 
-    public static final NotificationGroup IMPORTANT_ERROR_NOTIFICATION = new NotificationGroup(
+    /**
+     * <p>Displays a sticky notification balloon in the global notification area.</p>
+     * <p>Creates an entry in the "Event Log" tool window.</p>
+     */
+    public static final NotificationGroup ERROR_NOTIFICATION = new NotificationGroup(
             "LESS Compiler Error Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
-    private final Project myProject;
+    private static final String NOTIFICATION_TITLE = "LESS CSS Compiler";
 
-    public static Notifier getInstance(@NotNull final Project project) {
-        return new Notifier(project);
+    private static final Key<Notifier> userDataKey = new Key<Notifier>("LessNotifier");
+
+    public static synchronized Notifier getInstance(@NotNull final Project project) {
+        Notifier instance = project.getUserData(userDataKey);
+        if (instance == null) {
+            instance = new Notifier(project);
+            project.putUserData(userDataKey, instance);
+        }
+        return instance;
     }
+
+    private final Project myProject;
+    private final ConcurrentLinkedQueue<Notification> successes = new ConcurrentLinkedQueue<Notification>();
+    private final ConcurrentMultiMap<String, Notification> errors = new ConcurrentMultiMap<String, Notification>();
 
     public Notifier(@NotNull final Project project) {
         myProject = project;
@@ -50,8 +77,8 @@ public class Notifier {
 
     @NotNull
     public static Notification createNotification(@NotNull NotificationGroup notificationGroup,
-                                                  @NotNull String title, @NotNull String message, @NotNull NotificationType type,
-                                                  @Nullable NotificationListener listener) {
+                                                  @NotNull String title, @NotNull String message,
+                                                  @NotNull NotificationType type, @Nullable NotificationListener listener) {
         // title can be empty; description can't be null or empty
         if (StringUtil.isEmptyOrSpaces(message)) {
             message = title;
@@ -62,6 +89,12 @@ public class Notifier {
         return notificationGroup.createNotification(title, message, type, listener);
     }
 
+    @NotNull
+    private static Notification createNotification(@NotNull NotificationGroup notificationGroup, @NotNull String message,
+                                                   @NotNull NotificationType type, @Nullable NotificationListener listener) {
+        return createNotification(notificationGroup, NOTIFICATION_TITLE, message, type, listener);
+    }
+
     /*
      * Generic
      */
@@ -70,37 +103,73 @@ public class Notifier {
         notification.notify(myProject);
     }
 
-    public void notify(@NotNull final NotificationGroup notificationGroup,
-                       @NotNull final String title, @NotNull final String message,
+    public void notify(@NotNull final NotificationGroup notificationGroup, @NotNull final String message,
                        @NotNull final NotificationType type, @Nullable final NotificationListener listener) {
-        notify(createNotification(notificationGroup, title, message, type, listener));
+        notify(createNotification(notificationGroup, message, type, listener));
     }
 
     /*
      * Log Only
      */
 
-    public void log(@NotNull final String title, @NotNull final String message,
-                    @Nullable final NotificationListener listener) {
-        notify(LOG_ONLY, title, message, NotificationType.INFORMATION, listener);
+    public void log(@NotNull final String message, @Nullable final NotificationListener listener) {
+        // TODO: Expire error messages for all unchanged LESS files
+        notify(LOG_ONLY, message, NotificationType.INFORMATION, listener);
     }
 
     /*
      * Error
      */
 
+    private void addError(@NotNull final String lessFilePath, @NotNull final Notification notification) {
+        errors.putValue(lessFilePath, notification);
+    }
+
+    private void expireErrors(@NotNull final String lessFilePath) {
+        if (errors.containsKey(lessFilePath)) {
+            for (Notification notification : errors.get(lessFilePath)) {
+                notification.hideBalloon();
+            }
+            errors.remove(lessFilePath);
+        }
+    }
+
     public void notifyError(@NotNull final LessErrorMessage m) {
         final NotificationListener listener = new FileNotificationListener(myProject, m.getFilePath(), m.getLine(), m.getColumn());
-        notify(createNotification(IMPORTANT_ERROR_NOTIFICATION, m.getTitle(), m.getHtml(), NotificationType.ERROR, listener));
+        final Notification notification = createNotification(ERROR_NOTIFICATION, m.getTitle(), m.getHtml(), NotificationType.ERROR, listener);
+
+        synchronized (errors) {
+            expireErrors(m.getFilePath());
+            addError(m.getFilePath(), notification);
+            notify(notification);
+        }
     }
 
     /*
      * Success
      */
 
-    public void notifySuccessBalloon(@NotNull final String title, @NotNull final String message,
-                                     @Nullable final NotificationListener listener) {
-        notify(CHANGES_TOOLWINDOW_BALLOON, title, message, NotificationType.INFORMATION, listener);
+    private void addSuccess(@NotNull final Notification notification) {
+        successes.add(notification);
+    }
+
+    private void expireSuccesses() {
+        for (Notification notification : successes) {
+            notification.hideBalloon();
+        }
+        successes.clear();
+    }
+
+    public void notifySuccessBalloon(@NotNull final String message, @Nullable final NotificationListener listener) {
+        final Notification notification = createNotification(CHANGES_TOOLWINDOW_BALLOON, message, NotificationType.INFORMATION, listener);
+
+        // TODO: Expire error messages for all successfully compiled LESS files
+        synchronized (successes) {
+            expireSuccesses();
+            addSuccess(notification);
+        }
+
+        notify(notification);
     }
 
 }

@@ -16,10 +16,6 @@
 
 package net.andydvorak.intellij.lessc.notification;
 
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationGroup;
-import com.intellij.notification.NotificationType;
-import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Matcher;
@@ -28,8 +24,8 @@ import java.util.regex.Pattern;
 public class LessErrorMessage extends Exception {
 
     private final Matcher matcher;
-    private final String fileName;
     private final String filePath;
+    private final String fileName;
     private final String title;
     private final String message;
     private final String message_html;
@@ -56,14 +52,17 @@ public class LessErrorMessage extends Exception {
         }
     }
 
-    public String getFileName() {
-        return fileName;
-    }
-
+    @NotNull
     public String getFilePath() {
         return filePath;
     }
 
+    @NotNull
+    public String getFileName() {
+        return fileName;
+    }
+
+    @NotNull
     public String getTitle() {
         return title;
     }
@@ -76,10 +75,12 @@ public class LessErrorMessage extends Exception {
         return column;
     }
 
+    @NotNull
     public String getText() {
         return getFileName() + ": " + message;
     }
 
+    @NotNull
     public String getHtml() {
         return "<a href='file'>" + getFileName() + "</a>" + ": " + message_html;
     }
