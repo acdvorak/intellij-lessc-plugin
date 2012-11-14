@@ -20,9 +20,11 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import net.andydvorak.intellij.lessc.LessManager;
+import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
@@ -37,10 +39,33 @@ public class CompileLessAction extends AnAction {
     public void actionPerformed(AnActionEvent _e) {
         final AnActionEventWrapper e = new AnActionEventWrapper(_e);
         final Collection<VirtualFile> files = e.getLessFiles();
+        final LessManager lessManager = LessManager.getInstance(e.getProject());
+
+        int numMissing = 0;
 
         for (VirtualFile file : files) {
             final VirtualFileEvent virtualFileEvent = new VirtualFileEvent(this, file, file.getName(), file.getParent());
-            LessManager.getInstance(e.getProject()).handleChangeEvent(virtualFileEvent);
+            final LessProfile lessProfile = lessManager.getLessProfile(virtualFileEvent);
+
+            if (lessProfile != null && lessProfile.hasCssDirectories()) {
+                lessManager.handleChangeEvent(virtualFileEvent);
+            } else {
+                numMissing++;
+            }
+        }
+
+        if (numMissing > 0) {
+            final String title, message;
+
+            if (numMissing == 1) {
+                title = "Missing CSS Output Directory";
+                message = "The selected LESS file does not have any CSS output directories mapped to it and cannot be compiled.";
+            } else {
+                title = "Missing CSS Output Directories";
+                message = numMissing + " of the selected LESS files do not have any CSS output directories mapped to them and cannot be compiled.";
+            }
+
+            Messages.showInfoMessage(e.getProject(), message + "\n\nYou can add CSS output directories under Settings > Project Settings > LESS Compiler.", title);
         }
     }
 
