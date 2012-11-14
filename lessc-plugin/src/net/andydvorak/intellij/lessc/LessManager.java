@@ -35,6 +35,7 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.ui.awt.RelativePoint;
+import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
 import net.andydvorak.intellij.lessc.file.*;
@@ -44,15 +45,14 @@ import net.andydvorak.intellij.lessc.notification.Notifier;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 @State(
         name = "LessManager",
@@ -72,6 +72,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     @Transient
     private final VirtualFileListenerImpl virtualFileListener;
+
+    private final ConcurrentMap<String, LessCompileJob> lastCompileTimes = new ConcurrentHashMap<String, LessCompileJob>();
+    private final ConcurrentLinkedQueue<String> compileQueue = new ConcurrentLinkedQueue<String>();
+    private final ConcurrentMap<String, LessCompileJob> compileQueueJobs = new ConcurrentHashMap<String, LessCompileJob>();
 
     public LessManager(final Project project) {
         super(project);
@@ -147,64 +151,59 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return getLessFile(virtualFileEvent).getLessProfile(getProfiles());
     }
 
-    private boolean areUnsavedDocuments() {
-        return !ArrayUtils.isEmpty(FileDocumentManager.getInstance().getUnsavedDocuments());
-    }
-
     private void saveAllDocuments() {
         FileDocumentManager.getInstance().saveAllDocuments();
     }
 
-    private void waitForSave() {
-        if (areUnsavedDocuments()) {
-            LOG.debug("Saving unsaved documents");
-            saveAllDocuments();
-        }
-
-        // Wait for all files to be saved
-        while (areUnsavedDocuments()) {
-            try {
-                LOG.debug("Waiting 250 ms for all documents to be saved (committed to disk)...");
-                Thread.sleep(250);
-            } catch (InterruptedException ignored) {
-
-            }
-        }
-    }
-
     public void handleChangeEvent(final VirtualFileEvent virtualFileEvent) {
         if (isSupported(virtualFileEvent)) {
-            waitForSave();
-
-            final String title = "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS";
-
-            PsiDocumentManager.getInstance(myProject).performWhenAllCommitted(new Runnable() {
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    ProgressManager.getInstance().run(new Task.Backgroundable(myProject, title, false) {
-                        @Override
-                        public void run(@NotNull ProgressIndicator indicator) {
-                            compileWithProgress(this, indicator, virtualFileEvent);
-                        }
-                    });
+                    saveAllDocuments();
+                }
+            });
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    compile(virtualFileEvent);
                 }
             });
         }
     }
 
+    private void compile(final VirtualFileEvent virtualFileEvent) {
+        compile(new LessCompileJob(getLessFile(virtualFileEvent), getLessProfile(virtualFileEvent)), true);
+    }
+
+    private void compile(final LessCompileJob compileJob, final boolean async) {
+        // Abort if the job is queued
+        if (enqueue(compileJob, async)) return;
+
+        final LessFile lessFile = compileJob.getSourceLessFile();
+        final String title = "Compiling " + lessFile.getName() + " to CSS...";
+
+        PsiDocumentManager.getInstance(myProject).performWhenAllCommitted(new Runnable() {
+            @Override
+            public void run() {
+                ProgressManager.getInstance().run(new Task.Backgroundable(myProject, title, false) {
+                    @Override
+                    public void run(@NotNull ProgressIndicator indicator) {
+                        compileWithProgress(this, indicator, compileJob);
+                    }
+                });
+            }
+        });
+    }
+
     private synchronized void compileWithProgress(@NotNull final Task.Backgroundable task,
-                                     @NotNull final ProgressIndicator indicator,
-                                     @NotNull final VirtualFileEvent virtualFileEvent) {
+                                                  @NotNull final ProgressIndicator indicator,
+                                                  @NotNull final LessCompileJob compileJob) {
         indicator.setFraction(0);
 
-        final LessFile lessFile = getLessFile(virtualFileEvent);
-        final LessProfile lessProfile = getLessProfile(virtualFileEvent);
-
-        final LessCompileJob compileJob = new LessCompileJob(lessFile, lessProfile);
-        final LessCompileObserver observer = new LessCompileObserverImpl(compileJob, task, indicator);
+        compileJob.addObserver(new LessCompileObserverImpl(compileJob, task, indicator));
 
         try {
-            compileJob.addObserver(observer);
             compileJob.compile();
             handleSuccess(compileJob);
         } catch (Exception e) {
@@ -212,7 +211,83 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             handleException(e, curLessFile.getCanonicalPathSafe(), curLessFile.getName());
         } finally {
             indicator.setFraction(1);
+            dequeue();
         }
+    }
+
+    /**
+     * Enqueues a compile job if it is running asynchronously and needs to wait for other compile jobs to finish.
+     * @param compileJob job to enqueue
+     * @param async {@code true} to run the job asynchronously at a later time if necessary
+     *              (determined by the IntelliJ's Event Dispatch Queue);
+     *              {@code false} to run it immediately
+     * @return {@code true} if the compile job was enqueued to wait for other jobs to finish; otherwise {@code false}
+     */
+    private boolean enqueue(LessCompileJob compileJob, boolean async) {
+        final LessFile lessFile = compileJob.getSourceLessFile();
+        final String lessFilePath = lessFile.getCanonicalPathSafe();
+
+        synchronized (lastCompileTimes) {
+            // If less than 250 milliseconds (1/4 second) have elapsed since this file was last compiled, queue it up
+            if (async && needsToWait(lessFilePath)) {
+                // TODO: Create separate ConcurrentLinkedHashMap class?
+                synchronized (compileQueue) {
+                    compileQueue.add(lessFilePath);
+                    compileQueueJobs.put(lessFilePath, compileJob);
+                }
+                return true;
+            }
+            lastCompileTimes.put(lessFilePath, compileJob);
+        }
+
+        return false;
+    }
+
+    /**
+     * Run queued compile jobs in the Event Dispatch Thread after all other events have finished.
+     */
+    private void dequeue() {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                final List<LessCompileJob> jobs = getQueuedCompileJobsConcurrent();
+                for (LessCompileJob job : jobs) {
+                    compile(job, false);
+                }
+            }
+        });
+    }
+
+    /**
+     * Determines if the given LESS file has been compiled too recently and needs to wait before recompiling.
+     * @param lessFilePath path to the LESS file to be compiled
+     * @return {@code true} if the given LESS file has been compiled too recently and needs to wait before recompiling;
+     *         otherwise {@code false}
+     */
+    private boolean needsToWait(final String lessFilePath) {
+        return lastCompileTimes.containsKey(lessFilePath) && !lastCompileTimes.get(lessFilePath).canCreateNewCompileJob();
+    }
+
+    /**
+     * Returns a list of queued compile jobs in FIFO order (thread-safe).
+     * @return queued compile jobs in FIFO order
+     */
+    private List<LessCompileJob> getQueuedCompileJobsConcurrent() {
+        final List<LessCompileJob> jobs = new ArrayList<LessCompileJob>();
+
+        // Extract compile jobs atomically, maintaining FIFO order
+        synchronized (compileQueue) {
+            final LinkedHashSet<String> paths = new LinkedHashSet<String>(compileQueue);
+
+            for (String lessFilePath : paths) {
+                jobs.add(compileQueueJobs.get(lessFilePath));
+            }
+
+            compileQueue.clear();
+            compileQueueJobs.clear();
+        }
+
+        return jobs;
     }
 
     // TODO: This is a bit quirky and doesn't seem to work if the new CSS directory hasn't been created yet and its parent dir isn't open in the project view

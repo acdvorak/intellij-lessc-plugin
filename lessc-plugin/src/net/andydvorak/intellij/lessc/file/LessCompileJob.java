@@ -27,13 +27,17 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class LessCompileJob implements LessCompileObservable {
 
+    private static final long WAIT_INTERVAL_MS = 250;
     private static final Logger LOG = Logger.getInstance("#" + LessCompileJob.class.getName());
 
     private final AtomicBoolean compiled = new AtomicBoolean();
     private final AtomicBoolean running = new AtomicBoolean();
+
+    private final AtomicLong finished = new AtomicLong(0);
 
     private final LessFile sourceLessFile;
     private final LessProfile lessProfile;
@@ -132,13 +136,29 @@ public class LessCompileJob implements LessCompileObservable {
     public void compile() throws IOException, LessException, IllegalStateException {
         preventConcurrency();
         initLessEngine();
-        start();
-        finish();
+        try {
+            start();
+        } finally {
+            finish();
+        }
     }
 
     public void refreshVFS() {
         if (lessProfile != null)
             VFSLocationChange.refresh(lessProfile.getCssDirectories());
+    }
+
+    public boolean isRunning() {
+        return running.get();
+    }
+
+    public boolean isFinished() {
+        return compiled.get();
+    }
+
+    // TODO: Rename this method
+    public boolean canCreateNewCompileJob() {
+        return !isRunning() && (!isFinished() || System.currentTimeMillis() - finished.get() > WAIT_INTERVAL_MS);
     }
 
     /*
@@ -225,6 +245,7 @@ public class LessCompileJob implements LessCompileObservable {
     }
 
     private void finish() {
+        finished.set(System.currentTimeMillis());
         compiled.set(true);
         running.set(false);
 
