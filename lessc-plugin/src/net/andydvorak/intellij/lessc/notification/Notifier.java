@@ -30,16 +30,16 @@ import org.jetbrains.annotations.Nullable;
 public class Notifier {
 
     public static final NotificationGroup LOG_ONLY = NotificationGroup.logOnlyGroup(
-            "Less Compiler Log");
+            "LESS Compiler Debug Log");
 
     public static final NotificationGroup CHANGES_TOOLWINDOW_BALLOON = NotificationGroup.toolWindowGroup(
-            "Less Compiler Messages", ChangesViewContentManager.TOOLWINDOW_ID, true);
+            "LESS Compiler Successful Compiles", ChangesViewContentManager.TOOLWINDOW_ID, true);
 
     public static final NotificationGroup MINOR_NOTIFICATION = new NotificationGroup(
-            "Less Compiler Minor Notifications", NotificationDisplayType.BALLOON, true);
+            "LESS Compiler Minor Notifications", NotificationDisplayType.BALLOON, true);
 
     public static final NotificationGroup IMPORTANT_ERROR_NOTIFICATION = new NotificationGroup(
-            "Less Compiler Important Messages", NotificationDisplayType.STICKY_BALLOON, true);
+            "LESS Compiler Error Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
     private final @NotNull Project myProject;
 
