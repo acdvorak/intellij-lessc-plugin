@@ -16,7 +16,6 @@
 
 package net.andydvorak.intellij.lessc;
 
-import com.asual.lesscss.LessException;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
@@ -28,8 +27,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.*;
+import com.intellij.openapi.vfs.VirtualFileCopyEvent;
+import com.intellij.openapi.vfs.VirtualFileEvent;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiDocumentManager;
@@ -40,19 +41,17 @@ import net.andydvorak.intellij.lessc.file.*;
 import net.andydvorak.intellij.lessc.notification.FileNotificationListener;
 import net.andydvorak.intellij.lessc.notification.LessErrorMessage;
 import net.andydvorak.intellij.lessc.notification.Notifier;
-import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
 
 @State(
@@ -139,116 +138,13 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     @NotNull
-    private LessFile getLessFile(final VirtualFileEvent virtualFileEvent) {
+    private static LessFile getLessFile(final VirtualFileEvent virtualFileEvent) {
         return new LessFile(virtualFileEvent.getFile().getPath());
     }
 
     @Nullable
     private LessProfile getLessProfile(final VirtualFileEvent virtualFileEvent) {
         return getLessFile(virtualFileEvent).getLessProfile(getProfiles());
-    }
-
-    // TODO: Refactor/combine compile() methods
-    private LessCompileJob compile(final VirtualFileEvent virtualFileEvent) throws IOException, LessException {
-        final LessFile lessFile = getLessFile(virtualFileEvent);
-        final LessProfile lessProfile = getLessProfile(virtualFileEvent);
-        final LessCompileJob lessCompileJob = new LessCompileJob(lessFile, lessProfile);
-
-        if (lessProfile != null && lessProfile.hasCssDirectories()) {
-            compile(lessCompileJob);
-        }
-
-        return lessCompileJob;
-    }
-
-    // TODO: Refactor/combine compile() methods
-    private void compile(final LessCompileJob lessCompileJob) throws IOException, LessException {
-        if (lessCompileJob.getSourceLessFile().shouldCompile(lessCompileJob.getLessProfile()))
-            lessCompileJob.compile();
-
-        if ( updateCssFiles(lessCompileJob) ) {
-            lessCompileJob.addUpdatedLessFile(lessCompileJob.getSourceLessFile());
-            LOG.info("Successfully compiled " + lessCompileJob.getSourceLessFile().getCanonicalPath() + " to CSS");
-        }
-
-        compileDependents(lessCompileJob);
-
-        lessCompileJob.refreshVFS();  // TODO: Only call this once - not for every file
-    }
-
-    /**
-     *
-     * @param lessCompileJob
-     * @return true if the CSS output file has changed and is non-empty; otherwise false
-     * @throws IOException
-     */
-    private boolean updateCssFiles(final LessCompileJob lessCompileJob) throws IOException {
-        if ( lessCompileJob.getCssTempFile().length() == 0 ) {
-            FileUtil.delete(lessCompileJob.getCssTempFile());
-            return false;
-        }
-
-        final File lessProfileDir = lessCompileJob.getLessProfile().getLessDir();
-        final File lessFile = lessCompileJob.getSourceLessFile().getCanonicalFile();
-
-        final String relativeLessPath = StringUtils.defaultString(FileUtil.getRelativePath(lessProfileDir, lessFile));
-        final String relativeCssPath = relativeLessPath.replaceFirst("\\.less$", ".css");
-
-        final String cssTempFileContent = FileUtil.loadFile(lessCompileJob.getCssTempFile());
-
-        int numUpdated = 0;
-
-        for ( CssDirectory cssDirectory : lessCompileJob.getLessProfile().getCssDirectories() ) {
-            final File cssDestFile = new File(cssDirectory.getPath(), relativeCssPath);
-
-            // CSS file hasn't changed, so don't bother updating
-            if ( cssDestFile.exists() && FileUtil.loadFile(cssDestFile).equals(cssTempFileContent) )
-                continue;
-
-            numUpdated++;
-
-            FileUtil.createIfDoesntExist(cssDestFile);
-            FileUtil.copy(lessCompileJob.getCssTempFile(), cssDestFile);
-
-            final VirtualFile virtualCssFile = LocalFileSystem.getInstance().findFileByIoFile(cssDestFile);
-
-            if ( virtualCssFile != null ) {
-                // TODO: performance of synchronous vs. asynchronous?
-                virtualCssFile.getParent().refresh(true, false);
-                virtualCssFile.getParent().getParent().refresh(true, false);
-            }
-
-            lessCompileJob.refreshVFS();
-        }
-
-        FileUtil.delete(lessCompileJob.getCssTempFile());
-
-        return numUpdated > 0;
-    }
-
-    private void compileDependents(final LessCompileJob lessCompileJob) throws IOException {
-        final Set<String> dependentPaths = LessFile.getDependentPaths(lessCompileJob.getSourceLessFile(), lessCompileJob.getLessProfile());
-
-        for ( String dependentPath : dependentPaths ) {
-            final LessFile dependentLessFile = new LessFile(dependentPath);
-            final LessCompileJob dependentCompileJob = new LessCompileJob(lessCompileJob, dependentLessFile);
-
-            String lessFilePath = "UNKNOWN INPUT FILE PATH";
-            String lessFileName = "UNKNOWN INPUT FILE NAME";
-
-            try {
-                lessFilePath = dependentLessFile.getCanonicalPath();
-                lessFileName = dependentLessFile.getName();
-
-                compile(dependentCompileJob);
-
-                for(LessFile curModifiedLessFile : dependentCompileJob.getUpdatedLessFiles()) {
-                    lessCompileJob.addUpdatedLessFile(curModifiedLessFile);
-                }
-            } catch (Exception e) {
-                handleException(e, lessFilePath, lessFileName);
-            }
-        }
     }
 
     private boolean areUnsavedDocuments() {
@@ -277,7 +173,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleChangeEvent(final VirtualFileEvent virtualFileEvent) {
-        if ( isSupported(virtualFileEvent) ) {
+        if (isSupported(virtualFileEvent)) {
             waitForSave();
 
             final String title = "Compiling " + getLessFile(virtualFileEvent).getName() + " to CSS";
@@ -288,9 +184,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                     ProgressManager.getInstance().run(new Task.Backgroundable(myProject, title, false) {
                         @Override
                         public void run(@NotNull ProgressIndicator indicator) {
-                            // TODO: Update progress title when multiple files are being compiled (e.g., "Compiling file 1 of 3...")
-//                            this.setTitle()
-                            compileWithProgress(indicator, virtualFileEvent);
+                            compileWithProgress(this, indicator, virtualFileEvent);
                         }
                     });
                 }
@@ -298,30 +192,34 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
     }
 
-    private void compileWithProgress(@NotNull final ProgressIndicator indicator, @NotNull final VirtualFileEvent virtualFileEvent) {
+    private synchronized void compileWithProgress(@NotNull final Task.Backgroundable task,
+                                     @NotNull final ProgressIndicator indicator,
+                                     @NotNull final VirtualFileEvent virtualFileEvent) {
         indicator.setFraction(0);
 
-        String lessFilePath = "UNKNOWN INPUT FILE PATH";
-        String lessFileName = "UNKNOWN INPUT FILE NAME";
+        final LessFile lessFile = getLessFile(virtualFileEvent);
+        final LessProfile lessProfile = getLessProfile(virtualFileEvent);
+
+        final String lessFilePath = lessFile.getCanonicalPathSafe();
+        final String lessFileName = lessFile.getName();
+
+        final LessCompileJob compileJob = new LessCompileJob(lessFile, lessProfile);
+        final LessCompileObserver observer = new LessCompileObserverImpl(compileJob, task, indicator);
 
         try {
-            final LessFile lessFile = getLessFile(virtualFileEvent);
-
-            lessFilePath = lessFile.getCanonicalPath();
-            lessFileName = lessFile.getName();
-
-            final LessCompileJob lessCompileJob = compile(virtualFileEvent);
-
-            handleSuccess(lessCompileJob);
+            compileJob.addObserver(observer);
+            compileJob.compile();
+            handleSuccess(compileJob);
         } catch (Exception e) {
             handleException(e, lessFilePath, lessFileName);
+        } finally {
+            indicator.setFraction(1);
         }
-
-        indicator.setFraction(1);
     }
 
+    // TODO: This is a bit quirky and doesn't seem to work if the new CSS directory hasn't been created yet and its parent dir isn't open in the project view
     public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        if ( isSupported(virtualFileMoveEvent) ) {
+        if (isSupported(virtualFileMoveEvent)) {
             final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
             try {
                 VFSLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, fileLocationChangeDialog);
@@ -332,7 +230,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        if ( isSupported(virtualFileCopyEvent) ) {
+        if (isSupported(virtualFileCopyEvent)) {
             final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
             try {
                 VFSLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, fileLocationChangeDialog);
@@ -343,7 +241,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
-        if ( isSupported(virtualFileEvent) ) {
+        if (isSupported(virtualFileEvent)) {
             final LessProfile lessProfile = getLessProfile(virtualFileEvent);
             try {
                 VFSLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, fileLocationChangeDialog);
@@ -395,14 +293,18 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private void notifyMultiple(final Set<LessFile> modifiedLessFiles) {
         final Notifier notifier = Notifier.getInstance(myProject);
-        final String messageShortText = modifiedLessFiles.size() + " " + "LESS files successfully compiled to CSS";
+        final String messageShortText = modifiedLessFiles.size() + " CSS files were successfully updated";
         final StringBuilder messageFullText = new StringBuilder(messageShortText + ":");
         final StringBuilder messageFilesHtml = new StringBuilder(messageShortText + " " + IGNORE_LINK + ":");
-        for (LessFile lessFile : modifiedLessFiles) {
+        final Iterator<LessFile> iterator = modifiedLessFiles.iterator();
+        messageFilesHtml.append(" [ ");
+        while (iterator.hasNext()) {
+            final LessFile lessFile = iterator.next();
             messageFullText.append('\n');
-            messageFullText.append(String.format("\t%s %s", lessFile.getCanonicalPathSafe(), "successfully compiled to CSS"));
-            messageFilesHtml.append(String.format("<p>%s %s</p>", createLink(lessFile), "successfully compiled to CSS"));
+            messageFullText.append(String.format("\t%s", lessFile.getCanonicalPathSafe()));
+            messageFilesHtml.append(String.format("%s%s", createLink(lessFile), iterator.hasNext() ? ", " : ""));
         }
+        messageFilesHtml.append(" ] " + IGNORE_LINK);
         final FileNotificationListener listener = new FileNotificationListener(myProject);
         notifier.logInfo(NOTIFICATION_TITLE, messageFilesHtml.toString(), listener);
         notifier.notifySuccessBalloon(NOTIFICATION_TITLE, messageShortText + " " + IGNORE_LINK, listener);

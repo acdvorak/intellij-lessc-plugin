@@ -20,16 +20,21 @@ import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,27 +42,36 @@ public class LessFile extends File implements Comparable<File> {
 
     private static final Pattern LESS_IMPORT_PATTERN = Pattern.compile("@import \"([^\"]+)\";");
     private static final Pattern LESS_FILENAME_PATTERN = Pattern.compile(".*\\.less$");
-
     private static final Logger LOG = Logger.getInstance("#" + LessFile.class.getName());
 
+    private final AtomicBoolean cssChanged = new AtomicBoolean();
+
     public LessFile(final String path) {
-        super(path);
+        this(new File(path));
     }
 
     public LessFile(final String parent, final String child) {
-        super(parent, child);
+        this(new File(parent, child));
     }
 
     public LessFile(final File parent, final String child) {
-        super(parent, child);
+        this(new File(parent, child));
     }
 
     public LessFile(final URI uri) {
-        super(uri);
+        this(new File(uri));
     }
 
     public LessFile(final File file) {
-        super(file.getAbsolutePath());
+        super(getCanonicalPathSafe(file));
+    }
+
+    /*
+     * Public instance methods
+     */
+
+    public boolean hasCssChanged() {
+        return cssChanged.get();
     }
 
     /**
@@ -66,7 +80,7 @@ public class LessFile extends File implements Comparable<File> {
      */
     public String getCanonicalPathSafe() {
         try {
-            return super.getCanonicalPath();
+            return getCanonicalPath();
         } catch (IOException ignored) {
             return getAbsolutePath();
         }
@@ -81,21 +95,11 @@ public class LessFile extends File implements Comparable<File> {
         return StringEscapeUtils.escapeHtml4(getCanonicalPathSafe());
     }
 
-    public void compile(final LessEngine engine, final File cssFile, final boolean compress) throws IOException, LessException {
-        LOG.info("Compiling LESS file: " + getName());
-        LOG.info("\t" + "lessPath: " + getCanonicalPath());
-        LOG.info("\t" + "cssPath: " + cssFile.getCanonicalPath());
-
-        final String compiled = engine.compile(toURL(), compress);
-
-        FileUtil.writeToFile(cssFile, compiled);
-    }
-
     @Nullable
     public LessProfile getLessProfile(final Collection<LessProfile> lessProfiles) {
-        for ( LessProfile lessProfile : lessProfiles ) {
+        for (LessProfile lessProfile : lessProfiles) {
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
-            if ( FileUtil.isAncestor(lessProfileDir, this, false) ) {
+            if (FileUtil.isAncestor(lessProfileDir, this, false)) {
                 return lessProfile;
             }
         }
@@ -106,8 +110,8 @@ public class LessFile extends File implements Comparable<File> {
         if (lessProfile == null)
             return false;
 
-        final List<String> includePatterns = getNormalizePatterns(lessProfile.getIncludePattern());
-        final List<String> excludePatterns = getNormalizePatterns(lessProfile.getExcludePattern());
+        final List<String> includePatterns = normalizePatterns(lessProfile.getIncludePattern());
+        final List<String> excludePatterns = normalizePatterns(lessProfile.getExcludePattern());
 
         boolean include = includePatterns.isEmpty();
         boolean exclude = false;
@@ -123,8 +127,198 @@ public class LessFile extends File implements Comparable<File> {
         return include && !exclude;
     }
 
-    private List<String> getNormalizePatterns(final String patterns) {
-        final Set<String> normalized = new HashSet<String>();
+    public boolean matches(final String pattern) {
+        return FilenameUtils.wildcardMatchOnSystem(getCanonicalPathSafe(), makePatternAbsolute(pattern));
+    }
+
+    public boolean equals(@Nullable final LessFile that) {
+        return isSameFile(this, that);
+    }
+
+    public boolean notEquals(@Nullable final LessFile that) {
+        return !this.equals(that);
+    }
+
+    /**
+     * Returns all files that directly {@code @import} the current LESS file.
+     * @param lessProfile profile to search for dependents
+     * @return all files that directly {@code @import} the current LESS file.
+     * @throws IOException
+     */
+    @NotNull
+    public Set<LessFile> getFirstLevelDependents(@NotNull final LessProfile lessProfile) throws IOException {
+        final LessFile parentLessFile = this;
+        return getLessFiles(lessProfile, new Filter() {
+            @Override
+            public boolean accept(@NotNull LessFile lessFile) throws IOException {
+                return  lessFile.notEquals(parentLessFile) &&
+//                        lessFile.shouldCompile(lessProfile) && // this prevents us from finding compilable dependents in uncompilable files
+                        lessFile.imports(parentLessFile);
+            }
+        });
+    }
+
+    /**
+     * Returns all compilable dependents of the current LESS file found in the given profile (recursive).
+     * If a <em>non-compilable</em> file directly {@code @import}s the current LESS file, and a separate
+     * <em>compilable</em> file {@code @import}s the non-compilable file, the compilable file will be included
+     * in the returned set but the non-compilable file will not.
+     * @param lessProfile profile to search for dependents
+     * @return all compilable dependent LESS files
+     * @throws IOException
+     */
+    @NotNull
+    public Set<LessFile> getDependentsRecursive(@NotNull final LessProfile lessProfile) throws IOException {
+        final Set<LessFile> dependents = getDependentsRecursive(lessProfile, new LinkedHashSet<LessFile>());
+        LOG.debug("Dependency tree for " + getName() + " contains " + dependents.size() + " files");
+        final Set<LessFile> compilable = filter(dependents, new Filter() {
+            @Override
+            public boolean accept(@NotNull LessFile lessFile) throws IOException {
+                return lessFile.shouldCompile(lessProfile);
+            }
+        });
+        LOG.debug("Found for " + getName() + " contains " + dependents.size() + " files");
+        return compilable;
+    }
+
+    /**
+     * Determines if the current LESS file contains an {@code @import} that resolves to the given LESS file.
+     * @param importedLessFile LESS file to search for in the current file's {@code @import}s
+     * @return {@code true} if the current LESS file contains an {@code @import} that resolves to the given LESS file;
+     *         otherwise {@code false}
+     * @throws IOException
+     */
+    public boolean imports(@NotNull final LessFile importedLessFile) throws IOException {
+        final Set<LessFile> matchingImports = getImports(new Filter() {
+            @Override
+            public boolean accept(@NotNull LessFile lessFile) {
+                return importedLessFile.equals(lessFile);
+            }
+        });
+        return !matchingImports.isEmpty();
+    }
+
+    @NotNull
+    public Set<LessFile> getImports(@NotNull Filter filter) throws IOException {
+        final Set<LessFile> imports = new LinkedHashSet<LessFile>();
+        final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher(FileUtil.loadFile(this));
+        while (importMatcher.find()) {
+            final LessFile lessFile = new LessFile(getParent(), importMatcher.group(1));
+            if (filter.accept(lessFile)) {
+                imports.add(lessFile);
+            }
+        }
+        return imports;
+    }
+
+    public void compile(@NotNull final LessEngine engine, final LessProfile lessProfile) throws IOException, LessException {
+        cssChanged.set(false);
+
+        final File cssTempFile = createCssTempFile();
+
+        LOG.info("Compiling LESS file: " + getName());
+        LOG.info("\t" + "lessPath: " + getCanonicalPath());
+        LOG.info("\t" + "cssTempPath: " + cssTempFile.getCanonicalPath());
+
+        final String compiled = engine.compile(toURL(), lessProfile.isCompressOutput());
+
+        FileUtil.writeToFile(cssTempFile, compiled);
+
+        updateCssFiles(cssTempFile, lessProfile);
+    }
+
+    /*
+     * Private instance methods
+     */
+
+    private Set<LessFile> getDependentsRecursive(@NotNull final LessProfile lessProfile,
+                                                 @NotNull final Set<LessFile> curDependents) throws IOException {
+        final Set<LessFile> newDependents = new LinkedHashSet<LessFile>();
+        final Set<LessFile> sourceFileDependents = getFirstLevelDependents(lessProfile);
+        final Set<LessFile> sourceFileDependentsFiltered = filter(sourceFileDependents, new Filter() {
+            @Override
+            public boolean accept(@NotNull LessFile lessFile) throws IOException {
+                return !curDependents.contains(lessFile) && !newDependents.contains(lessFile);
+            }
+        });
+
+        for (LessFile dependentLessFile : sourceFileDependentsFiltered) {
+            newDependents.add(dependentLessFile);
+
+            final Set<LessFile> allDependents = mergeSets(curDependents, newDependents);
+            final Set<LessFile> recursiveDependents = dependentLessFile.getDependentsRecursive(lessProfile, allDependents);
+
+            newDependents.addAll(recursiveDependents);
+        }
+
+        return newDependents;
+    }
+
+    /**
+     * Copies the contents of the temp file to its corresponding CSS file(s) in every output directory specified in the profile.
+     * @throws IOException
+     */
+    private void updateCssFiles(@NotNull final File cssTempFile, @NotNull final LessProfile lessProfile) throws IOException {
+        if (cssTempFile.length() == 0) {
+            FileUtil.delete(cssTempFile);
+            return;
+        }
+
+        final File lessProfileDir = lessProfile.getLessDir();
+
+        final String relativeLessPath = StringUtils.defaultString(FileUtil.getRelativePath(lessProfileDir, this));
+        final String relativeCssPath = relativeLessPath.replaceFirst("\\.less$", ".css");
+
+        final String cssTempFileContent = FileUtil.loadFile(cssTempFile);
+
+        int numUpdated = 0;
+
+        for (CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
+            final File cssDestFile = new File(cssDirectory.getPath(), relativeCssPath);
+
+            // CSS file hasn't changed, so don't bother updating
+            if (cssDestFile.exists() && FileUtil.loadFile(cssDestFile).equals(cssTempFileContent))
+                continue;
+
+            numUpdated++;
+
+            FileUtil.createIfDoesntExist(cssDestFile);
+            FileUtil.copy(cssTempFile, cssDestFile);
+
+            final VirtualFile virtualCssFile = LocalFileSystem.getInstance().findFileByIoFile(cssDestFile);
+
+            if (virtualCssFile != null) {
+                // TODO: performance of synchronous vs. asynchronous?
+                virtualCssFile.getParent().refresh(true, false);
+                virtualCssFile.getParent().getParent().refresh(true, false);
+            }
+        }
+
+        FileUtil.delete(cssTempFile);
+
+        cssChanged.set(numUpdated > 0);
+    }
+
+    /*
+     * Public static methods
+     */
+
+    public static boolean isLessFile(@NotNull final String filename) {
+        return filename.endsWith(".less");
+    }
+
+    public static boolean isSameFile(@Nullable final LessFile file1, @Nullable final LessFile file2) {
+        return  file1 != null &&
+                file2 != null &&
+                file1.getCanonicalPathSafe().equals(file2.getCanonicalPathSafe());
+    }
+
+    /*
+     * Private static methods
+     */
+
+    private static List<String> normalizePatterns(final String patterns) {
+        final Set<String> normalized = new LinkedHashSet<String>();
         for (String pattern : StringUtils.defaultString(patterns).split(";")) {
             if (StringUtils.isNotEmpty(pattern))
                 normalized.add(makePatternAbsolute(pattern));
@@ -132,49 +326,69 @@ public class LessFile extends File implements Comparable<File> {
         return new ArrayList<String>(normalized);
     }
 
-    private boolean matches(final String pattern) {
-        return FilenameUtils.wildcardMatchOnSystem(getCanonicalPathSafe(), makePatternAbsolute(pattern));
-    }
-
-    private String makePatternAbsolute(final String pattern) {
+    private static String makePatternAbsolute(final String pattern) {
         return FileUtil.isAbsoluteFilePath(pattern) ? pattern : "*" + File.separator + pattern;
     }
 
-    public static boolean isLessFile(final String filename) {
-        return filename.endsWith(".less");
+    /**
+     * Returns a set of all LESS files in the profile directory or one of its subdirectories (recursive)
+     * that match the given filter criteria.
+     * @param lessProfile LESS profile
+     * @param filter filter to reduce the result set
+     * @return all LESS files in the profile directory (recursive)
+     * @throws IOException
+     */
+    public static Set<LessFile> getLessFiles(@NotNull final LessProfile lessProfile,
+                                             @NotNull final Filter filter) throws IOException {
+        final List<File> files = FileUtil.findFilesByMask(LESS_FILENAME_PATTERN, lessProfile.getLessDir());
+        final Set<LessFile> lessFiles = new LinkedHashSet<LessFile>();
+        for (File file : files) {
+            final LessFile lessFile = new LessFile(file);
+            if (filter.accept(lessFile)) {
+                lessFiles.add(lessFile);
+            }
+        }
+        return lessFiles;
     }
 
-    public static boolean isSameFile(final File file1, final File file2) throws IOException {
-        return file1.getCanonicalPath().equals(file2.getCanonicalPath());
+    private static Set<LessFile> mergeSets(@NotNull final Set<LessFile> paths1, @NotNull final Set<LessFile> paths2) {
+        final Set<LessFile> mergedPaths = new LinkedHashSet<LessFile>();
+        mergedPaths.addAll(paths1);
+        mergedPaths.addAll(paths2);
+        return mergedPaths;
+    }
+    
+    private static Set<LessFile> filter(@NotNull final Set<LessFile> lessFiles, @NotNull final Filter filter) throws IOException {
+        final Set<LessFile> filtered = new LinkedHashSet<LessFile>();
+        for (LessFile lessFile : lessFiles) {
+            if (filter.accept(lessFile)) {
+                filtered.add(lessFile);
+            }
+        }
+        return filtered;
     }
 
     /**
-     * Returns a list of paths to all LESS files in the profile directory that @import the given LESS file.
-     * @param sourceLessFile
-     * @param lessProfile
-     * @return
-     * @throws IOException
+     * Similar to {@link #getCanonicalPath()}, but falls back to returning {@link #getAbsolutePath()} instead of throwing an {@link IOException}.
+     * @return the canonical path to the {@code File} if it exists; otherwise the absolute path
      */
-    public static Set<String> getDependentPaths(final LessFile sourceLessFile, final LessProfile lessProfile) throws IOException {
-        final String lessParentPath = sourceLessFile.getParent();
-        final Set<String> lessFiles = new LinkedHashSet<String>();
-        final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher("");
-
-        final List<File> filesByMask = FileUtil.findFilesByMask(LESS_FILENAME_PATTERN, lessProfile.getLessDir());
-        for ( File dependentLessFile : filesByMask) {
-            if ( ! isSameFile(sourceLessFile, dependentLessFile) ) {
-                importMatcher.reset(FileUtil.loadFile(dependentLessFile));
-
-                while ( importMatcher.find() ) {
-                    final LessFile importedLessFile = new LessFile(lessParentPath, importMatcher.group(1));
-
-                    if ( isSameFile(sourceLessFile, importedLessFile) && new LessFile(dependentLessFile.getAbsolutePath()).shouldCompile(lessProfile) ) {
-                        lessFiles.add(dependentLessFile.getCanonicalPath());
-                    }
-                }
-            }
+    private static String getCanonicalPathSafe(final File file) {
+        try {
+            return file.getCanonicalPath();
+        } catch (IOException ignored) {
+            return file.getAbsolutePath();
         }
+    }
 
-        return lessFiles;
+    private static File createCssTempFile() throws IOException {
+        return FileUtil.createTempFile("intellij-lessc-plugin.", ".css", true);
+    }
+
+    /*
+     * Public inner classes
+     */
+
+    public static interface Filter {
+        public boolean accept(@NotNull LessFile lessFile) throws IOException;
     }
 }

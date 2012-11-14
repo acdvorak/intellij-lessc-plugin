@@ -18,36 +18,57 @@ package net.andydvorak.intellij.lessc.file;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
-import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.diagnostic.Logger;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class LessCompileJob {
+public class LessCompileJob implements LessCompileObservable {
+
+    private static final Logger LOG = Logger.getInstance("#" + LessCompileJob.class.getName());
+
+    private final AtomicBoolean compiled = new AtomicBoolean();
+    private final AtomicBoolean running = new AtomicBoolean();
 
     private final LessFile sourceLessFile;
     private final LessProfile lessProfile;
-    private final Set<LessFile> updatedLessFiles;
-    private final Set<String> updatedLessFilePaths;
-    private File cssTempFile;
+
+    private final Set<LessFile> sourceAndDependents = new LinkedHashSet<LessFile>();
+    private final AtomicInteger curLessFileIndex = new AtomicInteger(-1);
+
+    private final Set<LessFile> updatedLessFiles = new LinkedHashSet<LessFile>();
+    private final Set<String> updatedLessFilePaths = new LinkedHashSet<String>();
+    private final Set<LessCompileObserver> observers = new LinkedHashSet<LessCompileObserver>();
+
     private LessEngine lessEngine;
+
+    /*
+     * Constructors
+     */
 
     public LessCompileJob(final LessFile sourceLessFile, final LessProfile lessProfile) {
         this.sourceLessFile = sourceLessFile;
         this.lessProfile = lessProfile;
-        this.updatedLessFiles = new LinkedHashSet<LessFile>();
-        this.updatedLessFilePaths = new LinkedHashSet<String>();
     }
 
     public LessCompileJob(final LessCompileJob otherCompileJob, final LessFile sourceLessFile) {
         this.sourceLessFile = sourceLessFile;
         this.lessProfile = otherCompileJob.getLessProfile();
-        this.updatedLessFiles = new LinkedHashSet<LessFile>(otherCompileJob.getUpdatedLessFiles());
-        this.updatedLessFilePaths = new LinkedHashSet<String>(otherCompileJob.getUpdatedLessFilePaths());
+
+        // Clone sets
+        this.updatedLessFiles.addAll(otherCompileJob.getUpdatedLessFiles());
+        this.updatedLessFilePaths.addAll(otherCompileJob.getUpdatedLessFilePaths());
+        this.observers.addAll(otherCompileJob.observers);
     }
+
+    /*
+     * Public instance methods
+     */
 
     public LessFile getSourceLessFile() {
         return sourceLessFile;
@@ -55,6 +76,17 @@ public class LessCompileJob {
 
     public LessProfile getLessProfile() {
         return lessProfile;
+    }
+
+    public LessFile getCurLessFile() {
+        final int index = curLessFileIndex.get();
+        if (!sourceAndDependents.isEmpty() && index > -1) {
+            final LessFile[] lessFiles = new LessFile[sourceAndDependents.size()];
+            sourceAndDependents.toArray(lessFiles);
+            return lessFiles[index];
+        } else {
+            return null;
+        }
     }
 
     public void addUpdatedLessFile(LessFile lessFile) {
@@ -80,21 +112,127 @@ public class LessCompileJob {
         return getUpdatedLessFiles().size();
     }
 
-    public File getCssTempFile() throws IOException {
-        if (cssTempFile == null) {
-            cssTempFile = FileUtil.createTempFile("intellij-lessc-plugin.", ".css", true);
-        }
-        return cssTempFile;
+    @Override
+    public void addObserver(@NotNull LessCompileObserver observer) {
+        observers.add(observer);
     }
 
-    public void compile() throws IOException, LessException {
-        if (lessEngine == null) {
-            lessEngine = new LessEngine();
+    @Override
+    public void removeObserver(@NotNull LessCompileObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(@NotNull LessCompileNotification notification) {
+        for (LessCompileObserver observer : observers) {
+            notification.notifyObserver(observer);
         }
-        sourceLessFile.compile(lessEngine, getCssTempFile(), lessProfile.isCompressOutput());
+    }
+
+    public void compile() throws IOException, LessException, IllegalStateException {
+        preventConcurrency();
+        initLessEngine();
+        start();
+        finish();
     }
 
     public void refreshVFS() {
-        VFSLocationChange.refresh(lessProfile.getCssDirectories());
+        if (lessProfile != null)
+            VFSLocationChange.refresh(lessProfile.getCssDirectories());
+    }
+
+    /*
+    * Private instance methods
+    */
+
+    private Set<LessFile> getSourceAndDependents() throws IOException {
+        final Set<LessFile> filesToCompile = new LinkedHashSet<LessFile>();
+        filesToCompile.add(sourceLessFile);
+        if (lessProfile != null && lessProfile.hasCssDirectories()) {
+            final Set<LessFile> dependents = sourceLessFile.getDependentsRecursive(lessProfile);
+            filesToCompile.addAll(dependents);
+        }
+        return filesToCompile;
+    }
+
+    private void preventConcurrency() throws IllegalStateException {
+        if (compiled.get() || running.get()) {
+            final String message = "LessCompileJob for \"" + sourceLessFile.getName() + "\" can only be compiled once.";
+            LOG.error(message);
+            throw new IllegalStateException(message);
+        }
+    }
+
+    private void initLessEngine() throws LessException {
+        if (lessEngine == null) {
+            lessEngine = new LessEngine();
+        }
+    }
+
+    private void start() throws IOException, LessException {
+        running.set(true);
+
+        sourceAndDependents.clear();
+        sourceAndDependents.addAll(getSourceAndDependents());
+
+        notifyObservers(new LessCompileNotification() {
+            @Override
+            public void notifyObserver(@NotNull LessCompileObserver observer) {
+                observer.compileStarted(sourceAndDependents);
+            }
+        });
+
+        for (LessFile lessFile : sourceAndDependents) {
+            compile(lessFile);
+        }
+    }
+
+    private void compile(@NotNull final LessFile lessFile) throws IOException, LessException {
+        final boolean cssChanged;
+
+        curLessFileIndex.incrementAndGet();
+
+        if (lessFile.shouldCompile(lessProfile)) {
+            lessFile.compile(lessEngine, lessProfile);
+            cssChanged = lessFile.hasCssChanged();
+            refreshVFS();
+        } else {
+            cssChanged = false;
+        }
+
+        final LessCompileNotification notification;
+
+        if (cssChanged) {
+            addUpdatedLessFile(lessFile);
+            notification = new LessCompileNotification() {
+                @Override
+                public void notifyObserver(@NotNull LessCompileObserver observer) {
+                    observer.cssFileChanged(lessFile);
+                }
+            };
+        } else {
+            notification = new LessCompileNotification() {
+                @Override
+                public void notifyObserver(@NotNull LessCompileObserver observer) {
+                    observer.cssFileUnchanged(lessFile);
+                }
+            };
+        }
+
+        notifyObservers(notification);
+    }
+
+    private void finish() {
+        compiled.set(true);
+        running.set(false);
+
+        final int numCompiled = getNumUpdated();
+
+        notifyObservers(new LessCompileNotification() {
+            @Override
+            public void notifyObserver(@NotNull LessCompileObserver observer) {
+                observer.compileFinished(numCompiled);
+            }
+        });
     }
 }
