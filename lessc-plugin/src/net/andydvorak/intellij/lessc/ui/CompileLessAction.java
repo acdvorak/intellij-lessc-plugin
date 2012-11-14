@@ -62,7 +62,7 @@ public class CompileLessAction extends AnAction {
                 message = "The selected LESS file does not have any CSS output directories mapped to it and cannot be compiled.";
             } else {
                 title = "Missing CSS Output Directories";
-                message = numMissing + " of the selected LESS files do not have any CSS output directories mapped to them and cannot be compiled.";
+                message = numMissing + " of the " + files.size() + " LESS files you selected do not have any CSS output directories mapped to them and cannot be compiled.";
             }
 
             Messages.showInfoMessage(e.getProject(), message + "\n\nYou can add CSS output directories under Settings > Project Settings > LESS Compiler.", title);
