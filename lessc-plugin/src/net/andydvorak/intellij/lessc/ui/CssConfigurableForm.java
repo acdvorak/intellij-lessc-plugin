@@ -183,12 +183,16 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 lessManager.getState().resetPrompts();
-                resetPromptsButton.setEnabled(false);
+                lessProfilesPanel.setPromptButtonsEnabled(false);
             }
         });
         resetPromptsButton.setEnabled(!lessManager.getState().hasDefaultPromptSettings());
 
         return rootPanel;
+    }
+
+    public void setPromptButtonEnabled(final boolean enabled) {
+        resetPromptsButton.setEnabled(enabled);
     }
 
     private void addRow() {

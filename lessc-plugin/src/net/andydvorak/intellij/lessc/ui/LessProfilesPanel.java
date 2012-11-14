@@ -47,6 +47,8 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @NotNull private final LessManager lessManager;
     @NotNull private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
+    private final List<CssConfigurableForm> cssConfigurableForms = new ArrayList<CssConfigurableForm>();
+
     public LessProfilesPanel(@NotNull final Project project) {
         this.project = project;
         this.lessManager = LessManager.getInstance(project);
@@ -184,21 +186,31 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     private void addProfileNode(LessProfile lessProfile) {
-        final CssConfigurableForm configurablePanel = new CssConfigurableForm(project, lessProfile, this, TREE_UPDATER);
-        configurablePanel.setModified(true);
-        final MyNode node = new MyNode(configurablePanel);
+        final CssConfigurableForm cssConfigurableForm = new CssConfigurableForm(project, lessProfile, this, TREE_UPDATER);
+        cssConfigurableForm.setModified(true);
+        cssConfigurableForms.add(cssConfigurableForm);
+        final MyNode node = new MyNode(cssConfigurableForm);
         addNode(node, myRoot);
         selectNodeInTree(node);
     }
 
     private void reloadTree() {
         myRoot.removeAllChildren();
+        cssConfigurableForms.clear();
         Collection<LessProfile> collection = lessManager.getProfiles();
         for (LessProfile profile : collection) {
             LessProfile clone = new LessProfile(profile);
-            addNode(new MyNode(new CssConfigurableForm(project, clone, this, TREE_UPDATER)), myRoot);
+            final CssConfigurableForm cssConfigurableForm = new CssConfigurableForm(project, clone, this, TREE_UPDATER);
+            cssConfigurableForms.add(cssConfigurableForm);
+            addNode(new MyNode(cssConfigurableForm), myRoot);
         }
         isInitialized.set(true);
+    }
+
+    public void setPromptButtonsEnabled(final boolean enabled) {
+        for (CssConfigurableForm cssConfigurableForm : cssConfigurableForms) {
+            cssConfigurableForm.setPromptButtonEnabled(enabled);
+        }
     }
 
     public void reset() {
