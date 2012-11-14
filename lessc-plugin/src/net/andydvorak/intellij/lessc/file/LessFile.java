@@ -203,7 +203,7 @@ public class LessFile extends File implements Comparable<File> {
         final Set<LessFile> imports = new LinkedHashSet<LessFile>();
         final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher(FileUtil.loadFile(this));
         while (importMatcher.find()) {
-            final LessFile lessFile = new LessFile(getParent(), importMatcher.group(1));
+            final LessFile lessFile = new LessFile(getParent(), resolveImportFileName(importMatcher.group(1)));
             if (filter.accept(lessFile)) {
                 imports.add(lessFile);
             }
@@ -343,6 +343,22 @@ public class LessFile extends File implements Comparable<File> {
 
     private static String makePatternAbsolute(final String pattern) {
         return FileUtil.isAbsoluteFilePath(pattern) ? pattern : "*" + File.separator + pattern;
+    }
+
+    /**
+     * Resolves extensionless {@code @import} LESS filenames so that they always end with ".less".
+     * <p>Examples:</p>
+     * <pre>resolveImportFileName("main") = "main.less"</pre>
+     * <pre>resolveImportFileName("main.less") = "main.less"</pre>
+     * @param filename filename from a LESS {@code @import} that may or may not end with ".less"
+     * @return the filename ending with ".less"
+     */
+    private static String resolveImportFileName(@Nullable String filename) {
+        filename = StringUtils.defaultString(filename);
+        if (filename.endsWith(".less"))
+            return filename;
+        else
+            return filename + ".less";
     }
 
     /**
