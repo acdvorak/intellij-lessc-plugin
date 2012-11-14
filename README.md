@@ -46,7 +46,7 @@ It should also be compatible with RubyMine 4.5+, but has not been tested.
     If the plugin somehow fails to catch changes to a LESS file, simply right-click anywhere in the editor or Project tree
     and select "Compile to CSS".  You can also compile an entire directory by right-clicking on it in the Project tree.
 
-7.  ***Error Notifications***
+7.  **Error Notifications**
 
     Any errors encountered during the compilation process will produce an error notification balloon in the IDE
     containing a link to the file and the line number that caused the error.
