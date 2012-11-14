@@ -63,7 +63,7 @@
         <![CDATA[
 <h3>2.5.1</h3>
 <ul>
-  <li>[enhancement] Issue #6 - Optional .less extension support for @imports</li>
+  <li>[enhancement] Issue #6 - Optional .less extension support for <code>@import</code>s</li>
 </ul>
 <h3>2.5.0</h3>
 <ul>
@@ -121,7 +121,7 @@
 </ul>
 <h3>1.9.0</h3>
 <ul>
-  <li>[enhancement] @import support</li>
+  <li>[enhancement] <code>@import</code> support</li>
 </ul>
 <h3>1.8.4</h3>
 <ul>
