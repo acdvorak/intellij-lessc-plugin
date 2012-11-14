@@ -185,6 +185,8 @@ public class LessCompileJob implements LessCompileObservable {
         for (LessFile lessFile : sourceAndDependents) {
             compile(lessFile);
         }
+
+        refreshVFS();
     }
 
     private void compile(@NotNull final LessFile lessFile) throws IOException, LessException {

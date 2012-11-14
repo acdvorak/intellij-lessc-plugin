@@ -288,9 +288,24 @@ public class LessFile extends File implements Comparable<File> {
             final VirtualFile virtualCssFile = LocalFileSystem.getInstance().findFileByIoFile(cssDestFile);
 
             if (virtualCssFile != null) {
-                // TODO: performance of synchronous vs. asynchronous?
-                virtualCssFile.getParent().refresh(true, false);
+                // Refresh file
+                virtualCssFile.refresh(false, false);
+
+                // Refresh parent dirs
                 virtualCssFile.getParent().getParent().refresh(true, false);
+                virtualCssFile.getParent().refresh(true, false);
+
+                // Refresh root dir
+                final VirtualFile virtualCssRoot = LocalFileSystem.getInstance().findFileByIoFile(new File(cssDirectory.getPath()));
+
+                if (virtualCssRoot != null) {
+                    virtualCssRoot.refresh(false, true);
+                    virtualCssRoot.refresh(true, true);
+                } else {
+                    System.out.println();
+                }
+
+
             }
         }
 
