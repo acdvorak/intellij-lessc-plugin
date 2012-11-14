@@ -40,11 +40,11 @@ public class LessEngine {
 	private Scriptable scope;
 	private Function compile;
 	
-	public LessEngine() {
+	public LessEngine() throws LessException {
 		this(new LessOptions());
 	}
 	
-	public LessEngine(LessOptions options) {
+	public LessEngine(LessOptions options) throws LessException {
 		this(options, defaultResourceLoader(options));
 	}
 
@@ -66,7 +66,7 @@ public class LessEngine {
      * @param loader
      * @see <a href="http://www.envjs.com/doc/guides#running-embed">Embedding EnvJS</a>
      */
-	public LessEngine(LessOptions options, ResourceLoader loader) {
+	public LessEngine(LessOptions options, ResourceLoader loader) throws LessException {
 		this.options = options;
 		this.loader = loader;
 		try {
@@ -110,6 +110,7 @@ public class LessEngine {
 			Context.exit();
 		} catch (Exception e) {
 			logger.error("LESS Engine initialization failed.", e);
+            throw new LessException(e);
 		}
 	}
 	
