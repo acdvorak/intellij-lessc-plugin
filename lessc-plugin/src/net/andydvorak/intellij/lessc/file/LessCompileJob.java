@@ -205,8 +205,6 @@ public class LessCompileJob implements LessCompileObservable {
         for (LessFile lessFile : sourceAndDependents) {
             compile(lessFile);
         }
-
-        refreshVFS();
     }
 
     private void compile(@NotNull final LessFile lessFile) throws IOException, LessException {
@@ -217,7 +215,6 @@ public class LessCompileJob implements LessCompileObservable {
         if (lessFile.shouldCompile(lessProfile)) {
             lessFile.compile(lessEngine, lessProfile);
             cssChanged = lessFile.hasCssChanged();
-            refreshVFS();
         } else {
             cssChanged = false;
         }
@@ -232,6 +229,7 @@ public class LessCompileJob implements LessCompileObservable {
                     observer.cssFileChanged(lessFile);
                 }
             };
+            refreshVFS();
         } else {
             notification = new LessCompileNotification() {
                 @Override

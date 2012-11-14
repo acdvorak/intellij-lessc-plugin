@@ -212,6 +212,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         } finally {
             indicator.setFraction(1);
             dequeue();
+            refreshVFS();
         }
     }
 
@@ -253,6 +254,17 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                 final List<LessCompileJob> jobs = getQueuedCompileJobsConcurrent();
                 for (LessCompileJob job : jobs) {
                     compile(job, false);
+                }
+            }
+        });
+    }
+
+    private void refreshVFS() {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (LessProfile lessProfile : getProfiles()) {
+                    VFSLocationChange.refresh(lessProfile.getCssDirectories());
                 }
             }
         });
