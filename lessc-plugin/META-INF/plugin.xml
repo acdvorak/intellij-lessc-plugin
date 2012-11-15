@@ -58,9 +58,16 @@
         ]]>
     </description>
     <vendor>Andrew C. Dvorak</vendor>
-    <version>2.5.5</version>
+    <version>2.6.0</version>
     <change-notes>
         <![CDATA[
+<h3>2.6.0</h3>
+<ul>
+  <li>[bugfix] Fixed #25 - Multiple notifications for the same file</li>
+  <li>[enhancement] Issue #4 - Hide previous error notifications for the same file</li>
+  <li>[enhancement] Issue #27 - Clean up Notifier logging</li>
+  <li>[enhancement] Issue #28 - Move UI messages to external properties files</li>
+</ul>
 <h3>2.5.5</h3>
 <ul>
   <li>[bugfix] Fixed #26 - VFS refresh doesn't work when CSS files don't already exist</li>
