@@ -68,12 +68,12 @@ public class NotificationListenerImpl implements NotificationListener {
         return !myProject.isDisposed() && event.getEventType() == HyperlinkEvent.EventType.ACTIVATED;
     }
 
-    private boolean isViewFileEvent(@NotNull HyperlinkEvent event) {
+    private static boolean isViewFileEvent(@NotNull HyperlinkEvent event) {
         final String description = StringUtils.defaultString(event.getDescription());
         return "file".equals(description) || description.endsWith(".less") || description.endsWith(".css");
     }
 
-    private boolean isIgnoreEvent(@NotNull HyperlinkEvent event) {
+    private static boolean isIgnoreEvent(@NotNull HyperlinkEvent event) {
         final String description = event.getDescription();
         return "ignore".equals(description) || "dismiss".equals(description);
     }
@@ -84,29 +84,33 @@ public class NotificationListenerImpl implements NotificationListener {
             return;
 
         if (isViewFileEvent(event)) {
-            String curFilePath = this.filePath;
-
-            if (curFilePath == null) {
-                curFilePath = event.getDescription(); // retrieves the "href" attribute of the hyperlink
-            }
-
-            final VirtualFile file = LocalFileSystem.getInstance().findFileByPath(curFilePath);
-            if (file != null) {
-                final FileEditorManager editorManager = FileEditorManager.getInstance(myProject);
-                final Editor editor = editorManager.openTextEditor(new OpenFileDescriptor(myProject, file), true);
-                final LogicalPosition logicalPosition = getLogicalPosition();
-
-                if(editor != null && logicalPosition != null) {
-                    // Set correct caret position
-                    // See https://github.com/johnlindquist/open-source-plugins/blob/master/QuickJump/src/com/johnlindquist/quickjump/QuickJumpAction.java
-                    editor.getCaretModel().moveToVisualPosition(editor.logicalToVisualPosition(logicalPosition));
-                }
-
-                notification.hideBalloon();
-            }
+            handleViewFileEvent(notification, event);
         } else if (isIgnoreEvent(event)) {
             notification.expire();
         }
+    }
+
+    private void handleViewFileEvent(@NotNull final Notification notification, @NotNull final HyperlinkEvent event) {
+        final String eventDescription = event.getDescription(); // retrieves the "href" attribute of the hyperlink
+        final String curFilePath = StringUtils.defaultString(this.filePath, eventDescription);
+        final VirtualFile file = LocalFileSystem.getInstance().findFileByPath(curFilePath);
+        openFileInEditor(notification, file);
+    }
+
+    private void openFileInEditor(@NotNull final Notification notification, @Nullable final VirtualFile file) {
+        if (file == null) return;
+
+        final FileEditorManager editorManager = FileEditorManager.getInstance(myProject);
+        final Editor editor = editorManager.openTextEditor(new OpenFileDescriptor(myProject, file), true);
+        final LogicalPosition logicalPosition = getLogicalPosition();
+
+        if(editor != null && logicalPosition != null) {
+            // Set correct caret position
+            // See https://github.com/johnlindquist/open-source-plugins/blob/master/QuickJump/src/com/johnlindquist/quickjump/QuickJumpAction.java
+            editor.getCaretModel().moveToVisualPosition(editor.logicalToVisualPosition(logicalPosition));
+        }
+
+        notification.hideBalloon();
     }
 
 }
