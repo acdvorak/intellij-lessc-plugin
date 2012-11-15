@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.observer;
 
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
+import net.andydvorak.intellij.lessc.fs.LessCompileJob;
+import net.andydvorak.intellij.lessc.fs.LessFile;
+import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -27,7 +29,7 @@ import java.util.Set;
  * @author Andrew C. Dvorak
  * @since 11/13/12
  */
-public class LessCompileObserverImpl implements LessCompileObserver {
+public class CompileObserverImpl implements CompileObserver {
 
     private final LessCompileJob compileJob;
     private final Task.Backgroundable task;
@@ -37,9 +39,9 @@ public class LessCompileObserverImpl implements LessCompileObserver {
     private double numCompleted;
     private double numChanged;
 
-    public LessCompileObserverImpl(@NotNull final LessCompileJob compileJob,
-                                   @NotNull final Task.Backgroundable task,
-                                   @NotNull final ProgressIndicator indicator) {
+    public CompileObserverImpl(@NotNull final LessCompileJob compileJob,
+                               @NotNull final Task.Backgroundable task,
+                               @NotNull final ProgressIndicator indicator) {
         this.compileJob = compileJob;
         this.task = task;
         this.indicator = indicator;
@@ -54,14 +56,14 @@ public class LessCompileObserverImpl implements LessCompileObserver {
     }
 
     @Override
-    public void cssFileChanged(@NotNull final LessFile lessFile) {
+    public void outputFileChanged(@NotNull final LessFile lessFile) {
         numCompleted++;
         numChanged++;
         updateProgress();
     }
 
     @Override
-    public void cssFileUnchanged(@NotNull final LessFile lessFile) {
+    public void outputFileUnchanged(@NotNull final LessFile lessFile) {
         numCompleted++;
         updateProgress();
     }

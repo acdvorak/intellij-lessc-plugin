@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -30,7 +30,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Conditions;
 import com.intellij.util.PlatformIcons;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
@@ -48,7 +48,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @NotNull private final LessManager lessManager;
     @NotNull private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
-    private final List<CssConfigurableForm> cssConfigurableForms = new ArrayList<CssConfigurableForm>();
+    private final List<LessProfileConfigurableForm> lessProfileConfigurableForms = new ArrayList<LessProfileConfigurableForm>();
 
     public LessProfilesPanel(@NotNull final Project project) {
         this.project = project;
@@ -105,7 +105,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         // Check for duplicate profile names
         for (int i = 0; i < myRoot.getChildCount(); i++) {
             MyNode node = (MyNode) myRoot.getChildAt(i);
-            final String profileName = ((CssConfigurableForm) node.getConfigurable()).getEditableObject().getName();
+            final String profileName = ((LessProfileConfigurableForm) node.getConfigurable()).getEditableObject().getName();
             if (profiles.contains(profileName)) {
                 selectNodeInTree(profileName);
                 throw new ConfigurationException(UIBundle.message("duplicate.less.profile.name", profileName));
@@ -125,7 +125,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         } else {
             for (int i = 0; i < myRoot.getChildCount(); i++) {
                 MyNode node = (MyNode) myRoot.getChildAt(i);
-                final LessProfile lessProfile = ((CssConfigurableForm) node.getConfigurable()).getEditableObject();
+                final LessProfile lessProfile = ((LessProfileConfigurableForm) node.getConfigurable()).getEditableObject();
                 profiles.put(lessProfile.getName(), lessProfile);
             }
         }
@@ -200,30 +200,30 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     private void addProfileNode(LessProfile lessProfile) {
-        final CssConfigurableForm cssConfigurableForm = new CssConfigurableForm(project, lessProfile, this, TREE_UPDATER);
-        cssConfigurableForm.setModified(true);
-        cssConfigurableForms.add(cssConfigurableForm);
-        final MyNode node = new MyNode(cssConfigurableForm);
+        final LessProfileConfigurableForm lessProfileConfigurableForm = new LessProfileConfigurableForm(project, lessProfile, this, TREE_UPDATER);
+        lessProfileConfigurableForm.setModified(true);
+        lessProfileConfigurableForms.add(lessProfileConfigurableForm);
+        final MyNode node = new MyNode(lessProfileConfigurableForm);
         addNode(node, myRoot);
         selectNodeInTree(node);
     }
 
     private void reloadTree() {
         myRoot.removeAllChildren();
-        cssConfigurableForms.clear();
+        lessProfileConfigurableForms.clear();
         Collection<LessProfile> collection = lessManager.getProfiles();
         for (LessProfile profile : collection) {
             LessProfile clone = new LessProfile(profile);
-            final CssConfigurableForm cssConfigurableForm = new CssConfigurableForm(project, clone, this, TREE_UPDATER);
-            cssConfigurableForms.add(cssConfigurableForm);
-            addNode(new MyNode(cssConfigurableForm), myRoot);
+            final LessProfileConfigurableForm lessProfileConfigurableForm = new LessProfileConfigurableForm(project, clone, this, TREE_UPDATER);
+            lessProfileConfigurableForms.add(lessProfileConfigurableForm);
+            addNode(new MyNode(lessProfileConfigurableForm), myRoot);
         }
         isInitialized.set(true);
     }
 
     public void setPromptButtonsEnabled(final boolean enabled) {
-        for (CssConfigurableForm cssConfigurableForm : cssConfigurableForms) {
-            cssConfigurableForm.setPromptButtonEnabled(enabled);
+        for (LessProfileConfigurableForm lessProfileConfigurableForm : lessProfileConfigurableForms) {
+            lessProfileConfigurableForm.setPromptButtonEnabled(enabled);
         }
     }
 

@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.fs;
 
 import com.intellij.openapi.vfs.*;
 
 public class VirtualFileListenerImpl implements VirtualFileListener {
 
-    final LessFileWatcherService lessFileWatcherService;
+    final VirtualFileWatcher fileWatcher;
 
-    public VirtualFileListenerImpl(final LessFileWatcherService lessFileWatcherService) {
-        this.lessFileWatcherService = lessFileWatcherService;
+    public VirtualFileListenerImpl(final VirtualFileWatcher fileWatcher) {
+        this.fileWatcher = fileWatcher;
     }
 
     public void contentsChanged(final VirtualFileEvent virtualFileEvent) {
-        lessFileWatcherService.handleChangeEvent(virtualFileEvent);
+        fileWatcher.handleChangeEvent(virtualFileEvent);
     }
 
     public void fileCreated(final VirtualFileEvent virtualFileEvent) {
-        lessFileWatcherService.handleChangeEvent(virtualFileEvent);
+        fileWatcher.handleChangeEvent(virtualFileEvent);
     }
 
     public void fileDeleted(final VirtualFileEvent virtualFileEvent) {
-        lessFileWatcherService.handleDeleteEvent(virtualFileEvent);
+        fileWatcher.handleDeleteEvent(virtualFileEvent);
     }
 
     public void fileMoved(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        lessFileWatcherService.handleMoveEvent(virtualFileMoveEvent);
+        fileWatcher.handleMoveEvent(virtualFileMoveEvent);
     }
 
     public void fileCopied(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        lessFileWatcherService.handleCopyEvent(virtualFileCopyEvent);
+        fileWatcher.handleCopyEvent(virtualFileCopyEvent);
     }
 
     public void propertyChanged(final VirtualFilePropertyEvent virtualFilePropertyEvent) {}

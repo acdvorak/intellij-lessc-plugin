@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.notification;
+package net.andydvorak.intellij.lessc.ui.notifier;
 
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationListener;
@@ -31,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.event.HyperlinkEvent;
 
-public class FileNotificationListener implements NotificationListener {
+public class NotificationListenerImpl implements NotificationListener {
     @NotNull
     private final Project myProject;
     @Nullable
@@ -39,15 +39,15 @@ public class FileNotificationListener implements NotificationListener {
     private final int line;
     private final int column;
 
-    public FileNotificationListener(@NotNull final Project project) {
+    public NotificationListenerImpl(@NotNull final Project project) {
         this(project, null);
     }
 
-    public FileNotificationListener(@NotNull final Project project, @Nullable final String filePath) {
+    public NotificationListenerImpl(@NotNull final Project project, @Nullable final String filePath) {
         this(project, filePath, -1, -1);
     }
 
-    public FileNotificationListener(@NotNull final Project project, @Nullable final String filePath, final int line, final int column) {
+    public NotificationListenerImpl(@NotNull final Project project, @Nullable final String filePath, final int line, final int column) {
         this.myProject = project;
         this.filePath = filePath;
         this.line = line;

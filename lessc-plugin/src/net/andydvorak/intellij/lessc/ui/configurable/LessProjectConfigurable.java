@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
-import net.andydvorak.intellij.lessc.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;

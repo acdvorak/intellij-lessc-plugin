@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.util.ui.ColumnInfo;
-import net.andydvorak.intellij.lessc.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 
 import javax.swing.*;

@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFileEvent;
-import net.andydvorak.intellij.lessc.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 
 /**
  * @author Andrew C. Dvorak
  * @since 11/1/12
  */
-public class FileLocationChangeDialog {
+public class VfsLocationChangeDialog {
     private int result = -1;
     private long lastPrompt = -1;
     private long promptIntervalMillis = 1000;
     private final Project myProject;
     private final LessProjectState myLessProjectState;
 
-    public FileLocationChangeDialog(final Project project, final LessProjectState state) {
+    public VfsLocationChangeDialog(final Project project, final LessProjectState state) {
         myProject = project;
         myLessProjectState = state;
     }

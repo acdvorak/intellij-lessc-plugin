@@ -174,12 +174,12 @@
     </project-components>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectConfigurable instance="net.andydvorak.intellij.lessc.ui.LessProjectConfigurable" />
+        <projectConfigurable instance="net.andydvorak.intellij.lessc.ui.configurable.LessProjectConfigurable" />
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter" />
     </extensions>
     <actions>
-        <action id="CompileLess" class="net.andydvorak.intellij.lessc.ui.CompileLessAction" text="Compile to CSS"
-                description="Compile selected LESS files to CSS" icon="/css-icon_18x18.png">
+        <action id="CompileLess" class="net.andydvorak.intellij.lessc.ui.configurable.LessCompileAction" text="Compile to CSS"
+                description="Compile selected LESS files to CSS" icon="/icons/css-icon_18x18.png">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>

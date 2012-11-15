@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.observer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,8 +22,6 @@ import org.jetbrains.annotations.NotNull;
  * @author Andrew C. Dvorak
  * @since 11/13/12
  */
-public interface LessCompileObservable {
-    public void addObserver(@NotNull LessCompileObserver observer);
-    public void removeObserver(@NotNull LessCompileObserver observer);
-    public void notifyObservers(@NotNull LessCompileNotification notification);
+public interface CompileEvent {
+    public void notify(@NotNull CompileObserver observer);
 }

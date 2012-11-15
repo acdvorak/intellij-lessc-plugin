@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.fs;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;

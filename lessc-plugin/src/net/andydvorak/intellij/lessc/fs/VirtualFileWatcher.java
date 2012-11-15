@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.fs;
 
-import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.vfs.VirtualFileCopyEvent;
+import com.intellij.openapi.vfs.VirtualFileEvent;
+import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 
-/**
- * @author Andrew C. Dvorak
- * @since 11/13/12
- */
-public interface LessCompileNotification {
-    public void notifyObserver(@NotNull LessCompileObserver observer);
+public interface VirtualFileWatcher {
+
+    void handleChangeEvent(final VirtualFileEvent virtualFileEvent);
+    void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent);
+    void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent);
+    void handleDeleteEvent(final VirtualFileEvent virtualFileEvent);
+
 }

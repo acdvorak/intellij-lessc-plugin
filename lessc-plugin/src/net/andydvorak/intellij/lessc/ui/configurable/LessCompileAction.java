@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -24,7 +24,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -35,7 +35,7 @@ import java.util.Collection;
  * @author Andrew C. Dvorak
  * @since 10/26/12
  */
-public class CompileLessAction extends AnAction {
+public class LessCompileAction extends AnAction {
 
     public void actionPerformed(AnActionEvent _e) {
         final AnActionEventWrapper e = new AnActionEventWrapper(_e);

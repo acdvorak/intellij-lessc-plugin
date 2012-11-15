@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -29,22 +29,22 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class TextFieldWithBrowseButtonListener extends TextFieldWithBrowseButton {
+public class TextFieldWithBrowseButtonImpl extends TextFieldWithBrowseButton {
 
     private final Project myProject;
     private String myTitle;
 
-    public TextFieldWithBrowseButtonListener(final Project project) {
+    public TextFieldWithBrowseButtonImpl(final Project project) {
         this(project, null);
     }
 
-    public TextFieldWithBrowseButtonListener(@Nullable final Project project, @Nullable final String title) {
+    public TextFieldWithBrowseButtonImpl(@Nullable final Project project, @Nullable final String title) {
         super();
 
         this.myProject = project;
         this.myTitle = title;
 
-        final TextFieldWithBrowseButtonListener parent = this;
+        final TextFieldWithBrowseButtonImpl parent = this;
 
         this.getButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

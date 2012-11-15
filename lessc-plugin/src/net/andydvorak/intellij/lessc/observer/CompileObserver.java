@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.observer;
 
-import java.util.EventListener;
+import net.andydvorak.intellij.lessc.fs.LessFile;
+import org.jetbrains.annotations.NotNull;
 
-public interface OptionsPanelListener extends EventListener
-{
-    void optionChanged();
+import java.util.Set;
+
+/**
+ * @author Andrew C. Dvorak
+ * @since 11/13/12
+ */
+public interface CompileObserver {
+    public void compileStarted(@NotNull Set<LessFile> lessFiles);
+    public void outputFileChanged(@NotNull LessFile lessFile);
+    public void outputFileUnchanged(@NotNull LessFile lessFile);
+    public void compileFinished(int numChanged);
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.notification;
+package net.andydvorak.intellij.lessc.ui.notifier;
 
-import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
+import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Matcher;

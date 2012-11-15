@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.fs;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
 import com.intellij.openapi.diagnostic.Logger;
+import net.andydvorak.intellij.lessc.observer.CompileEvent;
+import net.andydvorak.intellij.lessc.observer.CompileObservable;
+import net.andydvorak.intellij.lessc.observer.CompileObserver;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class LessCompileJob implements LessCompileObservable {
+public class LessCompileJob implements CompileObservable {
 
     private static final long WAIT_INTERVAL_MS = 250;
     private static final Logger LOG = Logger.getInstance("#" + LessCompileJob.class.getName());
@@ -47,7 +50,7 @@ public class LessCompileJob implements LessCompileObservable {
 
     private final Set<LessFile> updatedLessFiles = new LinkedHashSet<LessFile>();
     private final Set<String> updatedLessFilePaths = new LinkedHashSet<String>();
-    private final Set<LessCompileObserver> observers = new LinkedHashSet<LessCompileObserver>();
+    private final Set<CompileObserver> observers = new LinkedHashSet<CompileObserver>();
 
     /*
      * Constructors
@@ -105,19 +108,19 @@ public class LessCompileJob implements LessCompileObservable {
     }
 
     @Override
-    public void addObserver(@NotNull LessCompileObserver observer) {
+    public void addObserver(@NotNull CompileObserver observer) {
         observers.add(observer);
     }
 
     @Override
-    public void removeObserver(@NotNull LessCompileObserver observer) {
+    public void removeObserver(@NotNull CompileObserver observer) {
         observers.remove(observer);
     }
 
     @Override
-    public void notifyObservers(@NotNull LessCompileNotification notification) {
-        for (LessCompileObserver observer : observers) {
-            notification.notifyObserver(observer);
+    public void notifyObservers(@NotNull CompileEvent event) {
+        for (CompileObserver observer : observers) {
+            event.notify(observer);
         }
     }
 
@@ -132,7 +135,7 @@ public class LessCompileJob implements LessCompileObservable {
 
     public void refreshVFS() {
         if (lessProfile != null)
-            VFSLocationChange.refresh(lessProfile.getCssDirectories());
+            VirtualFileLocationChange.refresh(lessProfile.getCssDirectories());
     }
 
     public boolean isRunning() {
@@ -179,9 +182,9 @@ public class LessCompileJob implements LessCompileObservable {
 
         findSourceAndDependents();
 
-        notifyObservers(new LessCompileNotification() {
+        notifyObservers(new CompileEvent() {
             @Override
-            public void notifyObserver(@NotNull LessCompileObserver observer) {
+            public void notify(@NotNull CompileObserver observer) {
                 observer.compileStarted(sourceAndDependents);
             }
         });
@@ -203,27 +206,27 @@ public class LessCompileJob implements LessCompileObservable {
             cssChanged = false;
         }
 
-        final LessCompileNotification notification;
+        final CompileEvent event;
 
         if (cssChanged) {
             addUpdatedLessFile(lessFile);
-            notification = new LessCompileNotification() {
+            event = new CompileEvent() {
                 @Override
-                public void notifyObserver(@NotNull LessCompileObserver observer) {
-                    observer.cssFileChanged(lessFile);
+                public void notify(@NotNull CompileObserver observer) {
+                    observer.outputFileChanged(lessFile);
                 }
             };
             refreshVFS();
         } else {
-            notification = new LessCompileNotification() {
+            event = new CompileEvent() {
                 @Override
-                public void notifyObserver(@NotNull LessCompileObserver observer) {
-                    observer.cssFileUnchanged(lessFile);
+                public void notify(@NotNull CompileObserver observer) {
+                    observer.outputFileUnchanged(lessFile);
                 }
             };
         }
 
-        notifyObservers(notification);
+        notifyObservers(event);
     }
 
     private void finish() {
@@ -233,9 +236,9 @@ public class LessCompileJob implements LessCompileObservable {
 
         final int numCompiled = getNumUpdated();
 
-        notifyObservers(new LessCompileNotification() {
+        notifyObservers(new CompileEvent() {
             @Override
-            public void notifyObserver(@NotNull LessCompileObserver observer) {
+            public void notify(@NotNull CompileObserver observer) {
                 observer.compileFinished(numCompiled);
             }
         });

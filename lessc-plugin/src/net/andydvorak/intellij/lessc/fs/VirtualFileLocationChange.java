@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.file;
+package net.andydvorak.intellij.lessc.fs;
 
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.*;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
-import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
+import net.andydvorak.intellij.lessc.ui.configurable.VfsLocationChangeDialog;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -36,14 +36,14 @@ import java.util.Set;
  * @author Andrew C. Dvorak
  * @since 11/1/12
  */
-public class VFSLocationChange {
+public class VirtualFileLocationChange {
     @NotNull private final CssDirectory cssRootDir;
     @NotNull private final VirtualFile oldFile;
     @NotNull private final VirtualFile newParent;
 
-    public VFSLocationChange(@NotNull final CssDirectory cssRootDir,
-                             @NotNull final VirtualFile oldFile,
-                             @NotNull final VirtualFile newParent) {
+    public VirtualFileLocationChange(@NotNull final CssDirectory cssRootDir,
+                                     @NotNull final VirtualFile oldFile,
+                                     @NotNull final VirtualFile newParent) {
         this.cssRootDir = cssRootDir;
         this.oldFile = oldFile;
         this.newParent = newParent;
@@ -53,7 +53,6 @@ public class VFSLocationChange {
         deleteExisting();
         final String name = oldFile.getName();
         oldFile.copy(this, newParent, name);
-//        FileUtil.copy(new File(oldFile.getPath()), new File(newParent.getPath() + File.separator + oldFile.getName()));
         refresh();
     }
 
@@ -88,7 +87,7 @@ public class VFSLocationChange {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        VFSLocationChange that = (VFSLocationChange) o;
+        VirtualFileLocationChange that = (VirtualFileLocationChange) o;
 
         if (!ObjectUtils.equals(cssRootDir.getPath(), that.cssRootDir.getPath())) return false;
         if (!ObjectUtils.equals(newParent.getPath(), that.newParent.getPath())) return false;
@@ -124,14 +123,14 @@ public class VFSLocationChange {
 
     public static int copyCssFiles(@NotNull final VirtualFileCopyEvent virtualFileCopyEvent,
                                    @Nullable final LessProfile lessProfile,
-                                   @NotNull final FileLocationChangeDialog fileLocationChangeDialog) throws IOException {
-        final Set<VFSLocationChange> changes = getChanges(lessProfile, virtualFileCopyEvent);
+                                   @NotNull final VfsLocationChangeDialog vfsLocationChangeDialog) throws IOException {
+        final Set<VirtualFileLocationChange> changes = getChanges(lessProfile, virtualFileCopyEvent);
 
-        if (changes.isEmpty() || !fileLocationChangeDialog.shouldCopyCssFile(virtualFileCopyEvent))
+        if (changes.isEmpty() || !vfsLocationChangeDialog.shouldCopyCssFile(virtualFileCopyEvent))
             return 0;
 
-        for (VFSLocationChange vfsLocationChange : changes) {
-            vfsLocationChange.copy();
+        for (VirtualFileLocationChange locationChange : changes) {
+            locationChange.copy();
         }
 
         return changes.size();
@@ -139,14 +138,14 @@ public class VFSLocationChange {
 
     public static int moveCssFiles(@NotNull final VirtualFileMoveEvent virtualFileMoveEvent,
                                    @Nullable final LessProfile lessProfile,
-                                   @NotNull final FileLocationChangeDialog fileLocationChangeDialog) throws IOException {
-        final Set<VFSLocationChange> changes = getChanges(lessProfile, virtualFileMoveEvent);
+                                   @NotNull final VfsLocationChangeDialog vfsLocationChangeDialog) throws IOException {
+        final Set<VirtualFileLocationChange> changes = getChanges(lessProfile, virtualFileMoveEvent);
 
-        if (changes.isEmpty() || !fileLocationChangeDialog.shouldMoveCssFile(virtualFileMoveEvent))
+        if (changes.isEmpty() || !vfsLocationChangeDialog.shouldMoveCssFile(virtualFileMoveEvent))
             return 0;
 
-        for (VFSLocationChange vfsLocationChange : changes) {
-            vfsLocationChange.move();
+        for (VirtualFileLocationChange locationChange : changes) {
+            locationChange.move();
         }
 
         return changes.size();
@@ -154,27 +153,27 @@ public class VFSLocationChange {
 
     public static int deleteCssFiles(@NotNull final VirtualFileEvent virtualFileEvent,
                                      @Nullable final LessProfile lessProfile,
-                                     @NotNull final FileLocationChangeDialog fileLocationChangeDialog) throws IOException {
-        final Set<VFSLocationChange> changes = getChanges(lessProfile, virtualFileEvent.getFile(), virtualFileEvent.getFile().getParent());
+                                     @NotNull final VfsLocationChangeDialog vfsLocationChangeDialog) throws IOException {
+        final Set<VirtualFileLocationChange> changes = getChanges(lessProfile, virtualFileEvent.getFile(), virtualFileEvent.getFile().getParent());
 
-        if (changes.isEmpty() || !fileLocationChangeDialog.shouldDeleteCssFile(virtualFileEvent))
+        if (changes.isEmpty() || !vfsLocationChangeDialog.shouldDeleteCssFile(virtualFileEvent))
             return 0;
 
-        for (VFSLocationChange vfsLocationChange : changes) {
-            vfsLocationChange.delete();
+        for (VirtualFileLocationChange locationChange : changes) {
+            locationChange.delete();
         }
 
         return changes.size();
     }
 
     @NotNull
-    public static Set<VFSLocationChange> getChanges(@Nullable final LessProfile lessProfile,
+    public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
                                                     @NotNull final VirtualFileMoveEvent moveEvent) throws IOException {
         return getChanges(lessProfile, moveEvent.getFile(), moveEvent.getOldParent());
     }
 
     @NotNull
-    public static Set<VFSLocationChange> getChanges(@Nullable final LessProfile lessProfile,
+    public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
                                                     @NotNull final VirtualFileCopyEvent copyEvent) throws IOException {
         return getChanges(lessProfile, copyEvent.getFile(), copyEvent.getOriginalFile().getParent());
     }
@@ -188,13 +187,13 @@ public class VFSLocationChange {
      * @throws IOException
      */
     @NotNull
-    public static Set<VFSLocationChange> getChanges(@Nullable final LessProfile lessProfile,
+    public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
                                                     @NotNull final VirtualFile newVirtualLessFile,
                                                     @NotNull final VirtualFile oldVirtualLessParent) throws IOException {
-        final Set<VFSLocationChange> movableFiles = new HashSet<VFSLocationChange>();
+        final Set<VirtualFileLocationChange> changes = new HashSet<VirtualFileLocationChange>();
 
         if (lessProfile == null)
-            return movableFiles;
+            return changes;
 
         // TODO: Make sure new (and old?) directories are in the LESS profile dir
         final File lessRootDir = lessProfile.getLessDir();
@@ -203,13 +202,13 @@ public class VFSLocationChange {
         final String newRelativeCssPath = toCssPath(FileUtil.getRelativePath(lessRootDir, newLessFile));
 
         if (newRelativeCssPath == null)
-            return movableFiles;
+            return changes;
 
         final File oldLessFile = new File(oldVirtualLessParent.getPath() + File.separator + newLessFile.getName());
         final String oldRelativeCssPath = toCssPath(FileUtil.getRelativePath(lessRootDir, oldLessFile));
 
         if (oldRelativeCssPath == null)
-            return movableFiles;
+            return changes;
 
         for(CssDirectory cssRootDir : lessProfile.getCssDirectories()) {
             final VirtualFile oldVirtualCssFile = getVirtualFile(cssRootDir, oldRelativeCssPath);
@@ -226,10 +225,10 @@ public class VFSLocationChange {
             if (newVirtualCssFileParent == null)
                 continue;
 
-            movableFiles.add(new VFSLocationChange(cssRootDir, oldVirtualCssFile, newVirtualCssFileParent));
+            changes.add(new VirtualFileLocationChange(cssRootDir, oldVirtualCssFile, newVirtualCssFileParent));
         }
 
-        return movableFiles;
+        return changes;
     }
 
     @Nullable

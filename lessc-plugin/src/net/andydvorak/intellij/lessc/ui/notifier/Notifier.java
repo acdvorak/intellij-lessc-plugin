@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.notification;
+package net.andydvorak.intellij.lessc.ui.notifier;
 
 import com.intellij.notification.*;
 import com.intellij.openapi.project.Project;
@@ -22,8 +22,8 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vcs.changes.ui.ChangesViewContentManager;
 import com.intellij.util.containers.ConcurrentMultiMap;
-import net.andydvorak.intellij.lessc.file.LessFile;
-import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
+import net.andydvorak.intellij.lessc.fs.LessFile;
+import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -151,7 +151,7 @@ public class Notifier {
      */
 
     public void error(@NotNull final LessErrorMessage m) {
-        final NotificationListener listener = new FileNotificationListener(myProject, m.getFilePath(), m.getLine(), m.getColumn());
+        final NotificationListener listener = new NotificationListenerImpl(myProject, m.getFilePath(), m.getLine(), m.getColumn());
         final Notification notification = createNotification(ERROR_GROUP, m.getTitle(), m.getHtml(), NotificationType.ERROR, listener);
 
         expire(m.getFilePath());

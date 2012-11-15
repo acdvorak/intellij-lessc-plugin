@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.ui;
+package net.andydvorak.intellij.lessc.ui.configurable;
 
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -36,7 +36,7 @@ import com.intellij.util.containers.OrderedSet;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.lang3.StringUtils;
@@ -55,7 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
+public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> {
 
     private static final int SIZEPOLICY_FILL_ALL = GridConstraints.SIZEPOLICY_CAN_GROW | GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW;
     private static final GridConstraints GRIDCONSTRAINTS_FILL_ALL = new GridConstraints(
@@ -99,14 +99,8 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     private final ListTableModel<CssDirectory> profileMappingModel;
 
     private List<CssDirectory> cssDirectories;
-    private ActionListener actionListener = new ActionListener() {
-        public void actionPerformed(ActionEvent actionEvent) {
-            fireChangeEvent();
-            updateBox();
-        }
-    };
 
-    public CssConfigurableForm(final Project project, final LessProfile lessProfile, final LessProfilesPanel lessProfilesPanel, final Runnable updater) {
+    public LessProfileConfigurableForm(final Project project, final LessProfile lessProfile, final LessProfilesPanel lessProfilesPanel, final Runnable updater) {
         super(true, updater);
 
         this.project = project;
@@ -140,13 +134,9 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     }
 
     public JComponent createOptionsPanel() {
-        lessDirTextField = new TextFieldWithBrowseButtonListener(project, UIBundle.message("file.chooser.less.title"));
+        lessDirTextField = new TextFieldWithBrowseButtonImpl(project, UIBundle.message("file.chooser.less.title"));
 
         lessDirPanel.add(lessDirTextField, GRIDCONSTRAINTS_FILL_ALL);
-
-        includePatternTextField.addActionListener(actionListener);
-        excludePatternTextField.addActionListener(actionListener);
-        compressCssCheckbox.addActionListener(actionListener);
 
         profileMappingTable.addMouseListener(new MouseListener() {
             @Override public void mouseClicked(MouseEvent mouseEvent) {
@@ -311,21 +301,5 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     public void setModified(boolean modified) {
         this.modified = modified;
-    }
-
-    public void addOptionChangeListener(OptionsPanelListener listener) {
-        listeners.add(OptionsPanelListener.class, listener);
-    }
-
-    private void fireChangeEvent() {
-        Object[] fires = listeners.getListenerList();
-        for (int i = fires.length - 2; i >= 0; i -= 2) {
-            if (fires[i] == OptionsPanelListener.class) {
-                ((OptionsPanelListener)fires[i + 1]).optionChanged();
-            }
-        }
-    }
-
-    private void updateBox() {
     }
 }

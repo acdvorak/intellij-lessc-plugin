@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.andydvorak.intellij.lessc.messages;
+package net.andydvorak.intellij.lessc.ui.messages;
 
 import com.intellij.CommonBundle;
 import org.jetbrains.annotations.NonNls;
@@ -28,11 +28,11 @@ import java.util.ResourceBundle;
  * @author Andrew C. Dvorak
  * @since 11/14/12
  */
-public class UIBundle {
+public class NotificationsBundle {
     private static Reference<ResourceBundle> ourBundle;
 
     @NonNls
-    private static final String BUNDLE_NAME = "messages.UIBundle";
+    private static final String BUNDLE_NAME = "messages.NotificationsBundle";
 
     @SuppressWarnings({"HardCodedStringLiteral", "UnresolvedPropertyKey"})
     public static String logTitle(@NonNls String id) {

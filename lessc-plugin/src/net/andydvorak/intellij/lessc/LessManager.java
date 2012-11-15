@@ -32,14 +32,15 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
-import net.andydvorak.intellij.lessc.file.*;
-import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
-import net.andydvorak.intellij.lessc.notification.FileNotificationListener;
-import net.andydvorak.intellij.lessc.notification.LessErrorMessage;
-import net.andydvorak.intellij.lessc.notification.Notifier;
+import net.andydvorak.intellij.lessc.fs.*;
+import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
+import net.andydvorak.intellij.lessc.ui.notifier.NotificationListenerImpl;
+import net.andydvorak.intellij.lessc.ui.notifier.LessErrorMessage;
+import net.andydvorak.intellij.lessc.ui.notifier.Notifier;
+import net.andydvorak.intellij.lessc.observer.CompileObserverImpl;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
-import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
+import net.andydvorak.intellij.lessc.ui.configurable.VfsLocationChangeDialog;
 import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -57,14 +58,14 @@ import java.util.concurrent.ConcurrentMap;
                 @Storage(id = "dir", file = "$PROJECT_CONFIG_DIR$/lessc/lessc.xml", scheme = StorageScheme.DIRECTORY_BASED)
         }
 )
-public class LessManager extends AbstractProjectComponent implements PersistentStateComponent<LessProjectState>, LessFileWatcherService {
+public class LessManager extends AbstractProjectComponent implements PersistentStateComponent<LessProjectState>, VirtualFileWatcher {
 
     private static final Logger LOG = Logger.getInstance("#" + LessManager.class.getName());
     private static final String IGNORE_LINK = "(<a href='ignore'>ignore</a>)";
     private static final String DISMISS_LINK = "(<a href='dismiss'>dismiss</a>)";
 
     @NotNull private final LessProjectState state = new LessProjectState();
-    @NotNull private final FileLocationChangeDialog fileLocationChangeDialog;
+    @NotNull private final VfsLocationChangeDialog vfsLocationChangeDialog;
 
     @Transient
     private final VirtualFileListenerImpl virtualFileListener;
@@ -78,7 +79,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     public LessManager(final Project project) {
         super(project);
         this.virtualFileListener = new VirtualFileListenerImpl(this);
-        this.fileLocationChangeDialog = new FileLocationChangeDialog(project, state);
+        this.vfsLocationChangeDialog = new VfsLocationChangeDialog(project, state);
         this.notifier = Notifier.getInstance(project);
     }
     
@@ -204,7 +205,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                                                   @NotNull final LessCompileJob compileJob) {
         indicator.setFraction(0);
 
-        compileJob.addObserver(new LessCompileObserverImpl(compileJob, task, indicator));
+        compileJob.addObserver(new CompileObserverImpl(compileJob, task, indicator));
 
         final long startTime = System.currentTimeMillis();
 
@@ -269,7 +270,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             @Override
             public void run() {
                 for (LessProfile lessProfile : getProfiles()) {
-                    VFSLocationChange.refresh(lessProfile.getCssDirectories());
+                    VirtualFileLocationChange.refresh(lessProfile.getCssDirectories());
                 }
             }
         });
@@ -312,7 +313,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         if (isSupported(virtualFileMoveEvent)) {
             final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
             try {
-                VFSLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, fileLocationChangeDialog);
+                VirtualFileLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, vfsLocationChangeDialog);
             } catch (IOException e) {
                 LOG.warn(e);
             }
@@ -323,7 +324,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         if (isSupported(virtualFileCopyEvent)) {
             final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
             try {
-                VFSLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, fileLocationChangeDialog);
+                VirtualFileLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, vfsLocationChangeDialog);
             } catch (IOException e) {
                 LOG.warn(e);
             }
@@ -334,7 +335,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         if (isSupported(virtualFileEvent)) {
             final LessProfile lessProfile = getLessProfile(virtualFileEvent);
             try {
-                VFSLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, fileLocationChangeDialog);
+                VirtualFileLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, vfsLocationChangeDialog);
             } catch (IOException e) {
                 LOG.warn(e);
             }
@@ -372,7 +373,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final String filename = lessFile.getName();
         final String messageText = NotificationsBundle.message("compiled.unchanged", filename);
         final String messageHtml = NotificationsBundle.message("compiled.unchanged", createLink(lessFile)) + " " + IGNORE_LINK;
-        final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
+        final NotificationListenerImpl listener = new NotificationListenerImpl(myProject, lessFile.getCanonicalPathSafe());
         final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
 
         notifier.log(messageHtml, listener, modifiedLessFiles);
@@ -388,7 +389,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final String logMessageHtml = messagePartHtml + " " + IGNORE_LINK;
         final String successMessageHtml = messagePartHtml + " " + DISMISS_LINK;
 
-        final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
+        final NotificationListenerImpl listener = new NotificationListenerImpl(myProject, lessFile.getCanonicalPathSafe());
         final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
 
         notifier.log(logMessageHtml, listener, modifiedLessFiles);
@@ -411,7 +412,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
         messageFilesHtml.append(" ] " + IGNORE_LINK);
 
-        final FileNotificationListener listener = new FileNotificationListener(myProject);
+        final NotificationListenerImpl listener = new NotificationListenerImpl(myProject);
 
         notifier.log(messageFilesHtml.toString(), listener, new HashSet<LessFile>());
         notifier.success(messageShortText + " " + DISMISS_LINK, listener, modifiedLessFiles);
