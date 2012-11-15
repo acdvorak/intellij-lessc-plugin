@@ -31,7 +31,13 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.event.HyperlinkEvent;
 
+/**
+ * Listens for {@link HyperlinkEvent}s on a {@link Notification} object.
+ * If the user clicks on a link to a file, the file will be opened in the editor with the cursor
+ * placed at the appropriate line / column.  Clicking "ignore" or "dismiss" will expire the notification.
+ */
 public class NotificationListenerImpl implements NotificationListener {
+
     @NotNull
     private final Project myProject;
     @Nullable
@@ -102,4 +108,5 @@ public class NotificationListenerImpl implements NotificationListener {
             notification.expire();
         }
     }
+
 }
