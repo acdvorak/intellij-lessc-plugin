@@ -106,11 +106,12 @@ public class LessEngine {
 			cx.evaluateReader(scope, new InputStreamReader(cssmin.openConnection().getInputStream()), cssmin.getFile(), 1, null);
 			cx.evaluateReader(scope, new InputStreamReader(engine.openConnection().getInputStream()), engine.getFile(), 1, null);
 			compile = (Function) scope.get("compile", scope);
-			Context.exit();
 		} catch (Exception e) {
 			logger.error("LESS Engine initialization failed.", e);
             throw new LessException(e);
-		}
+		} finally {
+            Context.exit();
+        }
 	}
 	
 	public String compile(String inputLessCode) throws LessException {
