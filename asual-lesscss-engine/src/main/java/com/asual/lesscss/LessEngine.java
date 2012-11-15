@@ -31,6 +31,8 @@ import java.util.List;
  * @author Noah Sloan
  */
 public class LessEngine {
+
+    private static LessEngine instance;
 	
 	private final Log logger = LogFactory.getLog(getClass());
 	
@@ -39,6 +41,12 @@ public class LessEngine {
 	
 	private Scriptable scope;
 	private Function compile;
+
+    public static synchronized LessEngine getInstance() throws LessException {
+        if (instance == null)
+            instance = new LessEngine();
+        return instance;
+    }
 	
 	public LessEngine() throws LessException {
 		this(new LessOptions());

@@ -49,8 +49,6 @@ public class LessCompileJob implements LessCompileObservable {
     private final Set<String> updatedLessFilePaths = new LinkedHashSet<String>();
     private final Set<LessCompileObserver> observers = new LinkedHashSet<LessCompileObserver>();
 
-    private LessEngine lessEngine;
-
     /*
      * Constructors
      */
@@ -125,7 +123,6 @@ public class LessCompileJob implements LessCompileObservable {
 
     public void compile() throws IOException, LessException, IllegalStateException {
         preventConcurrency();
-        initLessEngine();
         try {
             start();
         } finally {
@@ -163,12 +160,6 @@ public class LessCompileJob implements LessCompileObservable {
         }
     }
 
-    private void initLessEngine() throws LessException {
-        if (lessEngine == null) {
-            lessEngine = new LessEngine();
-        }
-    }
-
     private void findSourceAndDependents() throws IOException {
         if (sourceAndDependents.isEmpty()) {
             sourceAndDependents.add(sourceLessFile);
@@ -202,7 +193,7 @@ public class LessCompileJob implements LessCompileObservable {
         curLessFileIndex.incrementAndGet();
 
         if (lessFile.shouldCompile(lessProfile)) {
-            lessFile.compile(lessEngine, lessProfile);
+            lessFile.compile(LessEngine.getInstance(), lessProfile);
             cssChanged = lessFile.hasCssChanged();
         } else {
             cssChanged = false;
