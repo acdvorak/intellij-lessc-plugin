@@ -80,11 +80,10 @@ public class LessEngine {
 			URL engine = classLoader.getResource("engine.js");
 			URL cssmin = classLoader.getResource("cssmin.js");
 
-//			Context cx = Context.enter();
-            Context cx = ContextFactory.getGlobal().enterContext();
+			Context cx = Context.enter();
 
-//			cx.setOptimizationLevel(9);
-            cx.setOptimizationLevel(-1);
+			cx.setOptimizationLevel(9);
+//            cx.setOptimizationLevel(-1);
 
             cx.setLanguageVersion(Context.VERSION_1_5);
 
