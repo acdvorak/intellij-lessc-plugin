@@ -40,6 +40,7 @@ import net.andydvorak.intellij.lessc.notification.Notifier;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 import net.andydvorak.intellij.lessc.ui.FileLocationChangeDialog;
+import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -155,6 +156,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     public void handleChangeEvent(final VirtualFileEvent virtualFileEvent) {
         if (isSupported(virtualFileEvent)) {
+            logChangeEvent(virtualFileEvent);
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 @Override
                 public void run() {
@@ -176,7 +178,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private void compile(final LessCompileJob compileJob, final boolean async) {
         // Abort if the job is queued
-        if (enqueue(compileJob, async)) return;
+        if (enqueue(compileJob, async)) {
+            logQueuedJob(compileJob, async);
+            return;
+        }
 
         final LessFile lessFile = compileJob.getSourceLessFile();
         final String title = NotificationsBundle.message("compiling.single", lessFile.getName());
@@ -201,12 +206,14 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
         compileJob.addObserver(new LessCompileObserverImpl(compileJob, task, indicator));
 
+        final long startTime = System.currentTimeMillis();
+
         try {
             compileJob.compile();
-            handleSuccess(compileJob);
+            handleSuccess(compileJob, startTime);
         } catch (Exception e) {
             final LessFile curLessFile = compileJob.getCurLessFile();
-            handleException(e, curLessFile.getCanonicalPathSafe(), curLessFile.getName());
+            handleException(e, curLessFile.getCanonicalPathSafe(), curLessFile.getName(), startTime);
         } finally {
             indicator.setFraction(1);
             dequeue();
@@ -334,13 +341,18 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
     }
 
-    private void handleException(final @NotNull Exception e, @NotNull final String lessFilePath, @NotNull final String lessFileName) {
-        final LessErrorMessage message = new LessErrorMessage(lessFilePath, lessFileName, e);
-        notifier.error(message);
-        LOG.warn(e);
+    private void handleException(@NotNull final Exception e, @NotNull final String lessFilePath,
+                                 @NotNull final String lessFileName, final long startTime) {
+        final double runTime = getRunTime(startTime);
+        notifier.error(new LessErrorMessage(lessFilePath, lessFileName, e));
+        LOG.warn(String.format("Compile failed with an exception in %3.2f seconds:", runTime), e);
     }
 
-    private void handleSuccess(final LessCompileJob lessCompileJob) {
+    private void handleSuccess(final LessCompileJob lessCompileJob, final long startTime) {
+        final double runTime = getRunTime(startTime);
+
+        LOG.info(String.format("Compile succeeded in %3.2f seconds", runTime));
+
         for (LessFile lessFile : lessCompileJob.getSourceAndDependents()) {
             notifier.expire(lessFile.getCanonicalPathSafe());
         }
@@ -411,6 +423,33 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return String.format("<a href='%s'>%s</a>", lessFile.getCanonicalPathSafeHtmlEscaped(), lessFile.getName());
     }
 
+    private double getRunTime(long startTime) {
+        return (double)(System.currentTimeMillis() - startTime) / 1000d;
+    }
 
+    private void logChangeEvent(VirtualFileEvent virtualFileEvent) {
+        LOG.info("LessManager.handleChangeEvent(virtualFileEvent)" + "\n" +
+                 "\t virtualFileEvent.getFile() = " + virtualFileEvent.getFile().getPath() + "\n" +
+                 "\t virtualFileEvent.isFromSave() = " + virtualFileEvent.isFromSave() + "\n" +
+                 "\t virtualFileEvent.isFromRefresh() = " + virtualFileEvent.isFromRefresh() + "\n" +
+                 "\t virtualFileEvent.getRequestor() = " + toStringLoggable(virtualFileEvent.getRequestor()));
+    }
+
+    private void logQueuedJob(LessCompileJob compileJob, boolean async) {
+        final String asyncStr = async ? "asynchronous" : "synchronous";
+        final String lessPath = compileJob.getSourceLessFile().getCanonicalPathSafe();
+        LOG.info(String.format("Queued %s compile job for %s", asyncStr, lessPath));
+    }
+
+    /**
+     * Returns a log-friendly string representation of an object that includes the fully-qualified
+     * class name and the value of the object's {@code toString()} if the class overrides it.
+     * @param obj object to represent as a string
+     * @return log-friendly representation of the object
+     */
+    private static String toStringLoggable(Object obj) {
+        final String identity = ObjectUtils.identityToString(obj);
+        final String override = ObjectUtils.toString(obj, null);
+        return ObjectUtils.equals(identity, override) ? identity : identity + " - " + override;
     }
 }

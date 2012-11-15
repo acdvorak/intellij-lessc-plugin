@@ -217,9 +217,9 @@ public class LessFile extends File implements Comparable<File> {
 
         final File cssTempFile = createCssTempFile();
 
-        LOG.info("Compiling LESS file: " + getName());
-        LOG.info("\t" + "lessPath: " + getCanonicalPath());
-        LOG.info("\t" + "cssTempPath: " + cssTempFile.getCanonicalPath());
+        LOG.info("Compiling " + getName() + ":\n" +
+                 "\t" + "lessPath: " + getCanonicalPath() + "\n" +
+                 "\t" + "cssTempPath: " + cssTempFile.getCanonicalPath());
 
         final String inputLessCode = FileUtil.loadFile(this);
         final boolean compressOutput = (lessProfile.isCompressOutput() && !inputLessCode.contains("//simpless:!minify")) || inputLessCode.contains("//simpless:minify");
