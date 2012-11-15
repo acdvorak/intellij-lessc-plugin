@@ -23,6 +23,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vcs.changes.ui.ChangesViewContentManager;
 import com.intellij.util.containers.ConcurrentMultiMap;
 import net.andydvorak.intellij.lessc.file.LessFile;
+import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,7 +56,8 @@ public class Notifier {
     public static final NotificationGroup ERROR_GROUP = new NotificationGroup(
             "LESS Compiler Error Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
-    private static final String TITLE = "LESS CSS Compiler";
+    private static final String LOG_TITLE = NotificationsBundle.message("log.title");
+    private static final String BALLOON_TITLE = NotificationsBundle.message("balloon.title");
 
     private static final Key<Notifier> userDataKey = new Key<Notifier>("LessNotifier");
 
@@ -89,12 +91,6 @@ public class Notifier {
         return notificationGroup.createNotification(title, message, type, listener);
     }
 
-    @NotNull
-    private static Notification createNotification(@NotNull NotificationGroup notificationGroup, @NotNull String message,
-                                                   @NotNull NotificationType type, @Nullable NotificationListener listener) {
-        return createNotification(notificationGroup, TITLE, message, type, listener);
-    }
-
     /*
      * Generic
      */
@@ -126,7 +122,7 @@ public class Notifier {
 
     public void log(@NotNull final String message, @Nullable final NotificationListener listener,
                     @NotNull final Set<LessFile> modifiedLessFiles) {
-        final Notification notification = createNotification(LOG_GROUP, message, NotificationType.INFORMATION, listener);
+        final Notification notification = createNotification(LOG_GROUP, LOG_TITLE, message, NotificationType.INFORMATION, listener);
 
         for (LessFile lessFile : modifiedLessFiles) {
             add(lessFile.getCanonicalPathSafe(), notification);
@@ -141,7 +137,7 @@ public class Notifier {
 
     public void success(@NotNull final String message, @Nullable final NotificationListener listener,
                         @NotNull final Set<LessFile> modifiedLessFiles) {
-        final Notification notification = createNotification(SUCCESS_GROUP, message, NotificationType.INFORMATION, listener);
+        final Notification notification = createNotification(SUCCESS_GROUP, BALLOON_TITLE, message, NotificationType.INFORMATION, listener);
 
         for (LessFile lessFile : modifiedLessFiles) {
             add(lessFile.getCanonicalPathSafe(), notification);

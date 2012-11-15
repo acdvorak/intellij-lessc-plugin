@@ -21,6 +21,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import net.andydvorak.intellij.lessc.messages.UIBundle;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -37,7 +38,7 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
     }
 
     public String getDisplayName() {
-        return "LESS Compiler";
+        return UIBundle.message("pref.display.name");
     }
 
     public Icon getIcon() {

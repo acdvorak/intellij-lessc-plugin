@@ -39,6 +39,7 @@ import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
 import net.andydvorak.intellij.lessc.file.*;
+import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
 import net.andydvorak.intellij.lessc.notification.FileNotificationListener;
 import net.andydvorak.intellij.lessc.notification.LessErrorMessage;
 import net.andydvorak.intellij.lessc.notification.Notifier;
@@ -184,7 +185,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         if (enqueue(compileJob, async)) return;
 
         final LessFile lessFile = compileJob.getSourceLessFile();
-        final String title = "Compiling " + lessFile.getName() + " to CSS...";
+        final String title = NotificationsBundle.message("compiling.single", lessFile.getName());
 
         PsiDocumentManager.getInstance(myProject).performWhenAllCommitted(new Runnable() {
             @Override
@@ -363,9 +364,8 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private void notifyNone(final LessFile lessFile) {
         final String filename = lessFile.getName();
-        final String messagePart = "was modified, but didn't change any CSS files";
-        final String messageText = filename + " " + messagePart;
-        final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
+        final String messageText = NotificationsBundle.message("compiled.unchanged", filename);
+        final String messageHtml = NotificationsBundle.message("compiled.unchanged", createLink(lessFile)) + " " + IGNORE_LINK;
         final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
         final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
 
@@ -376,10 +376,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private void notifySingle(final LessFile lessFile) {
         final String filename = lessFile.getName();
-        final String messagePart = "successfully compiled to CSS";
-        final String messageText = filename + " " + messagePart;
-        final String logMessageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
-        final String successMessageHtml = createLink(lessFile) + " " + messagePart + " " + DISMISS_LINK;
+
+        final String messageText = NotificationsBundle.message("compiled.changed.single", filename);
+        final String messagePartHtml = NotificationsBundle.message("compiled.changed.single", createLink(lessFile));
+        final String logMessageHtml = messagePartHtml + " " + IGNORE_LINK;
+        final String successMessageHtml = messagePartHtml + " " + DISMISS_LINK;
+
         final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
         final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
 
@@ -390,7 +392,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void notifyMultiple(final Set<LessFile> modifiedLessFiles) {
-        final String messageShortText = modifiedLessFiles.size() + " CSS files were successfully updated";
+        final String messageShortText = NotificationsBundle.message("compiled.changed.multiple", modifiedLessFiles.size());
         final StringBuilder messageFullText = new StringBuilder(messageShortText + ":");
         final StringBuilder messageFilesHtml = new StringBuilder(messageShortText + " " + IGNORE_LINK + ":");
         final Iterator<LessFile> iterator = modifiedLessFiles.iterator();

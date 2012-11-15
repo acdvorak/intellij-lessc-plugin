@@ -17,6 +17,7 @@
 package net.andydvorak.intellij.lessc.ui;
 
 import com.intellij.util.ui.ColumnInfo;
+import net.andydvorak.intellij.lessc.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 
 import javax.swing.*;
@@ -28,7 +29,7 @@ import java.io.File;
 public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
 
     public CssDirectoryColumn() {
-        super("CSS Output Directory");
+        super(UIBundle.message("table.header.css.output.dir"));
     }
 
     public TableCellRenderer getRenderer(final CssDirectory cssDirectory) {

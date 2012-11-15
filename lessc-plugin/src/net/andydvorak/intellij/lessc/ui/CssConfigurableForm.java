@@ -36,6 +36,7 @@ import com.intellij.util.containers.OrderedSet;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import net.andydvorak.intellij.lessc.LessManager;
+import net.andydvorak.intellij.lessc.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.lang3.StringUtils;
@@ -139,7 +140,7 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
     }
 
     public JComponent createOptionsPanel() {
-        lessDirTextField = new TextFieldWithBrowseButtonListener(project, "Choose a LESS source directory");
+        lessDirTextField = new TextFieldWithBrowseButtonListener(project, UIBundle.message("file.chooser.less.title"));
 
         lessDirPanel.add(lessDirTextField, GRIDCONSTRAINTS_FILL_ALL);
 
@@ -253,7 +254,7 @@ public class CssConfigurableForm extends NamedConfigurable<LessProfile> {
 
     private FileChooserDescriptor getFileChooserDescriptor() {
         FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
-        d.setTitle("Choose a CSS output directory");
+        d.setTitle(UIBundle.message("file.chooser.css.title"));
         d.setShowFileSystemRoots(true);
         return d;
     }

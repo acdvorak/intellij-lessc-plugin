@@ -16,6 +16,7 @@
 
 package net.andydvorak.intellij.lessc.notification;
 
+import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Matcher;
@@ -38,7 +39,7 @@ public class LessErrorMessage extends Exception {
         filePath = lessFilePath;
         fileName = lessFileName;
 
-        title = "LESS CSS Compiler Error";
+        title = NotificationsBundle.message("error.title");
         message = t.getLocalizedMessage();
         matcher = Pattern.compile("line ([0-9]+), column ([0-9]+)", Pattern.CASE_INSENSITIVE).matcher(message);
 

@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFileEvent;
+import net.andydvorak.intellij.lessc.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 
 /**
@@ -62,17 +63,17 @@ public class FileLocationChangeDialog {
 
             @Override
             public String getDoNotShowMessage() {
-                return "Do not ask me again";
+                return UIBundle.message("do.not.ask.me.again");
             }
         };
 
         if (option.isToBeShown()) {
             if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
                 result = Messages.showYesNoDialog(
-                        virtualFileEvent.getFileName() + " has moved.  Would you like to move the corresponding CSS files as well?",
-                        "LESS File Moved", // Title
-                        "Move CSS file(s)", // "Yes" button text
-                        "Don't move CSS file(s)", // "No" button text
+                        UIBundle.message("vfs.move.message", virtualFileEvent.getFileName()),
+                        UIBundle.message("vfs.move.title"), // Title
+                        UIBundle.message("vfs.move.yes"), // "Yes" button text
+                        UIBundle.message("vfs.move.no"), // "No" button text
                         Messages.getQuestionIcon(),
                         option);
             }
@@ -114,17 +115,17 @@ public class FileLocationChangeDialog {
 
             @Override
             public String getDoNotShowMessage() {
-                return "Do not ask me again";
+                return UIBundle.message("do.not.ask.me.again");
             }
         };
 
         if (option.isToBeShown()) {
             if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
                 result = Messages.showYesNoDialog(
-                        virtualFileEvent.getFileName() + " has been copied.  Would you like to copy the corresponding CSS files as well?",
-                        "LESS File Copied", // Title
-                        "Copy CSS file(s)", // "Yes" button text
-                        "Don't copy CSS file(s)", // "No" button text
+                        UIBundle.message("vfs.copy.message", virtualFileEvent.getFileName()),
+                        UIBundle.message("vfs.copy.title"), // Title
+                        UIBundle.message("vfs.copy.yes"), // "Yes" button text
+                        UIBundle.message("vfs.copy.no"), // "No" button text
                         Messages.getQuestionIcon(),
                         option);
             }
@@ -166,17 +167,17 @@ public class FileLocationChangeDialog {
 
             @Override
             public String getDoNotShowMessage() {
-                return "Do not ask me again";
+                return UIBundle.message("do.not.ask.me.again");
             }
         };
 
         if (option.isToBeShown()) {
             if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
                 result = Messages.showYesNoDialog(
-                        virtualFileEvent.getFileName() + " was deleted.  Would you like to delete the corresponding CSS files as well?",
-                        "LESS File Deleted", // Title
-                        "Delete CSS file(s)", // "Yes" button text
-                        "Don't delete CSS file(s)", // "No" button text
+                        UIBundle.message("vfs.delete.message", virtualFileEvent.getFileName()),
+                        UIBundle.message("vfs.delete.title"), // Title
+                        UIBundle.message("vfs.delete.yes"), // "Yes" button text
+                        UIBundle.message("vfs.delete.no"), // "No" button text
                         Messages.getQuestionIcon(),
                         option);
             }

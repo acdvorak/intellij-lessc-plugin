@@ -18,6 +18,7 @@ package net.andydvorak.intellij.lessc.file;
 
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
+import net.andydvorak.intellij.lessc.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -74,9 +75,9 @@ public class LessCompileObserverImpl implements LessCompileObserver {
     private void updateProgress() {
         if (numToCompile > 0) {
             final LessFile curLessFile = compileJob.getCurLessFile();
-            final String title = String.format("Compiling %d of %d LESS files to CSS (%s)...",
-                    (int)numCompleted + 1,
-                    (int)numToCompile,
+            final String title = NotificationsBundle.message("compiling.multiple",
+                    (int) numCompleted + 1,
+                    (int) numToCompile,
                     curLessFile != null ? curLessFile.getName() : null);
             task.setTitle(title);
             indicator.setFraction(numCompleted / numToCompile);

@@ -24,6 +24,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import net.andydvorak.intellij.lessc.LessManager;
+import net.andydvorak.intellij.lessc.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -58,14 +59,14 @@ public class CompileLessAction extends AnAction {
             final String title, message;
 
             if (numMissing == 1) {
-                title = "Missing CSS Output Directory";
-                message = "The selected LESS file does not have any CSS output directories mapped to it and cannot be compiled.";
+                title = UIBundle.message("action.missing.css.dir.single.title");
+                message = UIBundle.message("action.missing.css.dir.single.message");
             } else {
-                title = "Missing CSS Output Directories";
-                message = numMissing + " of the " + files.size() + " LESS files you selected do not have any CSS output directories mapped to them and cannot be compiled.";
+                title = UIBundle.message("action.missing.css.dir.multiple.title");
+                message = UIBundle.message("action.missing.css.dir.multiple.message", numMissing, files.size());
             }
 
-            Messages.showInfoMessage(e.getProject(), message + "\n\nYou can add CSS output directories under Settings > Project Settings > LESS Compiler.", title);
+            Messages.showInfoMessage(e.getProject(), UIBundle.message("action.missing.css.dir.add.message", message), title);
         }
     }
 
