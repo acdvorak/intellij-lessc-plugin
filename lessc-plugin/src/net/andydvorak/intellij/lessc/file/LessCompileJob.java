@@ -82,6 +82,10 @@ public class LessCompileJob implements LessCompileObservable {
         return lessProfile;
     }
 
+    public Set<LessFile> getSourceAndDependents() {
+        return sourceAndDependents;
+    }
+
     public LessFile getCurLessFile() {
         final int index = curLessFileIndex.get();
         if (!sourceAndDependents.isEmpty() && index > -1) {
@@ -165,16 +169,6 @@ public class LessCompileJob implements LessCompileObservable {
     * Private instance methods
     */
 
-    private Set<LessFile> getSourceAndDependents() throws IOException {
-        final Set<LessFile> filesToCompile = new LinkedHashSet<LessFile>();
-        filesToCompile.add(sourceLessFile);
-        if (lessProfile != null && lessProfile.hasCssDirectories()) {
-            final Set<LessFile> dependents = sourceLessFile.getDependentsRecursive(lessProfile);
-            filesToCompile.addAll(dependents);
-        }
-        return filesToCompile;
-    }
-
     private void preventConcurrency() throws IllegalStateException {
         if (compiled.get() || running.get()) {
             final String message = "LessCompileJob for \"" + sourceLessFile.getName() + "\" can only be compiled once.";
@@ -189,11 +183,20 @@ public class LessCompileJob implements LessCompileObservable {
         }
     }
 
+    private void findSourceAndDependents() throws IOException {
+        if (sourceAndDependents.isEmpty()) {
+            sourceAndDependents.add(sourceLessFile);
+            if (lessProfile != null && lessProfile.hasCssDirectories()) {
+                final Set<LessFile> dependents = sourceLessFile.getDependentsRecursive(lessProfile);
+                sourceAndDependents.addAll(dependents);
+            }
+        }
+    }
+
     private void start() throws IOException, LessException {
         running.set(true);
 
-        sourceAndDependents.clear();
-        sourceAndDependents.addAll(getSourceAndDependents());
+        findSourceAndDependents();
 
         notifyObservers(new LessCompileNotification() {
             @Override

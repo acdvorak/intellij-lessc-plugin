@@ -65,6 +65,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private static final Logger LOG = Logger.getInstance("#" + LessManager.class.getName());
     private static final String IGNORE_LINK = "(<a href='ignore'>ignore</a>)";
+    private static final String DISMISS_LINK = "(<a href='dismiss'>dismiss</a>)";
 
     @NotNull private final LessProjectState state = new LessProjectState();
     @NotNull private final FileLocationChangeDialog fileLocationChangeDialog;
@@ -76,10 +77,13 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     private final ConcurrentLinkedQueue<String> compileQueue = new ConcurrentLinkedQueue<String>();
     private final ConcurrentMap<String, LessCompileJob> compileQueueJobs = new ConcurrentHashMap<String, LessCompileJob>();
 
+    private final Notifier notifier;
+
     public LessManager(final Project project) {
         super(project);
         this.virtualFileListener = new VirtualFileListenerImpl(this);
         this.fileLocationChangeDialog = new FileLocationChangeDialog(project, state);
+        this.notifier = Notifier.getInstance(project);
     }
     
     public static LessManager getInstance(final Project project) {
@@ -337,11 +341,15 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private void handleException(final @NotNull Exception e, @NotNull final String lessFilePath, @NotNull final String lessFileName) {
         final LessErrorMessage message = new LessErrorMessage(lessFilePath, lessFileName, e);
-        Notifier.getInstance(myProject).notifyError(message);
+        notifier.error(message);
         LOG.warn(e);
     }
 
     private void handleSuccess(final LessCompileJob lessCompileJob) {
+        for (LessFile lessFile : lessCompileJob.getSourceAndDependents()) {
+            notifier.expire(lessFile.getCanonicalPathSafe());
+        }
+
         final int numModified = lessCompileJob.getNumUpdated();
 
         if (numModified == 0) {
@@ -354,30 +362,34 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void notifyNone(final LessFile lessFile) {
-        final Notifier notifier = Notifier.getInstance(myProject);
         final String filename = lessFile.getName();
         final String messagePart = "was modified, but didn't change any CSS files";
         final String messageText = filename + " " + messagePart;
         final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
         final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
-        notifier.log(messageHtml, listener);
+        final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
+
+        notifier.log(messageHtml, listener, modifiedLessFiles);
+
         LOG.info(messageText);
     }
 
     private void notifySingle(final LessFile lessFile) {
-        final Notifier notifier = Notifier.getInstance(myProject);
         final String filename = lessFile.getName();
         final String messagePart = "successfully compiled to CSS";
         final String messageText = filename + " " + messagePart;
-        final String messageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
+        final String logMessageHtml = createLink(lessFile) + " " + messagePart + " " + IGNORE_LINK;
+        final String successMessageHtml = createLink(lessFile) + " " + messagePart + " " + DISMISS_LINK;
         final FileNotificationListener listener = new FileNotificationListener(myProject, lessFile.getCanonicalPathSafe());
-        notifier.log(messageHtml, listener);
-        notifier.notifySuccessBalloon(messageHtml, listener);
+        final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
+
+        notifier.log(logMessageHtml, listener, modifiedLessFiles);
+        notifier.success(successMessageHtml, listener, modifiedLessFiles);
+
         LOG.info(messageText);
     }
 
     private void notifyMultiple(final Set<LessFile> modifiedLessFiles) {
-        final Notifier notifier = Notifier.getInstance(myProject);
         final String messageShortText = modifiedLessFiles.size() + " CSS files were successfully updated";
         final StringBuilder messageFullText = new StringBuilder(messageShortText + ":");
         final StringBuilder messageFilesHtml = new StringBuilder(messageShortText + " " + IGNORE_LINK + ":");
@@ -390,9 +402,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             messageFilesHtml.append(String.format("%s%s", createLink(lessFile), iterator.hasNext() ? ", " : ""));
         }
         messageFilesHtml.append(" ] " + IGNORE_LINK);
+
         final FileNotificationListener listener = new FileNotificationListener(myProject);
-        notifier.log(messageFilesHtml.toString(), listener);
-        notifier.notifySuccessBalloon(messageShortText + " " + IGNORE_LINK, listener);
+
+        notifier.log(messageFilesHtml.toString(), listener, new HashSet<LessFile>());
+        notifier.success(messageShortText + " " + DISMISS_LINK, listener, modifiedLessFiles);
+
         LOG.info(messageFullText.toString());
     }
 

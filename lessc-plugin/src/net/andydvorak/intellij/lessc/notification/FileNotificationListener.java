@@ -59,7 +59,7 @@ public class FileNotificationListener implements NotificationListener {
     }
 
     private boolean isSupportedEvent(@NotNull HyperlinkEvent event) {
-        return event.getEventType() == HyperlinkEvent.EventType.ACTIVATED;
+        return !myProject.isDisposed() && event.getEventType() == HyperlinkEvent.EventType.ACTIVATED;
     }
 
     private boolean isViewFileEvent(@NotNull HyperlinkEvent event) {
@@ -69,7 +69,7 @@ public class FileNotificationListener implements NotificationListener {
 
     private boolean isIgnoreEvent(@NotNull HyperlinkEvent event) {
         final String description = event.getDescription();
-        return "ignore".equals(description);
+        return "ignore".equals(description) || "dismiss".equals(description);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class FileNotificationListener implements NotificationListener {
         if (!isSupportedEvent(event))
             return;
 
-        if (isViewFileEvent(event) && !myProject.isDisposed()) {
+        if (isViewFileEvent(event)) {
             String curFilePath = this.filePath;
 
             if (curFilePath == null) {
