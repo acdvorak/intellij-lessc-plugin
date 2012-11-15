@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class LessEngine {
 
-    private static LessEngine instance;
+	private static LessEngine instance;
 	
 	private final Log logger = LogFactory.getLog(getClass());
 	
@@ -42,11 +42,11 @@ public class LessEngine {
 	private Scriptable scope;
 	private Function compile;
 
-    public static synchronized LessEngine getInstance() throws LessException {
-        if (instance == null)
-            instance = new LessEngine();
-        return instance;
-    }
+	public static synchronized LessEngine getInstance() throws LessException {
+		if (instance == null)
+			instance = new LessEngine();
+		return instance;
+	}
 	
 	public LessEngine() throws LessException {
 		this(new LessOptions());
@@ -68,12 +68,12 @@ public class LessEngine {
 		return resourceLoader;
 	}
 
-    /**
-     *
-     * @param options
-     * @param loader
-     * @see <a href="http://www.envjs.com/doc/guides#running-embed">Embedding EnvJS</a>
-     */
+	/**
+	 *
+	 * @param options
+	 * @param loader
+	 * @see <a href="http://www.envjs.com/doc/guides#running-embed">Embedding EnvJS</a>
+	 */
 	public LessEngine(LessOptions options, ResourceLoader loader) throws LessException {
 		this.options = options;
 		this.loader = loader;
@@ -91,13 +91,13 @@ public class LessEngine {
 			Context cx = Context.enter();
 
 			cx.setOptimizationLevel(9);
-//            cx.setOptimizationLevel(-1);
+//			cx.setOptimizationLevel(-1);
 
-            cx.setLanguageVersion(Context.VERSION_1_5);
+			cx.setLanguageVersion(Context.VERSION_1_5);
 
 			logger.debug("Using implementation version: " + cx.getImplementationVersion());
 
-//            Global global = Main.getGlobal();
+//			Global global = Main.getGlobal();
 			Global global = new Global();
 
 			global.init(cx);
@@ -116,10 +116,10 @@ public class LessEngine {
 			compile = (Function) scope.get("compile", scope);
 		} catch (Exception e) {
 			logger.error("LESS Engine initialization failed.", e);
-            throw new LessException(e);
+			throw new LessException(e);
 		} finally {
-            Context.exit();
-        }
+			Context.exit();
+		}
 	}
 	
 	public String compile(String inputLessCode) throws LessException {
