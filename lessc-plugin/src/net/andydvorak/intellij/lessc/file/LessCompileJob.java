@@ -60,26 +60,12 @@ public class LessCompileJob implements LessCompileObservable {
         this.lessProfile = lessProfile;
     }
 
-    public LessCompileJob(final LessCompileJob otherCompileJob, final LessFile sourceLessFile) {
-        this.sourceLessFile = sourceLessFile;
-        this.lessProfile = otherCompileJob.getLessProfile();
-
-        // Clone sets
-        this.updatedLessFiles.addAll(otherCompileJob.getUpdatedLessFiles());
-        this.updatedLessFilePaths.addAll(otherCompileJob.getUpdatedLessFilePaths());
-        this.observers.addAll(otherCompileJob.observers);
-    }
-
     /*
      * Public instance methods
      */
 
     public LessFile getSourceLessFile() {
         return sourceLessFile;
-    }
-
-    public LessProfile getLessProfile() {
-        return lessProfile;
     }
 
     public Set<LessFile> getSourceAndDependents() {

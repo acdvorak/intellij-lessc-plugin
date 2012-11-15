@@ -24,17 +24,11 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.ui.popup.Balloon;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.vfs.VirtualFileCopyEvent;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileMoveEvent;
-import com.intellij.openapi.wm.StatusBar;
-import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiDocumentManager;
-import com.intellij.ui.awt.RelativePoint;
 import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
@@ -417,22 +411,6 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return String.format("<a href='%s'>%s</a>", lessFile.getCanonicalPathSafeHtmlEscaped(), lessFile.getName());
     }
 
-    private void showBalloon(final String message, final MessageType messageType) {
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                final StatusBar statusBar = WindowManager.getInstance().getStatusBar(myProject);
 
-                if ( statusBar != null ) {
-                    JBPopupFactory.getInstance()
-                            .createHtmlTextBalloonBuilder(message, messageType, null)
-                            .setFadeoutTime(7500)
-                            .createBalloon()
-                            .show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
-                }
-
-//                EventLog.getEventLog(project).
-            }
-        });
     }
 }
