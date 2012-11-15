@@ -152,6 +152,10 @@ public class LessCompileJob implements LessCompileObservable {
     * Private instance methods
     */
 
+    /**
+     * Throws an {@code IllegalStateException} if this job is run more than once.
+     * @throws IllegalStateException
+     */
     private void preventConcurrency() throws IllegalStateException {
         if (compiled.get() || running.get()) {
             final String message = "LessCompileJob for \"" + sourceLessFile.getName() + "\" can only be compiled once.";
