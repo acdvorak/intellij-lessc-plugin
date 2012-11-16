@@ -168,13 +168,13 @@ public class VirtualFileLocationChange {
 
     @NotNull
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
-                                                    @NotNull final VirtualFileMoveEvent moveEvent) throws IOException {
+                                                            @NotNull final VirtualFileMoveEvent moveEvent) throws IOException {
         return getChanges(lessProfile, moveEvent.getFile(), moveEvent.getOldParent());
     }
 
     @NotNull
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
-                                                    @NotNull final VirtualFileCopyEvent copyEvent) throws IOException {
+                                                            @NotNull final VirtualFileCopyEvent copyEvent) throws IOException {
         return getChanges(lessProfile, copyEvent.getFile(), copyEvent.getOriginalFile().getParent());
     }
 
@@ -188,8 +188,8 @@ public class VirtualFileLocationChange {
      */
     @NotNull
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
-                                                    @NotNull final VirtualFile newVirtualLessFile,
-                                                    @NotNull final VirtualFile oldVirtualLessParent) throws IOException {
+                                                            @NotNull final VirtualFile newVirtualLessFile,
+                                                            @NotNull final VirtualFile oldVirtualLessParent) throws IOException {
         final Set<VirtualFileLocationChange> changes = new HashSet<VirtualFileLocationChange>();
 
         if (lessProfile == null)
