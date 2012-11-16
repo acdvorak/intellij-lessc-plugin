@@ -58,9 +58,13 @@
         ]]>
     </description>
     <vendor>Andrew C. Dvorak</vendor>
-    <version>2.6.0</version>
+    <version>2.6.1</version>
     <change-notes>
         <![CDATA[
+<h3>2.6.1</h3>
+<ul>
+  <li>[enhancement] Faster compiles with Rhino optimizations enabled</li>
+</ul>
 <h3>2.6.0</h3>
 <ul>
   <li>[bugfix] Fixed #25 - Multiple notifications for the same file</li>
