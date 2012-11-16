@@ -108,7 +108,7 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     public boolean shouldCompile(@Nullable final LessProfile lessProfile) {
-        if (lessProfile == null)
+        if (lessProfile == null || !lessProfile.hasCssDirectories())
             return false;
 
         final List<String> includePatterns = normalizePatterns(lessProfile.getIncludePattern());
