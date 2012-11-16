@@ -218,7 +218,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         } finally {
             indicator.setFraction(1);
             dequeue();
-            refreshVFS();
+            refreshCssDirs();
         }
     }
 
@@ -265,7 +265,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         });
     }
 
-    private void refreshVFS() {
+    private void refreshCssDirs() {
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
