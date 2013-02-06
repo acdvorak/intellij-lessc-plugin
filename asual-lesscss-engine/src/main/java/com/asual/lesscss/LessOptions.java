@@ -44,7 +44,7 @@ public class LessOptions {
 	
 	public URL getLess() {
 		if (less == null) {
-			return getClass().getClassLoader().getResource("less-rhino-1.3.1.js");
+			return getClass().getClassLoader().getResource("less-rhino-1.3.3.js");
 		}
 		return less;
 	}
