@@ -24,9 +24,10 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -117,7 +118,7 @@ public class LessCompileAction extends AnAction {
             if (files == null || files.length == 0) return false;
 
             for (VirtualFile file : files) {
-                if ("LESS".equals(file.getFileType().getName()))
+                if (isLessFile(file))
                     return true;
             }
 
@@ -128,6 +129,11 @@ public class LessCompileAction extends AnAction {
             }
 
             return false;
+        }
+
+        private static boolean isLessFile(final VirtualFile file) {
+            return "LESS".equals(file.getFileType().getName()) ||
+                   "LESS".equals(StringUtils.upperCase(file.getExtension()));
         }
 
         /**
@@ -143,7 +149,7 @@ public class LessCompileAction extends AnAction {
                 return lessFiles;
 
             for (VirtualFile file : files) {
-                if ("LESS".equals(file.getFileType().getName()))
+                if (isLessFile(file))
                     lessFiles.add(file);
 
                 lessFiles.addAll(getLessFiles(file.getChildren()));
