@@ -141,7 +141,7 @@ This plugin uses version 1.3.3 of the official ```less-rhino.js``` compiler from
 
 # Copyright and License
 
-Copyright 2012 Andrew C. Dvorak.
+Copyright 2012-2013 Andrew C. Dvorak.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
