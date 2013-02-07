@@ -130,7 +130,7 @@ Notable alternatives to this plugin:
 
 ## LESS Compiler Version
 
-This plugin uses version 1.3.1 of the official ```less-rhino.js``` compiler from [lesscss.org][lesscss].
+This plugin uses version 1.3.3 of the official ```less-rhino.js``` compiler from [lesscss.org][lesscss].
 
 # Credits
 
