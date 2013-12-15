@@ -117,7 +117,7 @@ public class VirtualFileLocationChange {
 
         if (virtualCssRootDir != null) {
             virtualCssRootDir.refresh(true, true);
-            VirtualFileManager.getInstance().refresh(true);
+            VirtualFileManager.getInstance().refreshWithoutFileWatcher(true);
         }
     }
 
