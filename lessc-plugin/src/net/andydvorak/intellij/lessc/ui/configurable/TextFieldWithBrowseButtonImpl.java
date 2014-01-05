@@ -19,6 +19,7 @@ package net.andydvorak.intellij.lessc.ui.configurable;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
@@ -49,10 +50,11 @@ public class TextFieldWithBrowseButtonImpl extends TextFieldWithBrowseButton {
         this.getButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 final FileChooserDescriptor d = getFileChooserDescriptor();
+                final Project defaultProject = ProjectManager.getInstance().getDefaultProject();
                 String initial = parent.getText();
                 VirtualFile initialFile = StringUtil.isNotEmpty(initial) ? LocalFileSystem.getInstance().findFileByPath(initial) : null;
                 VirtualFile file =
-                        myProject != null ? FileChooser.chooseFile(myProject, d, initialFile) : FileChooser.chooseFile(parent, d, initialFile);
+                        myProject != null ? FileChooser.chooseFile(d,myProject, initialFile) : FileChooser.chooseFile(d, defaultProject, initialFile);
                 if (file != null) {
                     String path = file.getPresentableUrl();
                     if (SystemInfo.isWindows && path.length() == 2 && Character.isLetter(path.charAt(0)) && path.charAt(1) == ':') {

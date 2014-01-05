@@ -51,9 +51,7 @@ public class CssDirectory {
 
         CssDirectory that = (CssDirectory) o;
 
-        if (cssDirPath != null ? !cssDirPath.equals(that.cssDirPath) : that.cssDirPath != null) return false;
-
-        return true;
+        return !(cssDirPath != null ? !cssDirPath.equals(that.cssDirPath) : that.cssDirPath != null);
     }
 
     @Override

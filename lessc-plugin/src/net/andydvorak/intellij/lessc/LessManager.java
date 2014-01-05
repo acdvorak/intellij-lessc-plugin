@@ -17,7 +17,11 @@
 package net.andydvorak.intellij.lessc;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.*;
+import com.intellij.openapi.components.AbstractProjectComponent;
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.StorageScheme;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -32,22 +36,33 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
-import net.andydvorak.intellij.lessc.fs.*;
-import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
-import net.andydvorak.intellij.lessc.ui.notifier.NotificationListenerImpl;
-import net.andydvorak.intellij.lessc.ui.notifier.LessErrorMessage;
-import net.andydvorak.intellij.lessc.ui.notifier.Notifier;
+import net.andydvorak.intellij.lessc.fs.LessCompileJob;
+import net.andydvorak.intellij.lessc.fs.LessFile;
+import net.andydvorak.intellij.lessc.fs.VirtualFileListenerImpl;
+import net.andydvorak.intellij.lessc.fs.VirtualFileLocationChange;
+import net.andydvorak.intellij.lessc.fs.VirtualFileWatcher;
 import net.andydvorak.intellij.lessc.observer.CompileObserverImpl;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 import net.andydvorak.intellij.lessc.ui.configurable.VfsLocationChangeDialog;
+import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
+import net.andydvorak.intellij.lessc.ui.notifier.LessErrorMessage;
+import net.andydvorak.intellij.lessc.ui.notifier.NotificationListenerImpl;
+import net.andydvorak.intellij.lessc.ui.notifier.Notifier;
 import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
@@ -70,9 +85,9 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     @Transient
     private final VirtualFileListenerImpl virtualFileListener;
 
-    private final ConcurrentMap<String, LessCompileJob> lastCompileTimes = new ConcurrentHashMap<String, LessCompileJob>();
-    private final ConcurrentLinkedQueue<String> compileQueue = new ConcurrentLinkedQueue<String>();
-    private final ConcurrentMap<String, LessCompileJob> compileQueueJobs = new ConcurrentHashMap<String, LessCompileJob>();
+    private final ConcurrentMap<String, LessCompileJob> lastCompileTimes = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<String> compileQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentMap<String, LessCompileJob> compileQueueJobs = new ConcurrentHashMap<>();
 
     private final Notifier notifier;
 
@@ -291,11 +306,11 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
      * @return queued compile jobs in FIFO order
      */
     private List<LessCompileJob> getQueuedCompileJobsConcurrent() {
-        final List<LessCompileJob> jobs = new ArrayList<LessCompileJob>();
+        final List<LessCompileJob> jobs = new ArrayList<>();
 
         // Extract compile jobs atomically, maintaining FIFO order
         synchronized (compileQueue) {
-            final LinkedHashSet<String> paths = new LinkedHashSet<String>(compileQueue);
+            final LinkedHashSet<String> paths = new LinkedHashSet<>(compileQueue);
 
             for (String lessFilePath : paths) {
                 jobs.add(compileQueueJobs.get(lessFilePath));
@@ -374,7 +389,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final String messageText = NotificationsBundle.message("compiled.unchanged", filename);
         final String messageHtml = NotificationsBundle.message("compiled.unchanged", createLink(lessFile)) + " " + IGNORE_LINK;
         final NotificationListenerImpl listener = new NotificationListenerImpl(myProject, lessFile.getCanonicalPathSafe());
-        final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
+        final HashSet<LessFile> modifiedLessFiles = new HashSet<>(Arrays.asList(lessFile));
 
         notifier.log(messageHtml, listener, modifiedLessFiles);
 
@@ -390,7 +405,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         final String successMessageHtml = messagePartHtml + " " + DISMISS_LINK;
 
         final NotificationListenerImpl listener = new NotificationListenerImpl(myProject, lessFile.getCanonicalPathSafe());
-        final HashSet<LessFile> modifiedLessFiles = new HashSet<LessFile>(Arrays.asList(lessFile));
+        final HashSet<LessFile> modifiedLessFiles = new HashSet<>(Arrays.asList(lessFile));
 
         notifier.log(logMessageHtml, listener, modifiedLessFiles);
         notifier.success(successMessageHtml, listener, modifiedLessFiles);

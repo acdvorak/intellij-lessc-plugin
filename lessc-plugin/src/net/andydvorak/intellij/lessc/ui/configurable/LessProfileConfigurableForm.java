@@ -20,6 +20,7 @@ import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.NamedConfigurable;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
@@ -36,16 +37,21 @@ import com.intellij.util.containers.OrderedSet;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.event.EventListenerList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -109,7 +115,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         this.lessProfilesPanel = lessProfilesPanel;
         this.lessProfileName = lessProfile.getName();
 
-        cssDirectories = new ArrayList<CssDirectory>();
+        cssDirectories = new ArrayList<>();
 
         // Deep clone
         for (CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
@@ -117,7 +123,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         }
 
         final ColumnInfo[] columns = { new CssDirectoryColumn() };
-        profileMappingModel = new ListTableModel<CssDirectory>(columns, cssDirectories, 0);
+        profileMappingModel = new ListTableModel<>(columns, cssDirectories, 0);
         profileMappingTable = new JBTable(profileMappingModel);
     }
 
@@ -214,9 +220,9 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
     }
 
     private void removeDuplicateRows() {
-        final Set<CssDirectory> withoutDups = new OrderedSet<CssDirectory>();
+        final Set<CssDirectory> withoutDups = new OrderedSet<>();
         withoutDups.addAll(profileMappingModel.getItems());
-        cssDirectories = new ArrayList<CssDirectory>(withoutDups);
+        cssDirectories = new ArrayList<>(withoutDups);
         profileMappingModel.setItems(cssDirectories);
     }
 
@@ -230,8 +236,9 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         @NotNull
         final String initialNN = StringUtils.defaultString(initial);
         final FileChooserDescriptor d = getFileChooserDescriptor();
+        final Project defaultProject = ProjectManager.getInstance().getDefaultProject();
         final VirtualFile initialFile = StringUtil.isNotEmpty(initialNN) ? LocalFileSystem.getInstance().findFileByPath(initialNN) : null;
-        final VirtualFile file = project != null ? FileChooser.chooseFile(project, d, initialFile) : FileChooser.chooseFile(profileMappingTable, d, initialFile);
+        final VirtualFile file = project != null ? FileChooser.chooseFile(d, project, initialFile) : FileChooser.chooseFile(d, defaultProject, initialFile);
         String path = null;
         if (file != null) {
             path = file.getPresentableUrl();
@@ -280,7 +287,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         lessProfile.setIncludePattern(includePatternTextField.getText());
         lessProfile.setExcludePattern(excludePatternTextField.getText());
         lessProfile.setCompressOutput(compressCssCheckbox.isSelected());
-        lessProfile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
+        lessProfile.setCssDirectories(new ArrayList<>(cssDirectories));
 
         LessManager.getInstance(project).replaceProfile(lessProfileName, lessProfile);
 

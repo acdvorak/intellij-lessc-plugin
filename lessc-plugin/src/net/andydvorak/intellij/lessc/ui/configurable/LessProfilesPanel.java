@@ -30,16 +30,23 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Conditions;
 import com.intellij.util.PlatformIcons;
 import net.andydvorak.intellij.lessc.LessManager;
-import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import java.awt.event.KeyEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {
@@ -48,7 +55,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @NotNull private final LessManager lessManager;
     @NotNull private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
-    private final List<LessProfileConfigurableForm> lessProfileConfigurableForms = new ArrayList<LessProfileConfigurableForm>();
+    private final List<LessProfileConfigurableForm> lessProfileConfigurableForms = new ArrayList<>();
 
     public LessProfilesPanel(@NotNull final Project project) {
         this.project = project;
@@ -68,7 +75,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     protected void processRemovedItems() {
         Map<String, LessProfile> profiles = getAllProfiles();
-        final List<LessProfile> deleted = new ArrayList<LessProfile>();
+        final List<LessProfile> deleted = new ArrayList<>();
         for (LessProfile profile : lessManager.getProfiles()) {
             if (!profiles.containsValue(profile)) {
                 deleted.add(profile);
@@ -100,7 +107,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     public void apply() throws ConfigurationException {
-        final Set<String> profiles = new HashSet<String>();
+        final Set<String> profiles = new HashSet<>();
 
         // Check for duplicate profile names
         for (int i = 0; i < myRoot.getChildCount(); i++) {
@@ -117,7 +124,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     public Map<String, LessProfile> getAllProfiles() {
-        final Map<String, LessProfile> profiles = new com.intellij.util.containers.HashMap<String, LessProfile>();
+        final Map<String, LessProfile> profiles = new com.intellij.util.containers.HashMap<>();
         if (!isInitialized.get()) {
             for (LessProfile profile : lessManager.getProfiles()) {
                 profiles.put(profile.getName(), profile);
@@ -140,7 +147,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     @Nullable
     protected ArrayList<AnAction> createActions(boolean fromPopup) {
-        final ArrayList<AnAction> result = new ArrayList<AnAction>();
+        final ArrayList<AnAction> result = new ArrayList<>();
 
         final String addText = UIBundle.message("action.add.less.profile.text");
         final String addDescription = UIBundle.message("action.add.less.profile.description");

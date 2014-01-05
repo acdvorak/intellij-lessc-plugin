@@ -45,12 +45,12 @@ public class LessCompileJob implements CompileObservable {
     private final LessFile sourceLessFile;
     private final LessProfile lessProfile;
 
-    private final Set<LessFile> sourceAndDependents = new LinkedHashSet<LessFile>();
+    private final Set<LessFile> sourceAndDependents = new LinkedHashSet<>();
     private final AtomicInteger curLessFileIndex = new AtomicInteger(-1);
 
-    private final Set<LessFile> updatedLessFiles = new LinkedHashSet<LessFile>();
-    private final Set<String> updatedLessFilePaths = new LinkedHashSet<String>();
-    private final Set<CompileObserver> observers = new LinkedHashSet<CompileObserver>();
+    private final Set<LessFile> updatedLessFiles = new LinkedHashSet<>();
+    private final Set<String> updatedLessFilePaths = new LinkedHashSet<>();
+    private final Set<CompileObserver> observers = new LinkedHashSet<>();
 
     /*
      * Constructors
@@ -93,14 +93,14 @@ public class LessCompileJob implements CompileObservable {
      * @return set of LESS {@code File}s that produced new or updated CSS files after being compiled
      */
     public Set<LessFile> getUpdatedLessFiles() {
-        return new LinkedHashSet<LessFile>(updatedLessFiles);
+        return new LinkedHashSet<>(updatedLessFiles);
     }
 
     /**
      * @return set of paths to LESS {@code File}s that produced new or updated CSS files after being compiled
      */
     public Set<String> getUpdatedLessFilePaths() {
-        return new LinkedHashSet<String>(updatedLessFilePaths);
+        return new LinkedHashSet<>(updatedLessFilePaths);
     }
 
     public int getNumUpdated() {

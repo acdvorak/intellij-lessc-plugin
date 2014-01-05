@@ -124,6 +124,7 @@ public class LessCompileAction extends AnAction {
 
             // Search subdirectories recursively
             for (VirtualFile file : files) {
+                //noinspection UnsafeVfsRecursion
                 if (hasLessFiles(file.getChildren()))
                     return true;
             }
@@ -143,7 +144,7 @@ public class LessCompileAction extends AnAction {
          * @return Collection of LESS files
          */
         public static Collection<VirtualFile> getLessFiles(final VirtualFile[] files) {
-            final ArrayList<VirtualFile> lessFiles = new ArrayList<VirtualFile>();
+            final ArrayList<VirtualFile> lessFiles = new ArrayList<>();
 
             if (ArrayUtils.isEmpty(files))
                 return lessFiles;
