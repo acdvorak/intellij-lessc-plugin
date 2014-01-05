@@ -16,14 +16,15 @@
 
 package net.andydvorak.intellij.lessc.ui.configurable;
 
+import com.intellij.ui.JBColor;
 import com.intellij.util.ui.ColumnInfo;
-import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
+import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 
-import javax.swing.*;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
-import java.awt.*;
+import java.awt.Component;
 import java.io.File;
 
 public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
@@ -43,7 +44,7 @@ public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
                     final String path = (String) value;
                     if (!isSelected) {
                         final File file = new File(path);
-                        if ( ! (file.exists() && file.isDirectory()) ) setForeground(Color.RED);
+                        if ( ! (file.exists() && file.isDirectory()) ) setForeground(JBColor.RED);
                     }
                     setText(path);
                 }

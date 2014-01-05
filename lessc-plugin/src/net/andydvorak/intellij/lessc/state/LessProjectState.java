@@ -108,6 +108,7 @@ public class LessProjectState {
         if (promptOnCopy != that.promptOnCopy) return false;
         if (promptOnDelete != that.promptOnDelete) return false;
         if (promptOnMove != that.promptOnMove) return false;
+        //noinspection RedundantIfStatement
         if (lessProfiles != null ? !lessProfiles.equals(that.lessProfiles) : that.lessProfiles != null) return false;
 
         return true;

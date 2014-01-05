@@ -17,7 +17,12 @@
 package net.andydvorak.intellij.lessc.fs;
 
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.*;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileCopyEvent;
+import com.intellij.openapi.vfs.VirtualFileEvent;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.ui.configurable.VfsLocationChangeDialog;
@@ -89,11 +94,8 @@ public class VirtualFileLocationChange {
 
         VirtualFileLocationChange that = (VirtualFileLocationChange) o;
 
-        if (!ObjectUtils.equals(cssRootDir.getPath(), that.cssRootDir.getPath())) return false;
-        if (!ObjectUtils.equals(newParent.getPath(), that.newParent.getPath())) return false;
-        if (!ObjectUtils.equals(oldFile.getPath(), that.oldFile.getPath())) return false;
-
-        return true;
+        return ObjectUtils.equals(cssRootDir.getPath(), that.cssRootDir.getPath()) && ObjectUtils.equals(newParent.getPath(), that.newParent.getPath())
+            && ObjectUtils.equals(oldFile.getPath(), that.oldFile.getPath());
     }
 
     @Override
@@ -117,7 +119,7 @@ public class VirtualFileLocationChange {
 
         if (virtualCssRootDir != null) {
             virtualCssRootDir.refresh(true, true);
-            VirtualFileManager.getInstance().refresh(true);
+            VirtualFileManager.getInstance().refreshWithoutFileWatcher(true);
         }
     }
 
@@ -190,7 +192,7 @@ public class VirtualFileLocationChange {
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
                                                             @NotNull final VirtualFile newVirtualLessFile,
                                                             @NotNull final VirtualFile oldVirtualLessParent) throws IOException {
-        final Set<VirtualFileLocationChange> changes = new HashSet<VirtualFileLocationChange>();
+        final Set<VirtualFileLocationChange> changes = new HashSet<>();
 
         if (lessProfile == null)
             return changes;

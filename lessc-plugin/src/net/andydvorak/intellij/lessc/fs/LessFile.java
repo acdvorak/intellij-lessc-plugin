@@ -34,7 +34,11 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -201,7 +205,7 @@ public class LessFile extends File implements Comparable<File> {
 
     @NotNull
     public Set<LessFile> getImports(@NotNull Filter filter) throws IOException {
-        final Set<LessFile> imports = new LinkedHashSet<LessFile>();
+        final Set<LessFile> imports = new LinkedHashSet<>();
         final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher(FileUtil.loadFile(this));
         while (importMatcher.find()) {
             final LessFile lessFile = new LessFile(getParent(), resolveImportFileName(importMatcher.group(1)));
@@ -223,7 +227,7 @@ public class LessFile extends File implements Comparable<File> {
 
         final String inputLessCode = FileUtil.loadFile(this, "UTF-8");
         final boolean compressOutput = (lessProfile.isCompressOutput() && !inputLessCode.contains("//simpless:!minify")) || inputLessCode.contains("//simpless:minify");
-        final String compiled = engine.compile(inputLessCode, this.toURL().toString(), compressOutput);
+        final String compiled = engine.compile(inputLessCode, this.toURI().toURL().toString(), compressOutput);
 
         FileUtil.writeToFile(cssTempFile, compiled);
         updateCssFiles(cssTempFile, lessProfile);
@@ -235,7 +239,7 @@ public class LessFile extends File implements Comparable<File> {
 
     private Set<LessFile> getDependentsRecursive(@NotNull final LessProfile lessProfile,
                                                  @NotNull final Set<LessFile> curDependents) throws IOException {
-        final Set<LessFile> newDependents = new LinkedHashSet<LessFile>();
+        final Set<LessFile> newDependents = new LinkedHashSet<>();
         final Set<LessFile> sourceFileDependents = getFirstLevelDependents(lessProfile);
         final Set<LessFile> sourceFileDependentsFiltered = filter(sourceFileDependents, new Filter() {
             @Override
@@ -336,16 +340,16 @@ public class LessFile extends File implements Comparable<File> {
      */
 
     private static List<String> normalizePatterns(final String patterns) {
-        final Set<String> normalized = new LinkedHashSet<String>();
+        final Set<String> normalized = new LinkedHashSet<>();
         for (String pattern : StringUtils.defaultString(patterns).split(";")) {
             if (StringUtils.isNotEmpty(pattern))
                 normalized.add(makePatternAbsolute(pattern));
         }
-        return new ArrayList<String>(normalized);
+        return new ArrayList<>(normalized);
     }
 
     private static String makePatternAbsolute(final String pattern) {
-        return FileUtil.isAbsoluteFilePath(pattern) ? pattern : "*" + File.separator + pattern;
+        return FileUtil.isAbsolute(pattern) ? pattern : "*" + File.separator + pattern;
     }
 
     /**
@@ -375,7 +379,7 @@ public class LessFile extends File implements Comparable<File> {
     public static Set<LessFile> getLessFiles(@NotNull final LessProfile lessProfile,
                                              @NotNull final Filter filter) throws IOException {
         final List<File> files = FileUtil.findFilesByMask(LESS_FILENAME_PATTERN, lessProfile.getLessDir());
-        final Set<LessFile> lessFiles = new LinkedHashSet<LessFile>();
+        final Set<LessFile> lessFiles = new LinkedHashSet<>();
         for (File file : files) {
             final LessFile lessFile = new LessFile(file);
             if (filter.accept(lessFile)) {
@@ -386,14 +390,14 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     private static Set<LessFile> mergeSets(@NotNull final Set<LessFile> paths1, @NotNull final Set<LessFile> paths2) {
-        final Set<LessFile> mergedPaths = new LinkedHashSet<LessFile>();
+        final Set<LessFile> mergedPaths = new LinkedHashSet<>();
         mergedPaths.addAll(paths1);
         mergedPaths.addAll(paths2);
         return mergedPaths;
     }
     
     private static Set<LessFile> filter(@NotNull final Set<LessFile> lessFiles, @NotNull final Filter filter) throws IOException {
-        final Set<LessFile> filtered = new LinkedHashSet<LessFile>();
+        final Set<LessFile> filtered = new LinkedHashSet<>();
         for (LessFile lessFile : lessFiles) {
             if (filter.accept(lessFile)) {
                 filtered.add(lessFile);

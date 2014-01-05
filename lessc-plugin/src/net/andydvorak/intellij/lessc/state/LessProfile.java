@@ -16,7 +16,7 @@
 
 package net.andydvorak.intellij.lessc.state;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -25,13 +25,14 @@ import java.util.List;
 
 public class LessProfile {
     private String lessDirPath;
-    private List<CssDirectory> cssDirectories = new ArrayList<CssDirectory>();
+    private List<CssDirectory> cssDirectories = new ArrayList<>();
     private String includePattern = "";
     private String excludePattern = "";
     private boolean compressOutput = false;
     private String name = "";
 
     // Read from external .xml file
+    @SuppressWarnings("UnusedDeclaration")
     public LessProfile() {
     }
 
@@ -130,6 +131,7 @@ public class LessProfile {
         if (includePattern != null ? !includePattern.equals(that.includePattern) : that.includePattern != null)
             return false;
         if (lessDirPath != null ? !lessDirPath.equals(that.lessDirPath) : that.lessDirPath != null) return false;
+        //noinspection RedundantIfStatement
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
 
         return true;

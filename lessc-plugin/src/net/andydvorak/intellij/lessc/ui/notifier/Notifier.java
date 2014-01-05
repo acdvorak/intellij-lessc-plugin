@@ -16,7 +16,11 @@
 
 package net.andydvorak.intellij.lessc.ui.notifier;
 
-import com.intellij.notification.*;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationDisplayType;
+import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
@@ -59,7 +63,7 @@ public class Notifier {
     private static final String LOG_TITLE = NotificationsBundle.message("log.title");
     private static final String BALLOON_TITLE = NotificationsBundle.message("balloon.title");
 
-    private static final Key<Notifier> userDataKey = new Key<Notifier>("LessNotifier");
+    private static final Key<Notifier> userDataKey = new Key<>("LessNotifier");
 
     public static synchronized Notifier getInstance(@NotNull final Project project) {
         Notifier instance = project.getUserData(userDataKey);
@@ -71,7 +75,7 @@ public class Notifier {
     }
 
     private final Project myProject;
-    private final ConcurrentMultiMap<String, Notification> notifications = new ConcurrentMultiMap<String, Notification>();
+    private final ConcurrentMultiMap<String, Notification> notifications = new ConcurrentMultiMap<>();
 
     public Notifier(@NotNull final Project project) {
         myProject = project;

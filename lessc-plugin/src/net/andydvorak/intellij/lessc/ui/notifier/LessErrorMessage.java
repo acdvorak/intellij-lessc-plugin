@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 public class LessErrorMessage extends Exception {
 
-    private final Matcher matcher;
     private final String filePath;
     private final String fileName;
     private final String title;
@@ -41,7 +40,7 @@ public class LessErrorMessage extends Exception {
 
         title = NotificationsBundle.message("error.title");
         message = t.getLocalizedMessage();
-        matcher = Pattern.compile("line ([0-9]+), column ([0-9]+)", Pattern.CASE_INSENSITIVE).matcher(message);
+        Matcher matcher = Pattern.compile("line ([0-9]+), column ([0-9]+)", Pattern.CASE_INSENSITIVE).matcher(message);
 
         if (matcher.find()) {
             message_html = matcher.replaceFirst("<a href='file'>$0</a>");
