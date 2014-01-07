@@ -32,6 +32,7 @@ public class LessProfile {
     private String name = "";
 
     // Read from external .xml file
+    @SuppressWarnings("UnusedDeclaration")
     public LessProfile() {
     }
 
