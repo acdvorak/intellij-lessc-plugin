@@ -223,7 +223,7 @@ public class LessFile extends File implements Comparable<File> {
 
         final String inputLessCode = FileUtil.loadFile(this, "UTF-8");
         final boolean compressOutput = (lessProfile.isCompressOutput() && !inputLessCode.contains("//simpless:!minify")) || inputLessCode.contains("//simpless:minify");
-        final String compiled = engine.compile(inputLessCode, this.toURL().toString(), compressOutput);
+        final String compiled = engine.compile(inputLessCode, this.toURI().toURL().toString(), compressOutput);
 
         FileUtil.writeToFile(cssTempFile, compiled);
         updateCssFiles(cssTempFile, lessProfile);
@@ -345,7 +345,7 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     private static String makePatternAbsolute(final String pattern) {
-        return FileUtil.isAbsoluteFilePath(pattern) ? pattern : "*" + File.separator + pattern;
+        return FileUtil.isAbsolute(pattern) ? pattern : "*" + File.separator + pattern;
     }
 
     /**

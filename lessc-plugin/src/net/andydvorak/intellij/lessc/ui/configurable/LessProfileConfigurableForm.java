@@ -20,6 +20,7 @@ import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.NamedConfigurable;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
@@ -230,8 +231,9 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         @NotNull
         final String initialNN = StringUtils.defaultString(initial);
         final FileChooserDescriptor d = getFileChooserDescriptor();
+        final Project defaultProject = ProjectManager.getInstance().getDefaultProject();
         final VirtualFile initialFile = StringUtil.isNotEmpty(initialNN) ? LocalFileSystem.getInstance().findFileByPath(initialNN) : null;
-        final VirtualFile file = project != null ? FileChooser.chooseFile(project, d, initialFile) : FileChooser.chooseFile(profileMappingTable, d, initialFile);
+        final VirtualFile file = project != null ? FileChooser.chooseFile(d, project, initialFile) : FileChooser.chooseFile(d, defaultProject, initialFile);
         String path = null;
         if (file != null) {
             path = file.getPresentableUrl();
