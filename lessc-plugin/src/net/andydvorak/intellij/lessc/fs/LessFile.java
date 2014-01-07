@@ -80,11 +80,7 @@ public class LessFile extends File implements Comparable<File> {
      * @return the canonical path to the {@code File} if it exists; otherwise the absolute path
      */
     public String getCanonicalPathSafe() {
-        try {
-            return getCanonicalPath();
-        } catch (IOException ignored) {
-            return getAbsolutePath();
-        }
+        return getCanonicalPathSafe(this);
     }
 
     /**
