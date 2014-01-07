@@ -1,0 +1,10 @@
+@import "library.css";
+@import "fonts.css";
+@import url('classpath:META-INF/css/layout.css');
+
+#header {
+  .rounded-corners;
+}
+#footer {
+  .rounded-corners(10px);
+}
