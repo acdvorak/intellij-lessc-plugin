@@ -4,7 +4,7 @@ LESS CSS Compiler monitors [LESS](http://lesscss.org/) files and automatically c
 
 ## Compiler Version
 
-This plugin uses version **1.6.0** of the official ```less.js``` compiler from [lesscss.org][lesscss].
+This plugin uses version **1.5.0** of the official ```less.js``` compiler from [lesscss.org][lesscss].
 
 ## IDE Compatibility
 

@@ -4,7 +4,7 @@
         <![CDATA[
             <p>Watches directories for changes to LESS files and compiles changed files to CSS.</p>
 
-            <p><b>Supports LESS 1.6.0</b>.</p>
+            <p><b>Supports LESS 1.5.0</b>.</p>
 
             <h2>Features:</h2>
             <h3>Recursive directory monitoring</h3>
