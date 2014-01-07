@@ -128,16 +128,41 @@ Notable alternatives to this plugin:
 
 ## Running / Debugging the Plugin
 
-**NOTE**: These instructions are out of date.  They will be updated soon.
+1.  Clone the repository:
 
-1.  ```git clone git://github.com/acdvorak/intellij-lessc-plugin.git```
-2.  In IntelliJ, go to File > Open Project... and select ~~```$PROJECT_DIR/lessc-plugin/lessc-plugin.iml```~~
-3.  Create a Run / Debug configuration for the plugin module
-4.  Test the plugin by going to Run > Run lessc-plugin
+        git clone git://github.com/acdvorak/intellij-lessc-plugin.git
 
-## LESS Compiler Version
+2.  Ensure required plugins are enabled in IntelliJ:
 
-This plugin uses version 1.3.3 of the official ```less-rhino.js``` compiler from [lesscss.org][lesscss].
+    *   Plugin DevKit
+    *   UI Designer
+    *   Properties
+    *   I18n for Java
+
+3.  Import project into IntelliJ:
+
+    1.  ```File``` > ```Import Project...```
+    2.  Select the root directory of the Git repository you cloned
+    3.  Accept the default project name and location
+    4.  Check all source file directories
+    5.  **UNCHECK** the ```lessc-plugin``` library
+    6.  Check all modules
+    7.  If prompted _"The module file 'lessc-plugin.iml' already exist.  Would you like to overwrite it?"_, click ```Reuse```
+    8.  Select the IntelliJ SDK (```IDEA IU-xxx.yyy``` or ```IDEA IC-xxx.yyy```)
+
+        If you don't see the IntelliJ SDK:
+
+        1.  Click the ```+``` button and select ```IntelliJ Platform Plugin SDK```
+        2.  Select the appropriate IntelliJ SDK directory (IntelliJ should automatically select it for you)
+
+    9.  Click "Finish"
+
+4.  **IMPORTANT**: Make sure you mark the ```asual-lesscss-engine/src/main/resources``` directory as ```Resources Root```!
+
+    *  Right-click on the directory in the Project tree, select ```Mark Directory As``` > ```Resources Root```
+
+5.  Add a Run/Debug configuration for ```lessc-plugin```, type = ```Plugin```
+6.  Test the plugin by going to ```Run``` > ```Debug lessc-plugin```
 
 # Credits
 
