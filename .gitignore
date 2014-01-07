@@ -4,3 +4,8 @@ target
 build
 build-archive
 
+# Mac crap
+.DS_Store
+
+# Windows crap
+Thumbs.db
