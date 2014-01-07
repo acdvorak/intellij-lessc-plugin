@@ -2,6 +2,13 @@
 
 ```LESS Compiler``` monitors [LESS](http://lesscss.org/) files and automatically compiles them to CSS whenever they change.
 
+## LESS Compiler Version
+
+This plugin uses version 1.3.3 of the official ```less-rhino.js``` compiler from [lesscss.org][lesscss].
+
+**NOTE**: Updating LESS to v1.4 and newer will require a _**complete rewrite**_ of this plugin.
+Sadly, it is unlikely that I will have time to do that in the foreseeable future (though I would certainly like to).
+
 ## IDE Compatibility
 
 This plugin is **ONLY** compatible with IntelliJ IDEA 11+, PhpStorm 5+, and WebStorm 5+.
