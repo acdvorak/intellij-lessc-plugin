@@ -82,7 +82,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         this.vfsLocationChangeDialog = new VfsLocationChangeDialog(project, state);
         this.notifier = Notifier.getInstance(project);
     }
-    
+
     public static LessManager getInstance(final Project project) {
         return project.getComponent(LessManager.class);
     }
