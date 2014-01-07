@@ -28,6 +28,7 @@ public class LessProfile {
     private List<CssDirectory> cssDirectories = new ArrayList<CssDirectory>();
     private String includePattern = "";
     private String excludePattern = "";
+    private boolean compileAutomatically = true;
     private boolean compressOutput = false;
     private String name = "";
 
@@ -87,6 +88,14 @@ public class LessProfile {
         this.excludePattern = excludePattern;
     }
 
+    public boolean isCompileAutomatically() {
+        return compileAutomatically;
+    }
+
+    public void setCompileAutomatically(boolean compileAutomatically) {
+        this.compileAutomatically = compileAutomatically;
+    }
+
     public boolean isCompressOutput() {
         return compressOutput;
     }
@@ -106,6 +115,7 @@ public class LessProfile {
     public void copyFrom(final LessProfile lessProfile) {
         this.name = lessProfile.name;
         this.lessDirPath = lessProfile.lessDirPath;
+        this.compileAutomatically = lessProfile.compileAutomatically;
         this.compressOutput = lessProfile.compressOutput;
         this.includePattern = lessProfile.includePattern;
         this.excludePattern = lessProfile.excludePattern;
@@ -123,6 +133,7 @@ public class LessProfile {
 
         LessProfile that = (LessProfile) o;
 
+        if (compileAutomatically != that.compileAutomatically) return false;
         if (compressOutput != that.compressOutput) return false;
         if (cssDirectories != null ? !cssDirectories.equals(that.cssDirectories) : that.cssDirectories != null)
             return false;
@@ -142,6 +153,7 @@ public class LessProfile {
         result = 31 * result + (cssDirectories != null ? cssDirectories.hashCode() : 0);
         result = 31 * result + (includePattern != null ? includePattern.hashCode() : 0);
         result = 31 * result + (excludePattern != null ? excludePattern.hashCode() : 0);
+        result = 31 * result + (compileAutomatically ? 1 : 0);
         result = 31 * result + (compressOutput ? 1 : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;

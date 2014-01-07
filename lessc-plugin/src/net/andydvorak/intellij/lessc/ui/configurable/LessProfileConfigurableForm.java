@@ -83,6 +83,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
     private String lessProfileName;
     private boolean modified;
     private JPanel rootPanel;
+    private JCheckBox compileAutomaticallyOnSaveCheckBox;
     private JCheckBox compressCssCheckbox;
     private JPanel cssDirPanel;
     private JPanel lessDirPanelWrap;
@@ -273,6 +274,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
                 !Comparing.strEqual(lessDirTextField.getText(), lessProfile.getLessDirPath()) ||
                 !Comparing.strEqual(includePatternTextField.getText(), lessProfile.getIncludePattern()) ||
                 !Comparing.strEqual(excludePatternTextField.getText(), lessProfile.getExcludePattern()) ||
+                !Comparing.equal(compileAutomaticallyOnSaveCheckBox.isSelected(), lessProfile.isCompileAutomatically()) ||
                 !Comparing.equal(compressCssCheckbox.isSelected(), lessProfile.isCompressOutput()) ||
                 !Comparing.equal(cssDirectories, lessProfile.getCssDirectories());
     }
@@ -281,6 +283,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         lessProfile.setLessDirPath(lessDirTextField.getText());
         lessProfile.setIncludePattern(includePatternTextField.getText());
         lessProfile.setExcludePattern(excludePatternTextField.getText());
+        lessProfile.setCompileAutomatically(compileAutomaticallyOnSaveCheckBox.isSelected());
         lessProfile.setCompressOutput(compressCssCheckbox.isSelected());
         lessProfile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
 
@@ -295,6 +298,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         lessDirTextField.setText(lessProfile.getLessDirPath());
         includePatternTextField.setText(lessProfile.getIncludePattern());
         excludePatternTextField.setText(lessProfile.getExcludePattern());
+        compileAutomaticallyOnSaveCheckBox.setSelected(lessProfile.isCompileAutomatically());
         compressCssCheckbox.setSelected(lessProfile.isCompressOutput());
     }
 

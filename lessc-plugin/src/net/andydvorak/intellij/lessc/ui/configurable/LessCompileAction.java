@@ -50,7 +50,7 @@ public class LessCompileAction extends AnAction {
             final LessProfile lessProfile = lessManager.getLessProfile(virtualFileEvent);
 
             if (lessProfile != null && lessProfile.hasCssDirectories()) {
-                lessManager.handleChangeEvent(virtualFileEvent);
+                lessManager.handleManualEvent(virtualFileEvent);
             } else {
                 numMissing++;
             }

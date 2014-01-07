@@ -136,9 +136,13 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         XmlSerializerUtil.copyBean(state, this.state);
     }
 
-    private boolean isSupported(final VirtualFileEvent virtualFileEvent) {
-        return  LessFile.isLessFile(virtualFileEvent.getFileName()) &&
-                getLessProfile(virtualFileEvent) != null;
+    private boolean isSupported(final VirtualFileEvent virtualFileEvent, final boolean isManual) {
+        if (!LessFile.isLessFile(virtualFileEvent.getFileName())) {
+            return false;
+        }
+
+        final LessProfile lessProfile = getLessProfile(virtualFileEvent);
+        return lessProfile != null && (lessProfile.isCompileAutomatically() || isManual);
     }
 
     @NotNull
@@ -156,7 +160,15 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleChangeEvent(final VirtualFileEvent virtualFileEvent) {
-        if (isSupported(virtualFileEvent)) {
+        handleEvent(virtualFileEvent, false);
+    }
+
+    public void handleManualEvent(final VirtualFileEvent virtualFileEvent) {
+        handleEvent(virtualFileEvent, true);
+    }
+
+    private void handleEvent(final VirtualFileEvent virtualFileEvent, final boolean isManual) {
+        if (isSupported(virtualFileEvent, isManual)) {
             logChangeEvent(virtualFileEvent);
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 @Override
@@ -310,7 +322,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     // TODO: This is a bit quirky and doesn't seem to work if the new CSS directory hasn't been created yet and its parent dir isn't open in the project view
     public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        if (isSupported(virtualFileMoveEvent)) {
+        if (isSupported(virtualFileMoveEvent, false)) {
             final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
             try {
                 VirtualFileLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, vfsLocationChangeDialog);
@@ -321,7 +333,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        if (isSupported(virtualFileCopyEvent)) {
+        if (isSupported(virtualFileCopyEvent, false)) {
             final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
             try {
                 VirtualFileLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, vfsLocationChangeDialog);
@@ -332,7 +344,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
-        if (isSupported(virtualFileEvent)) {
+        if (isSupported(virtualFileEvent, false)) {
             final LessProfile lessProfile = getLessProfile(virtualFileEvent);
             try {
                 VirtualFileLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, vfsLocationChangeDialog);
@@ -429,7 +441,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     }
 
     private void logChangeEvent(VirtualFileEvent virtualFileEvent) {
-        LOG.info("LessManager.handleChangeEvent(virtualFileEvent)" + "\n" +
+        LOG.info("LessManager.handleEvent(virtualFileEvent)" + "\n" +
                  "\t virtualFileEvent.getFile() = " + virtualFileEvent.getFile().getPath() + "\n" +
                  "\t virtualFileEvent.isFromSave() = " + virtualFileEvent.isFromSave() + "\n" +
                  "\t virtualFileEvent.isFromRefresh() = " + virtualFileEvent.isFromRefresh() + "\n" +
