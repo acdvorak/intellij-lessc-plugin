@@ -387,7 +387,7 @@ public class LessFile extends File implements Comparable<File> {
         mergedPaths.addAll(paths2);
         return mergedPaths;
     }
-    
+
     private static Set<LessFile> filter(@NotNull final Set<LessFile> lessFiles, @NotNull final Filter filter) throws IOException {
         final Set<LessFile> filtered = new LinkedHashSet<LessFile>();
         for (LessFile lessFile : lessFiles) {
