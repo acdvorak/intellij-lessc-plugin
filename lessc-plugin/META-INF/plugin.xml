@@ -60,9 +60,13 @@
         ]]>
     </description>
     <vendor>Andrew C. Dvorak</vendor>
-    <version>2.6.3</version>
+    <version>2.6.4</version>
     <change-notes>
         <![CDATA[
+<h3>2.6.4</h3>
+<ul>
+  <li>[enhancement] Issue #58 - Added setting to disable automatic compilation on save (for those who prefer to compile manually)</li>
+</ul>
 <h3>2.6.3</h3>
 <ul>
   <li>[bugfix] Fixed to run under IntelliJ 13</li>
