@@ -96,7 +96,7 @@ public class LessFile extends File implements Comparable<File> {
     public LessProfile getLessProfile(final Collection<LessProfile> lessProfiles) {
         for (LessProfile lessProfile : lessProfiles) {
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
-            if (FileUtil.isAncestor(lessProfileDir, this, false)) {
+            if (lessProfileDir.exists() && FileUtil.isAncestor(lessProfileDir, this, false)) {
                 return lessProfile;
             }
         }
