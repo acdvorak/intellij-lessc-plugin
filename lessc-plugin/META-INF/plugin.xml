@@ -60,9 +60,13 @@
         ]]>
     </description>
     <vendor>Andrew C. Dvorak</vendor>
-    <version>2.6.6</version>
+    <version>2.6.7</version>
     <change-notes>
         <![CDATA[
+<h3>2.6.7</h3>
+<ul>
+  <li>[bugfix] Upgraded to LESS 1.6.0 and fixed JavaScript errors in less.js 1.6.0</li>
+</ul>
 <h3>2.6.6</h3>
 <ul>
   <li>[bugfix] Issue #53 - Downgraded to LESS 1.5.0 to fix JavaScript errors in less.js 1.6.0</li>
