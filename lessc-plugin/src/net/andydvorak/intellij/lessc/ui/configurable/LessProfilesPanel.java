@@ -23,15 +23,14 @@ import com.intellij.openapi.actionSystem.CustomShortcutSet;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.InputValidator;
-import com.intellij.openapi.ui.MasterDetailsComponent;
-import com.intellij.openapi.ui.MasterDetailsStateService;
-import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.*;
 import com.intellij.openapi.util.Conditions;
 import com.intellij.util.PlatformIcons;
 import net.andydvorak.intellij.lessc.LessManager;
+import net.andydvorak.intellij.lessc.state.CssDirectory;
 import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.LessProfile;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +38,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,7 +48,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @NotNull private final LessManager lessManager;
     @NotNull private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
-    private final List<LessProfileConfigurableForm> lessProfileConfigurableForms = new ArrayList<LessProfileConfigurableForm>();
+    private final List<LessProfileConfigurableForm> profileForms = new ArrayList<LessProfileConfigurableForm>();
 
     public LessProfilesPanel(@NotNull final Project project) {
         this.project = project;
@@ -56,80 +56,87 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         initTree();
     }
 
-    @Override
-    protected MasterDetailsStateService getStateService() {
-        return MasterDetailsStateService.getInstance(project);
-    }
-
-    @Override
-    protected String getComponentStateKey() {
-        return "LessCompiler.UI";
-    }
-
-    protected void processRemovedItems() {
-        Map<String, LessProfile> profiles = getAllProfiles();
-        final List<LessProfile> deleted = new ArrayList<LessProfile>();
-        for (LessProfile profile : lessManager.getProfiles()) {
-            if (!profiles.containsValue(profile)) {
-                deleted.add(profile);
-            }
-        }
-        for (LessProfile profile : deleted) {
-            lessManager.removeProfile(profile);
-        }
-    }
-
-    protected boolean wasObjectStored(Object o) {
-        return lessManager.getProfiles().contains(o);
-    }
-
-    @Nls
-    public String getDisplayName() {
-        return UIBundle.message("pref.display.name");
-    }
-
-    @Nullable
-    public Icon getIcon() {
-        return null;
-    }
-
-    @Nullable
-    @NonNls
-    public String getHelpTopic() {
-        return null;
+    protected boolean wasObjectStored(final Object o) {
+        if (o == null || LessProfile.class != o.getClass()) return false;
+        final LessProfile profile = (LessProfile) o;
+        return lessManager.getProfileMap().containsKey(profile.getId());
     }
 
     public void apply() throws ConfigurationException {
-        final Set<String> profiles = new HashSet<String>();
+        final Set<String> names = new HashSet<String>();
 
         // Check for duplicate profile names
         for (int i = 0; i < myRoot.getChildCount(); i++) {
-            MyNode node = (MyNode) myRoot.getChildAt(i);
-            final String profileName = ((LessProfileConfigurableForm) node.getConfigurable()).getEditableObject().getName();
-            if (profiles.contains(profileName)) {
-                selectNodeInTree(profileName);
-                throw new ConfigurationException(UIBundle.message("duplicate.less.profile.name", profileName));
+            final MyNode node = (MyNode) myRoot.getChildAt(i);
+            final LessProfileConfigurableForm form = (LessProfileConfigurableForm) node.getConfigurable();
+            final LessProfile profile = form.getCurrentState();
+            final String name = profile.getName();
+            final String dirPath = profile.getLessDirPath();
+
+            if (StringUtils.isBlank(name)) {
+                selectNodeInTree(name);
+                throw new ConfigurationException(UIBundle.message("blank.less.profile.name"));
             }
-            profiles.add(profileName);
+
+            if (names.contains(name)) {
+                selectNodeInTree(name);
+                throw new ConfigurationException(UIBundle.message("duplicate.less.profile.name", name));
+            }
+
+            if (StringUtils.isBlank(dirPath)) {
+                selectNodeInTree(name);
+                throw new ConfigurationException(UIBundle.message("blank.less.profile.source.dir"));
+            }
+
+            if (!profile.getLessDir().exists()) {
+                if (!confirmWarning(UIBundle.message("nonexistent.less.profile.source.dir.title"),
+                                    UIBundle.message("nonexistent.less.profile.source.dir.prompt", dirPath))) {
+                    selectNodeInTree(name);
+                    throw new ConfigurationException(UIBundle.message("nonexistent.less.profile.source.dir.error", dirPath));
+                }
+            }
+
+            if (profile.getCssDirectories().isEmpty()) {
+                selectNodeInTree(name);
+                throw new ConfigurationException(UIBundle.message("no.less.profile.css.dirs"));
+            }
+
+            for (final CssDirectory cssDirectory : profile.getCssDirectories()) {
+                if (!new File(cssDirectory.getPath()).exists()) {
+                    if (!confirmWarning(UIBundle.message("nonexistent.less.profile.css.dir.title"),
+                                        UIBundle.message("nonexistent.less.profile.css.dir.prompt", dirPath))) {
+                        selectNodeInTree(name);
+                        throw new ConfigurationException(UIBundle.message("nonexistent.less.profile.css.dir.error", dirPath));
+                    }
+                }
+            }
+
+            names.add(name);
         }
 
         super.apply();
     }
 
-    public Map<String, LessProfile> getAllProfiles() {
-        final Map<String, LessProfile> profiles = new com.intellij.util.containers.HashMap<String, LessProfile>();
-        if (!isInitialized.get()) {
-            for (LessProfile profile : lessManager.getProfiles()) {
-                profiles.put(profile.getName(), profile);
-            }
-        } else {
-            for (int i = 0; i < myRoot.getChildCount(); i++) {
-                MyNode node = (MyNode) myRoot.getChildAt(i);
-                final LessProfile lessProfile = ((LessProfileConfigurableForm) node.getConfigurable()).getEditableObject();
-                profiles.put(lessProfile.getName(), lessProfile);
+    protected void processRemovedItems() {
+        final Map<Integer, LessProfile> profiles = getProfileMap();
+        final List<Integer> deletedIds = new ArrayList<Integer>();
+
+        // Compile a list of all profiles that are no longer present in the UI
+        for (final LessProfile profile : lessManager.getProfiles()) {
+            if (!profiles.containsKey(profile.getId())) {
+                deletedIds.add(profile.getId());
             }
         }
-        return profiles;
+
+        // Remove the deleted profiles from the manager
+        for (final int id : deletedIds) {
+            lessManager.removeProfile(id);
+        }
+    }
+
+    public void reset() {
+        reloadTree();
+        super.reset();
     }
 
     @Override
@@ -154,7 +161,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
             public void actionPerformed(final AnActionEvent event) {
                 final String name = askForProfileName(addPromptTitle, "");
                 if (name == null) return;
-                final LessProfile lessProfile = new LessProfile(name);
+                final LessProfile lessProfile = new LessProfile(getNextId(), name);
                 addProfileNode(lessProfile);
             }
         });
@@ -172,7 +179,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
             public void actionPerformed(final AnActionEvent event) {
                 final String profileName = askForProfileName(copyPromptTitle, "");
                 if (profileName == null) return;
-                final LessProfile clone = new LessProfile((LessProfile) getSelectedObject());
+                final LessProfile clone = new LessProfile(getNextId(), (LessProfile) getSelectedObject());
                 clone.setName(profileName);
                 addProfileNode(clone);
             }
@@ -186,56 +193,140 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         return result;
     }
 
-    @Nullable
-    private String askForProfileName(final String title, final String initialName) {
-        final String message = UIBundle.message("action.new.less.profile.prompt.message");
-        return Messages.showInputDialog(message, title, Messages.getQuestionIcon(), initialName, new InputValidator() {
-            public boolean checkInput(String s) {
-                return !getAllProfiles().containsKey(s) && s.length() > 0;
-            }
-
-            public boolean canClose(String s) {
-                return checkInput(s);
-            }
-        });
-    }
-
-    private void addProfileNode(LessProfile lessProfile) {
-        final LessProfileConfigurableForm lessProfileConfigurableForm = new LessProfileConfigurableForm(project, lessProfile, this, TREE_UPDATER);
-        lessProfileConfigurableForm.setModified(true);
-        lessProfileConfigurableForms.add(lessProfileConfigurableForm);
-        final MyNode node = new MyNode(lessProfileConfigurableForm);
+    private void addProfileNode(final LessProfile lessProfile) {
+        final LessProfileConfigurableForm profileForm = new LessProfileConfigurableForm(project, lessProfile, this, TREE_UPDATER);
+        profileForm.setModified(true);
+        profileForms.add(profileForm);
+        final MyNode node = new MyNode(profileForm);
         addNode(node, myRoot);
         selectNodeInTree(node);
     }
 
     private void reloadTree() {
         myRoot.removeAllChildren();
-        lessProfileConfigurableForms.clear();
-        Collection<LessProfile> collection = lessManager.getProfiles();
-        for (LessProfile profile : collection) {
-            LessProfile clone = new LessProfile(profile);
-            final LessProfileConfigurableForm lessProfileConfigurableForm = new LessProfileConfigurableForm(project, clone, this, TREE_UPDATER);
-            lessProfileConfigurableForms.add(lessProfileConfigurableForm);
-            addNode(new MyNode(lessProfileConfigurableForm), myRoot);
+        profileForms.clear();
+        final Collection<LessProfile> profiles = lessManager.getProfiles();
+        for (final LessProfile profile : profiles) {
+            final LessProfile clone = new LessProfile(profile.getId(), profile);
+            final LessProfileConfigurableForm profileForm = new LessProfileConfigurableForm(project, clone, this, TREE_UPDATER);
+            profileForms.add(profileForm);
+            addNode(new MyNode(profileForm), myRoot);
         }
         isInitialized.set(true);
     }
 
-    public void setPromptButtonsEnabled(final boolean enabled) {
-        for (LessProfileConfigurableForm lessProfileConfigurableForm : lessProfileConfigurableForms) {
-            lessProfileConfigurableForm.setPromptButtonEnabled(enabled);
+    private Map<Integer, LessProfile> getProfileMap() {
+        if (!isInitialized.get()) {
+            return getManagerProfileMap();
+        } else {
+            return getUIProfileMap();
         }
     }
 
-    public void reset() {
-        reloadTree();
-        super.reset();
+    private Map<Integer, LessProfile> getManagerProfileMap() {
+        return lessManager.getProfileMap();
+    }
+
+    private Map<Integer, LessProfile> getUIProfileMap() {
+        final Map<Integer, LessProfile> profiles = new com.intellij.util.containers.HashMap<Integer, LessProfile>();
+        for (int i = 0; i < myRoot.getChildCount(); i++) {
+            final MyNode node = (MyNode) myRoot.getChildAt(i);
+            final LessProfile lessProfile = ((LessProfileConfigurableForm) node.getConfigurable()).getEditableObject();
+            profiles.put(lessProfile.getId(), lessProfile);
+        }
+        return profiles;
+    }
+
+    private int getNextId() {
+        int id = -1;
+        for (final LessProfile profile : getManagerProfileMap().values()) {
+            if (profile.getId() > id) {
+                id = profile.getId();
+            }
+        }
+        for (final LessProfile profile : getUIProfileMap().values()) {
+            if (profile.getId() > id) {
+                id = profile.getId();
+            }
+        }
+        return id + 1;
+    }
+
+    @Nullable
+    private String askForProfileName(final String title, final String initialName) {
+        final String message = UIBundle.message("action.new.less.profile.prompt.message");
+        return Messages.showInputDialog(message, title, Messages.getQuestionIcon(), initialName, new InputValidator() {
+            public boolean checkInput(final String newName) {
+                if (newName == null || newName.length() == 0) {
+                    return false;
+                }
+                // Don't allow duplicate profile names
+                for (final LessProfile profile : getProfileMap().values()) {
+                    if (StringUtils.equals(newName, profile.getName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public boolean canClose(final String s) {
+                return checkInput(s);
+            }
+        });
+    }
+
+    @Nullable
+    private boolean confirmWarning(final String title, final String message) {
+        return Messages.YES == Messages.showYesNoDialog(message, title, Messages.getWarningIcon());
+    }
+
+    public void setPromptButtonsEnabled(final boolean enabled) {
+        for (final LessProfileConfigurableForm profileForm : profileForms) {
+            profileForm.setPromptButtonEnabled(enabled);
+        }
+    }
+    /*
+     * Method overrides and interface implementations
+     */
+
+    @NotNull
+    public String getId() {
+        return "lessc.profiles";
+    }
+
+    @Nls
+    public String getDisplayName() {
+        return UIBundle.message("pref.display.name");
+    }
+
+    @Nullable
+    public Icon getIcon() {
+        return null;
+    }
+
+    @Nullable
+    @NonNls
+    public String getHelpTopic() {
+        return null;
+    }
+
+    public Runnable enableSearch(final String option) {
+        return null;
     }
 
     @Override
     protected String getEmptySelectionString() {
         return UIBundle.message("profile.empty.selection");
+    }
+
+    @Override
+    protected String getComponentStateKey() {
+        return "LessCompiler.UI";
+    }
+
+    @Override
+    protected MasterDetailsStateService getStateService() {
+        return MasterDetailsStateService.getInstance(project);
     }
 
     public void addItemsChangeListener(final Runnable runnable) {
@@ -250,13 +341,4 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         });
     }
 
-    @NotNull
-    public String getId() {
-        return "lessc.profiles";
-    }
-
-    public Runnable enableSearch(String option) {
-        return null;
-    }
-    
 }

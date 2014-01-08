@@ -109,24 +109,24 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return "LessManager";
     }
 
-    public void addProfile(final LessProfile lessProfile) {
-        state.lessProfiles.put(lessProfile.getName(), lessProfile);
+    /*
+     * State management
+     */
+
+    public void putProfile(final int id, final LessProfile newLessProfile) {
+        state.lessProfileMap.put(id, newLessProfile);
     }
 
-    public void removeProfile(final LessProfile lessProfile) {
-        state.lessProfiles.remove(lessProfile.getName());
+    public void removeProfile(final int id) {
+        state.lessProfileMap.remove(id);
     }
 
-    public void replaceProfile(final String displayName, final LessProfile lessProfile) {
-        state.lessProfiles.put(displayName, lessProfile);
-    }
-
-    public void clearProfiles() {
-        state.lessProfiles.clear();
+    public Map<Integer, LessProfile> getProfileMap() {
+        return new LinkedHashMap<Integer, LessProfile>(state.lessProfileMap);
     }
 
     public Collection<LessProfile> getProfiles() {
-        return state.lessProfiles.values();
+        return state.lessProfileMap.values();
     }
 
     /** Used to determine if the state has changed, and thus whether IntelliJ needs to write out to the .xml file. */
@@ -138,7 +138,31 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     /** Import state from external .xml file */
     public void loadState(final LessProjectState state) {
         XmlSerializerUtil.copyBean(state, this.state);
+
+        int nextProfileId = getNextProfileId();
+
+        // Migrate old config
+        for (final LessProfile profile : this.state.lessProfiles.values()) {
+            profile.setId(nextProfileId++);
+            this.state.lessProfileMap.put(profile.getId(), profile);
+        }
+
+        this.state.lessProfiles.clear();
     }
+
+    private int getNextProfileId() {
+        int id = -1;
+        for (final LessProfile profile : state.lessProfileMap.values()) {
+            if (profile.getId() > id) {
+                id = profile.getId();
+            }
+        }
+        return id + 1;
+    }
+
+    /*
+     * File system events
+     */
 
     private boolean isSupported(final VirtualFileEvent virtualFileEvent, final boolean isManual) {
         if (!LessFile.isLessFile(virtualFileEvent.getFileName())) {
@@ -188,6 +212,44 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             });
         }
     }
+
+    // TODO: This is a bit quirky and doesn't seem to work if the new CSS directory hasn't been created yet and its parent dir isn't open in the project view
+    public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
+        if (isSupported(virtualFileMoveEvent, false)) {
+            final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
+            try {
+                VirtualFileLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, vfsLocationChangeDialog);
+            } catch (final IOException e) {
+                LOG.warn(e);
+            }
+        }
+    }
+
+    public void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
+        if (isSupported(virtualFileCopyEvent, false)) {
+            final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
+            try {
+                VirtualFileLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, vfsLocationChangeDialog);
+            } catch (final IOException e) {
+                LOG.warn(e);
+            }
+        }
+    }
+
+    public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
+        if (isSupported(virtualFileEvent, false)) {
+            final LessProfile lessProfile = getLessProfile(virtualFileEvent);
+            try {
+                VirtualFileLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, vfsLocationChangeDialog);
+            } catch (final IOException e) {
+                LOG.warn(e);
+            }
+        }
+    }
+
+    /*
+     * Compiling
+     */
 
     private void compile(final VirtualFileEvent virtualFileEvent) {
         compile(new LessCompileJob(getLessFile(virtualFileEvent), getLessProfile(virtualFileEvent)), true);
@@ -325,39 +387,9 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return jobs;
     }
 
-    // TODO: This is a bit quirky and doesn't seem to work if the new CSS directory hasn't been created yet and its parent dir isn't open in the project view
-    public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
-        if (isSupported(virtualFileMoveEvent, false)) {
-            final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
-            try {
-                VirtualFileLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, vfsLocationChangeDialog);
-            } catch (IOException e) {
-                LOG.warn(e);
-            }
-        }
-    }
-
-    public void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
-        if (isSupported(virtualFileCopyEvent, false)) {
-            final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
-            try {
-                VirtualFileLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, vfsLocationChangeDialog);
-            } catch (IOException e) {
-                LOG.warn(e);
-            }
-        }
-    }
-
-    public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
-        if (isSupported(virtualFileEvent, false)) {
-            final LessProfile lessProfile = getLessProfile(virtualFileEvent);
-            try {
-                VirtualFileLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, vfsLocationChangeDialog);
-            } catch (IOException e) {
-                LOG.warn(e);
-            }
-        }
-    }
+    /*
+     * Exception handling
+     */
 
     private LessFile getLessFile(final @NotNull String uri) {
         try {
@@ -383,6 +415,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         LOG.warn(String.format("Compile failed with an exception in %3.2f seconds:", runTime), e);
     }
 
+    /*
+     * Success handling
+     */
+
     private void handleSuccess(final LessCompileJob lessCompileJob, final long startTime) {
         final double runTime = getRunTime(startTime);
 
@@ -402,6 +438,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             notifyMultiple(lessCompileJob.getUpdatedLessFiles());
         }
     }
+
+    /*
+     * Notifications
+     */
 
     private void notifyNone(final LessFile lessFile) {
         final String filename = lessFile.getName();
@@ -461,6 +501,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     private double getRunTime(final long startTime) {
         return (double)(System.currentTimeMillis() - startTime) / 1000d;
     }
+
+    /*
+     * Logging
+     */
 
     private void logChangeEvent(final VirtualFileEvent virtualFileEvent) {
         LOG.info("LessManager.handleEvent(virtualFileEvent)" + "\n" +

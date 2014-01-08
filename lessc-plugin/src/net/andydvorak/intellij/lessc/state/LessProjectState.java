@@ -16,12 +16,23 @@
 
 package net.andydvorak.intellij.lessc.state;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class LessProjectState {
 
+    /**
+     * Old profile map.  Uses profile names as keys.  This is problematic when renaming/deleting profiles.
+     */
     public Map<String, LessProfile> lessProfiles = new LinkedHashMap<String, LessProfile>();
+
+    /**
+     * New profile map.  Uses unique profile IDs as keys.  {@link #lessProfiles} must be automatically migrated into this map.
+     */
+    public Map<Integer, LessProfile> lessProfileMap = new LinkedHashMap<Integer, LessProfile>();
 
     public boolean moveCssFiles = true;
     public boolean promptOnMove = true;
@@ -100,28 +111,32 @@ public class LessProjectState {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LessProjectState that = (LessProjectState) o;
+        final LessProjectState that = (LessProjectState) o;
 
-        if (copyCssFiles != that.copyCssFiles) return false;
-        if (deleteCssFiles != that.deleteCssFiles) return false;
-        if (moveCssFiles != that.moveCssFiles) return false;
-        if (promptOnCopy != that.promptOnCopy) return false;
-        if (promptOnDelete != that.promptOnDelete) return false;
-        if (promptOnMove != that.promptOnMove) return false;
-        if (lessProfiles != null ? !lessProfiles.equals(that.lessProfiles) : that.lessProfiles != null) return false;
-
-        return true;
+        return new EqualsBuilder()
+                .append(copyCssFiles,   that.copyCssFiles)
+                .append(deleteCssFiles, that.deleteCssFiles)
+                .append(moveCssFiles,   that.moveCssFiles)
+                .append(promptOnCopy,   that.promptOnCopy)
+                .append(promptOnDelete, that.promptOnDelete)
+                .append(promptOnMove,   that.promptOnMove)
+                .append(lessProfiles,   that.lessProfiles)
+                .append(lessProfileMap, that.lessProfileMap)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
-        int result = lessProfiles != null ? lessProfiles.hashCode() : 0;
-        result = 31 * result + (moveCssFiles ? 1 : 0);
-        result = 31 * result + (promptOnMove ? 1 : 0);
-        result = 31 * result + (copyCssFiles ? 1 : 0);
-        result = 31 * result + (promptOnCopy ? 1 : 0);
-        result = 31 * result + (deleteCssFiles ? 1 : 0);
-        result = 31 * result + (promptOnDelete ? 1 : 0);
-        return result;
+        return new HashCodeBuilder()
+                .append(copyCssFiles)
+                .append(deleteCssFiles)
+                .append(moveCssFiles)
+                .append(promptOnCopy)
+                .append(promptOnDelete)
+                .append(promptOnMove)
+                .append(lessProfiles)
+                .append(lessProfileMap)
+                .hashCode();
     }
+
 }

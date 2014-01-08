@@ -17,33 +17,58 @@
 package net.andydvorak.intellij.lessc.state;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class LessProfile {
+
+    private int id = -1;
+    private String name = "";
     private String lessDirPath;
     private List<CssDirectory> cssDirectories = new ArrayList<CssDirectory>();
     private String includePattern = "";
     private String excludePattern = "";
     private boolean compileAutomatically = true;
     private boolean compressOutput = false;
-    private String name = "";
 
-    // Read from external .xml file
+    // For XML deserialization
     @SuppressWarnings("UnusedDeclaration")
     public LessProfile() {
     }
 
-    public LessProfile(final String profileName) {
+    public LessProfile(final int id, final String profileName) {
+        this.id = id;
         this.name = profileName;
     }
 
     // Clone
-    public LessProfile(final LessProfile other) {
+    public LessProfile(final int id, final LessProfile other) {
         this.copyFrom(other);
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    // For XML deserialization
+    @SuppressWarnings("UnusedDeclaration")
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getLessDirPath() {
@@ -104,58 +129,49 @@ public class LessProfile {
         this.compressOutput = compressOutput;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void copyFrom(final LessProfile lessProfile) {
-        this.name = lessProfile.name;
-        this.lessDirPath = lessProfile.lessDirPath;
-        this.compileAutomatically = lessProfile.compileAutomatically;
-        this.compressOutput = lessProfile.compressOutput;
-        this.includePattern = lessProfile.includePattern;
-        this.excludePattern = lessProfile.excludePattern;
-        this.cssDirectories.clear();
-
-        for (CssDirectory cssDirectory : lessProfile.cssDirectories) {
-            this.cssDirectories.add(new CssDirectory(cssDirectory));
+        id = lessProfile.id;
+        name = lessProfile.name;
+        lessDirPath = lessProfile.lessDirPath;
+        includePattern = lessProfile.includePattern;
+        excludePattern = lessProfile.excludePattern;
+        cssDirectories.clear();
+        for (final CssDirectory cssDirectory : lessProfile.cssDirectories) {
+            cssDirectories.add(new CssDirectory(cssDirectory));
         }
+        compileAutomatically = lessProfile.compileAutomatically;
+        compressOutput = lessProfile.compressOutput;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
-        LessProfile that = (LessProfile) o;
-
-        if (compileAutomatically != that.compileAutomatically) return false;
-        if (compressOutput != that.compressOutput) return false;
-        if (cssDirectories != null ? !cssDirectories.equals(that.cssDirectories) : that.cssDirectories != null)
-            return false;
-        if (excludePattern != null ? !excludePattern.equals(that.excludePattern) : that.excludePattern != null)
-            return false;
-        if (includePattern != null ? !includePattern.equals(that.includePattern) : that.includePattern != null)
-            return false;
-        if (lessDirPath != null ? !lessDirPath.equals(that.lessDirPath) : that.lessDirPath != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-
-        return true;
+        final LessProfile that = (LessProfile) o;
+        return new EqualsBuilder()
+                .append(id,                   that.id)
+                .append(name,                 that.name)
+                .append(lessDirPath,          that.lessDirPath)
+                .append(includePattern,       that.includePattern)
+                .append(excludePattern,       that.excludePattern)
+                .append(cssDirectories,       that.cssDirectories)
+                .append(compileAutomatically, that.compileAutomatically)
+                .append(compressOutput,       that.compressOutput)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
-        int result = lessDirPath != null ? lessDirPath.hashCode() : 0;
-        result = 31 * result + (cssDirectories != null ? cssDirectories.hashCode() : 0);
-        result = 31 * result + (includePattern != null ? includePattern.hashCode() : 0);
-        result = 31 * result + (excludePattern != null ? excludePattern.hashCode() : 0);
-        result = 31 * result + (compileAutomatically ? 1 : 0);
-        result = 31 * result + (compressOutput ? 1 : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        return result;
+        return new HashCodeBuilder(13, 17)
+                .append(id)
+                .append(name)
+                .append(lessDirPath)
+                .append(includePattern)
+                .append(excludePattern)
+                .append(cssDirectories)
+                .append(compileAutomatically)
+                .append(compressOutput)
+                .hashCode();
     }
+
 }

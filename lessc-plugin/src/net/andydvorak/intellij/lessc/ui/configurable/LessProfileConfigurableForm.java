@@ -75,12 +75,17 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
 
     private final Project project;
     private final LessManager lessManager;
+
+    // TODO: Clone profile HERE instead of in LessProfilesPanel (or wherever they're currently being cloned)
     private final LessProfile lessProfile;
+    private final LessProfile currentLessProfileUiState;
+
+    private int lessProfileId;
+    private String lessProfileName;
     private final LessProfilesPanel lessProfilesPanel;
 
     private final EventListenerList listeners = new EventListenerList();
 
-    private String lessProfileName;
     private boolean modified;
     private JPanel rootPanel;
     private JCheckBox compileAutomaticallyOnSaveCheckBox;
@@ -107,14 +112,18 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
 
         this.project = project;
         this.lessManager = LessManager.getInstance(project);
+
         this.lessProfile = lessProfile;
-        this.lessProfilesPanel = lessProfilesPanel;
+        this.currentLessProfileUiState = new LessProfile(lessProfile.getId(), lessProfile);
+
+        this.lessProfileId = lessProfile.getId();
         this.lessProfileName = lessProfile.getName();
+        this.lessProfilesPanel = lessProfilesPanel;
 
         cssDirectories = new ArrayList<CssDirectory>();
 
         // Deep clone
-        for (CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
+        for (final CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
             cssDirectories.add(new CssDirectory(cssDirectory));
         }
 
@@ -123,7 +132,24 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         profileMappingTable = new JBTable(profileMappingModel);
     }
 
-    public void setDisplayName(String displayName) {
+    public LessProfile getCurrentState() {
+        // Forms that are not being displayed (i.e., all forms EXCEPT the currently visible one)
+        // have null input fields.
+        if (this.lessDirTextField == null) {
+            return lessProfile;
+        }
+
+        final LessProfile profile = new LessProfile(lessProfileId, lessProfile);
+        profile.setLessDirPath(this.lessDirTextField.getText());
+        profile.setIncludePattern(this.includePatternTextField.getText());
+        profile.setExcludePattern(this.excludePatternTextField.getText());
+        profile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
+        profile.setCompileAutomatically(this.compileAutomaticallyOnSaveCheckBox.isSelected());
+        profile.setCompressOutput(this.compressCssCheckbox.isSelected());
+        return profile;
+    }
+
+    public void setDisplayName(final String displayName) {
         lessProfile.setName(displayName);
     }
 
@@ -268,7 +294,9 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         return null;
     }
 
+    // TODO: Clone profile HERE instead of in LessProfilesPanel (or wherever they're currently being cloned)
     public boolean isModified() {
+        currentLessProfileUiState.copyFrom(getCurrentState());
         return modified ||
                 !Comparing.strEqual(lessProfileName, lessProfile.getName()) ||
                 !Comparing.strEqual(lessDirTextField.getText(), lessProfile.getLessDirPath()) ||
@@ -279,6 +307,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
                 !Comparing.equal(cssDirectories, lessProfile.getCssDirectories());
     }
 
+    // TODO: Clone profile HERE instead of in LessProfilesPanel (or wherever they're currently being cloned)
     public void apply() throws ConfigurationException {
         lessProfile.setLessDirPath(lessDirTextField.getText());
         lessProfile.setIncludePattern(includePatternTextField.getText());
@@ -287,12 +316,15 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         lessProfile.setCompressOutput(compressCssCheckbox.isSelected());
         lessProfile.setCssDirectories(new ArrayList<CssDirectory>(cssDirectories));
 
-        LessManager.getInstance(project).replaceProfile(lessProfileName, lessProfile);
+        LessManager.getInstance(project).putProfile(lessProfileId, lessProfile);
 
         lessProfileName = lessProfile.getName();
         modified = false;
+
+        currentLessProfileUiState.copyFrom(getCurrentState());
     }
 
+    // TODO: Clone profile HERE instead of in LessProfilesPanel (or wherever they're currently being cloned)
     public void reset() {
         lessProfileName = lessProfile.getName();
         lessDirTextField.setText(lessProfile.getLessDirPath());
@@ -300,6 +332,8 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         excludePatternTextField.setText(lessProfile.getExcludePattern());
         compileAutomaticallyOnSaveCheckBox.setSelected(lessProfile.isCompileAutomatically());
         compressCssCheckbox.setSelected(lessProfile.isCompressOutput());
+
+        currentLessProfileUiState.copyFrom(getCurrentState());
     }
 
     public void disposeUIResources() {
