@@ -141,29 +141,29 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         lessDirPanel.add(lessDirTextField, GRIDCONSTRAINTS_FILL_ALL);
 
         profileMappingTable.addMouseListener(new MouseListener() {
-            @Override public void mouseClicked(MouseEvent mouseEvent) {
+            @Override public void mouseClicked(final MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2 && !mouseEvent.isConsumed()) {
                     mouseEvent.consume();
                     editRow();
                 }
             }
-            @Override public void mousePressed(MouseEvent mouseEvent) {}
-            @Override public void mouseReleased(MouseEvent mouseEvent) {}
-            @Override public void mouseEntered(MouseEvent mouseEvent) {}
-            @Override public void mouseExited(MouseEvent mouseEvent) {}
+            @Override public void mousePressed(final MouseEvent mouseEvent) {}
+            @Override public void mouseReleased(final MouseEvent mouseEvent) {}
+            @Override public void mouseEntered(final MouseEvent mouseEvent) {}
+            @Override public void mouseExited(final MouseEvent mouseEvent) {}
         });
 
         final ToolbarDecorator decorator = ToolbarDecorator.createDecorator(profileMappingTable);
         decorator
                 .setAddAction(new AnActionButtonRunnable() {
                     @Override
-                    public void run(AnActionButton button) {
+                    public void run(final AnActionButton button) {
                         addRow();
                     }
                 })
                 .setEditAction(new AnActionButtonRunnable() {
                     @Override
-                    public void run(AnActionButton button) {
+                    public void run(final AnActionButton button) {
                         editRow();
                     }
                 })
@@ -174,7 +174,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
         resetPromptsButton.setMnemonic('r');
         resetPromptsButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent actionEvent) {
+            public void actionPerformed(final ActionEvent actionEvent) {
                 lessManager.getState().resetPrompts();
                 lessProfilesPanel.setPromptButtonsEnabled(false);
             }
@@ -246,7 +246,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
     }
 
     private FileChooserDescriptor getFileChooserDescriptor() {
-        FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
+        final FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
         d.setTitle(UIBundle.message("file.chooser.css.title"));
         d.setShowFileSystemRoots(true);
         return d;
@@ -305,7 +305,7 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
     public void disposeUIResources() {
     }
 
-    public void setModified(boolean modified) {
+    public void setModified(final boolean modified) {
         this.modified = modified;
     }
 }

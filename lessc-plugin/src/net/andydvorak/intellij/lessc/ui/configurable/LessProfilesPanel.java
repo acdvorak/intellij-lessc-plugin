@@ -139,7 +139,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     @Nullable
-    protected ArrayList<AnAction> createActions(boolean fromPopup) {
+    protected ArrayList<AnAction> createActions(final boolean fromPopup) {
         final ArrayList<AnAction> result = new ArrayList<AnAction>();
 
         final String addText = UIBundle.message("action.add.less.profile.text");
@@ -150,7 +150,8 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
             {
                 registerCustomShortcutSet(CommonShortcuts.INSERT, myTree);
             }
-            public void actionPerformed(AnActionEvent event) {
+
+            public void actionPerformed(final AnActionEvent event) {
                 final String name = askForProfileName(addPromptTitle, "");
                 if (name == null) return;
                 final LessProfile lessProfile = new LessProfile(name);
@@ -168,7 +169,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
             {
                 registerCustomShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_MASK)), myTree);
             }
-            public void actionPerformed(AnActionEvent event) {
+            public void actionPerformed(final AnActionEvent event) {
                 final String profileName = askForProfileName(copyPromptTitle, "");
                 if (profileName == null) return;
                 final LessProfile clone = new LessProfile((LessProfile) getSelectedObject());
@@ -176,7 +177,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
                 addProfileNode(clone);
             }
 
-            public void update(AnActionEvent event) {
+            public void update(final AnActionEvent event) {
                 super.update(event);
                 event.getPresentation().setEnabled(getSelectedObject() != null);
             }
@@ -186,7 +187,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     }
 
     @Nullable
-    private String askForProfileName(String title, String initialName) {
+    private String askForProfileName(final String title, final String initialName) {
         final String message = UIBundle.message("action.new.less.profile.prompt.message");
         return Messages.showInputDialog(message, title, Messages.getQuestionIcon(), initialName, new InputValidator() {
             public boolean checkInput(String s) {
@@ -239,7 +240,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
     public void addItemsChangeListener(final Runnable runnable) {
         addItemsChangeListener(new ItemsChangeListener() {
-            public void itemChanged(@Nullable Object deletedItem) {
+            public void itemChanged(@Nullable final Object deletedItem) {
                 SwingUtilities.invokeLater(runnable);
             }
 

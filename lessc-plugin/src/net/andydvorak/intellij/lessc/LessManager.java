@@ -208,7 +208,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             public void run() {
                 ProgressManager.getInstance().run(new Task.Backgroundable(myProject, title, false) {
                     @Override
-                    public void run(@NotNull ProgressIndicator indicator) {
+                    public void run(@NotNull final ProgressIndicator indicator) {
                         compileWithProgress(this, indicator, compileJob);
                     }
                 });
@@ -247,7 +247,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
      *              {@code false} to run it immediately
      * @return {@code true} if the compile job was enqueued to wait for other jobs to finish; otherwise {@code false}
      */
-    private boolean enqueue(LessCompileJob compileJob, boolean async) {
+    private boolean enqueue(final LessCompileJob compileJob, final boolean async) {
         final LessFile lessFile = compileJob.getSourceLessFile();
         final String lessFilePath = lessFile.getCanonicalPathSafe();
 
@@ -275,7 +275,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             @Override
             public void run() {
                 final List<LessCompileJob> jobs = getQueuedCompileJobsConcurrent();
-                for (LessCompileJob job : jobs) {
+                for (final LessCompileJob job : jobs) {
                     compile(job, false);
                 }
             }
@@ -286,7 +286,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                for (LessProfile lessProfile : getProfiles()) {
+                for (final LessProfile lessProfile : getProfiles()) {
                     VirtualFileLocationChange.refresh(lessProfile.getCssDirectories());
                 }
             }
@@ -314,7 +314,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         synchronized (compileQueue) {
             final LinkedHashSet<String> paths = new LinkedHashSet<String>(compileQueue);
 
-            for (String lessFilePath : paths) {
+            for (final String lessFilePath : paths) {
                 jobs.add(compileQueueJobs.get(lessFilePath));
             }
 
@@ -388,7 +388,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
         LOG.info(String.format("Compile succeeded in %3.2f seconds", runTime));
 
-        for (LessFile lessFile : lessCompileJob.getSourceAndDependents()) {
+        for (final LessFile lessFile : lessCompileJob.getSourceAndDependents()) {
             notifier.expire(lessFile.getCanonicalPathSafe());
         }
 
@@ -458,11 +458,11 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return String.format("<a href='%s'>%s</a>", lessFile.getCanonicalPathSafeHtmlEscaped(), lessFile.getName());
     }
 
-    private double getRunTime(long startTime) {
+    private double getRunTime(final long startTime) {
         return (double)(System.currentTimeMillis() - startTime) / 1000d;
     }
 
-    private void logChangeEvent(VirtualFileEvent virtualFileEvent) {
+    private void logChangeEvent(final VirtualFileEvent virtualFileEvent) {
         LOG.info("LessManager.handleEvent(virtualFileEvent)" + "\n" +
                  "\t virtualFileEvent.getFile() = " + virtualFileEvent.getFile().getPath() + "\n" +
                  "\t virtualFileEvent.isFromSave() = " + virtualFileEvent.isFromSave() + "\n" +
@@ -470,7 +470,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
                  "\t virtualFileEvent.getRequestor() = " + toStringLoggable(virtualFileEvent.getRequestor()));
     }
 
-    private void logQueuedJob(LessCompileJob compileJob, boolean async) {
+    private void logQueuedJob(final LessCompileJob compileJob, final boolean async) {
         final String asyncStr = async ? "asynchronous" : "synchronous";
         final String lessPath = compileJob.getSourceLessFile().getCanonicalPathSafe();
         LOG.info(String.format("Queued %s compile job for %s", asyncStr, lessPath));
@@ -482,7 +482,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
      * @param obj object to represent as a string
      * @return log-friendly representation of the object
      */
-    private static String toStringLoggable(Object obj) {
+    private static String toStringLoggable(final Object obj) {
         final String identity = ObjectUtils.identityToString(obj);
         final String override = ObjectUtils.toString(obj, null);
         return ObjectUtils.equals(identity, override) ? identity : identity + " - " + override;

@@ -36,7 +36,7 @@ public class LessProjectState {
         return moveCssFiles;
     }
 
-    public void setMoveCssFiles(boolean moveCssFiles) {
+    public void setMoveCssFiles(final boolean moveCssFiles) {
         this.moveCssFiles = moveCssFiles;
     }
 
@@ -44,7 +44,7 @@ public class LessProjectState {
         return promptOnMove;
     }
 
-    public void setPromptOnMove(boolean promptOnMove) {
+    public void setPromptOnMove(final boolean promptOnMove) {
         this.promptOnMove = promptOnMove;
     }
 
@@ -52,7 +52,7 @@ public class LessProjectState {
         return copyCssFiles;
     }
 
-    public void setCopyCssFiles(boolean copyCssFiles) {
+    public void setCopyCssFiles(final boolean copyCssFiles) {
         this.copyCssFiles = copyCssFiles;
     }
 
@@ -60,7 +60,7 @@ public class LessProjectState {
         return promptOnCopy;
     }
 
-    public void setPromptOnCopy(boolean promptOnCopy) {
+    public void setPromptOnCopy(final boolean promptOnCopy) {
         this.promptOnCopy = promptOnCopy;
     }
 
@@ -68,7 +68,7 @@ public class LessProjectState {
         return deleteCssFiles;
     }
 
-    public void setDeleteCssFiles(boolean deleteCssFiles) {
+    public void setDeleteCssFiles(final boolean deleteCssFiles) {
         this.deleteCssFiles = deleteCssFiles;
     }
 
@@ -76,7 +76,7 @@ public class LessProjectState {
         return promptOnDelete;
     }
 
-    public void setPromptOnDelete(boolean promptOnDelete) {
+    public void setPromptOnDelete(final boolean promptOnDelete) {
         this.promptOnDelete = promptOnDelete;
     }
 
@@ -96,7 +96,7 @@ public class LessProjectState {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
