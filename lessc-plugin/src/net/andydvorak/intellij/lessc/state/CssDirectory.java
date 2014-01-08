@@ -21,6 +21,7 @@ public class CssDirectory {
     private String cssDirPath;
 
     // For XML serialization
+    @SuppressWarnings("UnusedDeclaration")
     public CssDirectory() {
     }
 
