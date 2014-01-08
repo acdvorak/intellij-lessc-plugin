@@ -183,6 +183,14 @@ Notable alternatives to this plugin:
 5.  Add a Run/Debug configuration for ```lessc-plugin```, type = ```Plugin```
 6.  Test the plugin by going to ```Run``` > ```Debug lessc-plugin```
 
+## TODO
+
+-  [ ]  When a .less file is a descendant of multiple profiles, but is only matched by the include/exclude patterns
+        of a single profile, and the .less file has a syntax error in it, the error message notification is
+        prematurely expired when a later profile's compile job completes "successfully" without changing any .css
+        files (because the .less file doesn't match that profile's patterns).
+-  [ ]  "Copy" profile button copies the _saved_ state of the selected profile (it should copy the _current_ state).
+
 ---
 
 # Credits
