@@ -34,7 +34,7 @@ public class LessOptions {
 	private String charset = "UTF-8";
 	private Boolean compress = false;
 	private Boolean css = false;
-	private URL less = getClass().getClassLoader().getResource("META-INF/less.js");
+	private URL less = getClass().getClassLoader().getResource("META-INF/less-1.6.0.js");
 	private String lineNumbers;
 	private Integer optimization = 3;
 

@@ -16,6 +16,7 @@
 
 package net.andydvorak.intellij.lessc.ui.notifier;
 
+import net.andydvorak.intellij.lessc.fs.LessFile;
 import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,11 +34,11 @@ public class LessErrorMessage extends Exception {
     private final int line;
     private final int column;
 
-    public LessErrorMessage(final @NotNull String lessFilePath, final @NotNull String lessFileName, final @NotNull Throwable t) {
+    public LessErrorMessage(final @NotNull Throwable t, final @NotNull LessFile lessFile) {
         super(t);
 
-        filePath = lessFilePath;
-        fileName = lessFileName;
+        filePath = lessFile.getCanonicalPathSafe();
+        fileName = lessFile.getName();
 
         title = NotificationsBundle.message("error.title");
         message = t.getLocalizedMessage();

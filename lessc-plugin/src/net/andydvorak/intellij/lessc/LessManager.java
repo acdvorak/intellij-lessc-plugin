@@ -16,6 +16,7 @@
 
 package net.andydvorak.intellij.lessc;
 
+import com.asual.lesscss.LessException;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
@@ -42,11 +43,14 @@ import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.state.LessProjectState;
 import net.andydvorak.intellij.lessc.ui.configurable.VfsLocationChangeDialog;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -224,9 +228,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         try {
             compileJob.compile();
             handleSuccess(compileJob, startTime);
-        } catch (Exception e) {
-            final LessFile curLessFile = compileJob.getCurLessFile();
-            handleException(e, curLessFile.getCanonicalPathSafe(), curLessFile.getName(), startTime);
+        } catch (final LessException e) {
+            handleLessException(e, compileJob.getCurLessFile(), startTime);
+        } catch (final Exception e) {
+            handleGenericException(e, compileJob.getCurLessFile(), startTime);
         } finally {
             indicator.setFraction(1);
             dequeue();
@@ -354,10 +359,27 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         }
     }
 
-    private void handleException(@NotNull final Exception e, @NotNull final String lessFilePath,
-                                 @NotNull final String lessFileName, final long startTime) {
+    private LessFile getLessFile(final @NotNull String uri) {
+        try {
+            return new LessFile(new URI(uri));
+        } catch (final URISyntaxException ex) {
+            return new LessFile(uri);
+        }
+    }
+
+    private void handleLessException(@NotNull final LessException e, @NotNull final LessFile curLessFile, final long startTime) {
+        final LessFile srcLessFile;
+        if (StringUtils.isNotBlank(e.getFilename())) {
+            srcLessFile = getLessFile(e.getFilename());
+        } else {
+            srcLessFile = curLessFile;
+        }
+        handleGenericException(e, srcLessFile, startTime);
+    }
+
+    private void handleGenericException(@NotNull final Exception e, @NotNull final LessFile lessFile, final long startTime) {
         final double runTime = getRunTime(startTime);
-        notifier.error(new LessErrorMessage(lessFilePath, lessFileName, e));
+        notifier.error(new LessErrorMessage(e, lessFile));
         LOG.warn(String.format("Compile failed with an exception in %3.2f seconds:", runTime), e);
     }
 
