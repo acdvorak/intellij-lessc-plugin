@@ -92,15 +92,16 @@ public class LessFile extends File implements Comparable<File> {
         return StringEscapeUtils.escapeHtml4(getCanonicalPathSafe());
     }
 
-    @Nullable
-    public LessProfile getLessProfile(final Collection<LessProfile> lessProfiles) {
+    @NotNull
+    public List<LessProfile> getLessProfiles(final Collection<LessProfile> lessProfiles) {
+        final List<LessProfile> profiles = new ArrayList<LessProfile>();
         for (LessProfile lessProfile : lessProfiles) {
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
             if (lessProfileDir.exists() && FileUtil.isAncestor(lessProfileDir, this, false)) {
-                return lessProfile;
+                profiles.add(lessProfile);
             }
         }
-        return null;
+        return profiles;
     }
 
     public boolean shouldCompile(@Nullable final LessProfile lessProfile) {

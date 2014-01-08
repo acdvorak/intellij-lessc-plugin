@@ -29,6 +29,7 @@ import com.intellij.openapi.vfs.VirtualFileCopyEvent;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileMoveEvent;
+import com.intellij.profile.Profile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
@@ -169,8 +170,15 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             return false;
         }
 
-        final LessProfile lessProfile = getLessProfile(virtualFileEvent);
-        return lessProfile != null && (lessProfile.isCompileAutomatically() || isManual);
+        final List<LessProfile> lessProfiles = getLessProfiles(virtualFileEvent);
+
+        for (final LessProfile profile : lessProfiles) {
+            if (profile.isCompileAutomatically() || isManual) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull
@@ -178,9 +186,19 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         return new LessFile(virtualFileEvent.getFile().getPath());
     }
 
+    @NotNull
+    public List<LessProfile> getLessProfiles(final VirtualFileEvent virtualFileEvent) {
+        return getLessFile(virtualFileEvent).getLessProfiles(getProfiles());
+    }
+
     @Nullable
-    public LessProfile getLessProfile(final VirtualFileEvent virtualFileEvent) {
-        return getLessFile(virtualFileEvent).getLessProfile(getProfiles());
+    public LessProfile getFirstLessProfile(final VirtualFileEvent virtualFileEvent) {
+        final List<LessProfile> profiles = getLessProfiles(virtualFileEvent);
+        if (profiles.isEmpty()) {
+            return null;
+        } else {
+            return profiles.get(0);
+        }
     }
 
     private void saveAllDocuments() {
@@ -216,7 +234,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     // TODO: This is a bit quirky and doesn't seem to work if the new CSS directory hasn't been created yet and its parent dir isn't open in the project view
     public void handleMoveEvent(final VirtualFileMoveEvent virtualFileMoveEvent) {
         if (isSupported(virtualFileMoveEvent, false)) {
-            final LessProfile lessProfile = getLessProfile(virtualFileMoveEvent);
+            final LessProfile lessProfile = getFirstLessProfile(virtualFileMoveEvent);
+            if (lessProfile == null) {
+                return;
+            }
             try {
                 VirtualFileLocationChange.moveCssFiles(virtualFileMoveEvent, lessProfile, vfsLocationChangeDialog);
             } catch (final IOException e) {
@@ -227,7 +248,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     public void handleCopyEvent(final VirtualFileCopyEvent virtualFileCopyEvent) {
         if (isSupported(virtualFileCopyEvent, false)) {
-            final LessProfile lessProfile = getLessProfile(virtualFileCopyEvent);
+            final LessProfile lessProfile = getFirstLessProfile(virtualFileCopyEvent);
+            if (lessProfile == null) {
+                return;
+            }
             try {
                 VirtualFileLocationChange.copyCssFiles(virtualFileCopyEvent, lessProfile, vfsLocationChangeDialog);
             } catch (final IOException e) {
@@ -238,7 +262,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     public void handleDeleteEvent(final VirtualFileEvent virtualFileEvent) {
         if (isSupported(virtualFileEvent, false)) {
-            final LessProfile lessProfile = getLessProfile(virtualFileEvent);
+            final LessProfile lessProfile = getFirstLessProfile(virtualFileEvent);
+            if (lessProfile == null) {
+                return;
+            }
             try {
                 VirtualFileLocationChange.deleteCssFiles(virtualFileEvent, lessProfile, vfsLocationChangeDialog);
             } catch (final IOException e) {
@@ -252,7 +279,10 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
      */
 
     private void compile(final VirtualFileEvent virtualFileEvent) {
-        compile(new LessCompileJob(getLessFile(virtualFileEvent), getLessProfile(virtualFileEvent)), true);
+        final List<LessProfile> profiles = getLessProfiles(virtualFileEvent);
+        for (final LessProfile profile : profiles) {
+            compile(new LessCompileJob(getLessFile(virtualFileEvent), profile), true);
+        }
     }
 
     private void compile(final LessCompileJob compileJob, final boolean async) {

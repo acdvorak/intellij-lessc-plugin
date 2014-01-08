@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Andrew C. Dvorak
@@ -47,9 +48,9 @@ public class LessCompileAction extends AnAction {
 
         for (VirtualFile file : files) {
             final VirtualFileEvent virtualFileEvent = new VirtualFileEvent(this, file, file.getName(), file.getParent());
-            final LessProfile lessProfile = lessManager.getLessProfile(virtualFileEvent);
+            final List<LessProfile> lessProfiles = lessManager.getLessProfiles(virtualFileEvent);
 
-            if (lessProfile != null && lessProfile.hasCssDirectories()) {
+            if (!lessProfiles.isEmpty()) {
                 lessManager.handleManualEvent(virtualFileEvent);
             } else {
                 numMissing++;
