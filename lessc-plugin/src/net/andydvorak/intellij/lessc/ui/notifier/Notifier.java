@@ -53,6 +53,13 @@ public class Notifier {
      * <p>Displays a sticky notification balloon in the global notification area.</p>
      * <p>Creates an entry in the "Event Log" tool window.</p>
      */
+    private static final NotificationGroup WARNING_GROUP = new NotificationGroup(
+            "LESS Compiler Warnings", NotificationDisplayType.STICKY_BALLOON, true);
+
+    /**
+     * <p>Displays a sticky notification balloon in the global notification area.</p>
+     * <p>Creates an entry in the "Event Log" tool window.</p>
+     */
     private static final NotificationGroup ERROR_GROUP = new NotificationGroup(
             "LESS Compiler Error Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
@@ -138,6 +145,21 @@ public class Notifier {
     public void success(@NotNull final String message, @Nullable final NotificationListener listener,
                         @NotNull final Set<LessFile> modifiedLessFiles) {
         final Notification notification = createNotification(SUCCESS_GROUP, BALLOON_TITLE, message, NotificationType.INFORMATION, listener);
+
+        for (final LessFile lessFile : modifiedLessFiles) {
+            add(lessFile.getCanonicalPathSafe(), notification);
+        }
+
+        notify(notification);
+    }
+
+    /*
+     * Warn
+     */
+
+    public void warn(@NotNull final String title, @NotNull final String message, @Nullable final NotificationListener listener,
+                     @NotNull final Set<LessFile> modifiedLessFiles) {
+        final Notification notification = createNotification(WARNING_GROUP, title, message, NotificationType.WARNING, listener);
 
         for (final LessFile lessFile : modifiedLessFiles) {
             add(lessFile.getCanonicalPathSafe(), notification);
