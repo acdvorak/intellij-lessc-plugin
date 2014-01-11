@@ -16,9 +16,11 @@
 
 package net.andydvorak.intellij.lessc.ui.configurable;
 
+import com.intellij.notification.NotificationListener;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -26,14 +28,18 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
 import net.andydvorak.intellij.lessc.LessManager;
+import net.andydvorak.intellij.lessc.fs.LessFile;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
+import net.andydvorak.intellij.lessc.ui.notifier.NotificationListenerImpl;
+import net.andydvorak.intellij.lessc.ui.notifier.Notifier;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,12 +49,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class LessCompileAction extends AnAction {
 
+    private static final Logger LOG = Logger.getInstance("#" + LessManager.class.getName());
+
     public void actionPerformed(final AnActionEvent _e) {
         final AnActionEventWrapper e = new AnActionEventWrapper(_e);
-        final Collection<VirtualFile> files = e.getLessFiles();
-        final LessManager lessManager = LessManager.getInstance(e.getProject());
+        final Project project = e.getProject();
 
-        int numMissing = 0;
+        if (project == null) return;
+
+        final LessManager lessManager = LessManager.getInstance(project);
+        final Notifier notifier = Notifier.getInstance(project);
+        final Collection<VirtualFile> files = e.getLessFiles();
+        final List<VirtualFile> filesWithNoProfile = new ArrayList<VirtualFile>();
 
         for (final VirtualFile file : files) {
             final VirtualFileEvent virtualFileEvent = new VirtualFileEvent(this, file, file.getName(), file.getParent());
@@ -57,22 +69,41 @@ public class LessCompileAction extends AnAction {
             if (!lessProfiles.isEmpty()) {
                 lessManager.handleManualEvent(virtualFileEvent);
             } else {
-                numMissing++;
+                filesWithNoProfile.add(file);
             }
         }
 
-        if (numMissing > 0) {
+        if (!filesWithNoProfile.isEmpty()) {
             final String title, message;
 
-            if (numMissing == 1) {
+            if (filesWithNoProfile.size() == 1) {
                 title = UIBundle.message("action.missing.css.dir.single.title");
                 message = UIBundle.message("action.missing.css.dir.single.message");
             } else {
                 title = UIBundle.message("action.missing.css.dir.multiple.title");
-                message = UIBundle.message("action.missing.css.dir.multiple.message", numMissing, files.size());
+                message = UIBundle.message("action.missing.css.dir.multiple.message", filesWithNoProfile.size(), files.size());
             }
 
-            Messages.showInfoMessage(e.getProject(), UIBundle.message("action.missing.css.dir.add.message", message), title);
+            // TODO: Log a single message with multiple hyperlinks.  This will require updating NotificationListenerImpl
+            final List<String> logLinesHtml = new ArrayList<String>();
+            final List<String> logLinesText = new ArrayList<String>();
+            for (final VirtualFile file : filesWithNoProfile) {
+                final String line = String.format("<a href='file:%s'>%s</a>", file.getCanonicalPath(), file.getName());
+                logLinesHtml.add(line);
+                logLinesText.add(file.getCanonicalPath());
+            }
+            final NotificationListener listener = new NotificationListenerImpl(project);
+            final String strLogLinesHtml = StringUtils.join(logLinesHtml, "\n");
+            final String strLogLinesText = StringUtils.join(logLinesText, "\n");
+            // TODO: Move to NotificationsBundle.properties
+            final String logMessageHtml = String.format("The following files do not belong to any LESS Profiles:\n%s", strLogLinesHtml);
+            final String logMessageText = String.format("The following files do not belong to any LESS Profiles:\n%s", strLogLinesText);
+
+            notifier.log(logMessageHtml, listener, new HashSet<LessFile>());
+
+            LOG.warn(logMessageText);
+
+            Messages.showInfoMessage(project, UIBundle.message("action.missing.css.dir.add.message", message), title);
         }
     }
 
