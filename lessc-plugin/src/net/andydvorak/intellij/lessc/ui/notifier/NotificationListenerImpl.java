@@ -40,8 +40,10 @@ public class NotificationListenerImpl implements NotificationListener {
 
     @NotNull
     private final Project myProject;
+
     @Nullable
     private final String filePath;
+
     private final int line;
     private final int column;
 
