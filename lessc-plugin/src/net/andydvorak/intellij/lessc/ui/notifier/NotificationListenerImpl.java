@@ -16,15 +16,20 @@
 
 package net.andydvorak.intellij.lessc.ui.notifier;
 
+import com.intellij.ide.actions.ShowSettingsUtilImpl;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationListener;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.LogicalPosition;
+import com.intellij.openapi.editor.impl.SettingsImpl;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import net.andydvorak.intellij.lessc.LessManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,6 +80,11 @@ public class NotificationListenerImpl implements NotificationListener {
         return "file".equals(description) || description.endsWith(".less") || description.endsWith(".css") || event.getURL() != null;
     }
 
+    private static boolean isSettingsEvent(@NotNull final HyperlinkEvent event) {
+        final String description = event.getDescription();
+        return "settings".equals(description) || "dismiss".equals(description);
+    }
+
     private static boolean isIgnoreEvent(@NotNull final HyperlinkEvent event) {
         final String description = event.getDescription();
         return "ignore".equals(description) || "dismiss".equals(description);
@@ -87,6 +97,8 @@ public class NotificationListenerImpl implements NotificationListener {
 
         if (isViewFileEvent(event)) {
             handleViewFileEvent(notification, event);
+        } else if (isSettingsEvent(event)) {
+            handleSettingsEvent(notification, event);
         } else if (isIgnoreEvent(event)) {
             notification.expire();
         }
@@ -120,6 +132,11 @@ public class NotificationListenerImpl implements NotificationListener {
         }
 
         notification.hideBalloon();
+    }
+
+    private void handleSettingsEvent(@NotNull final Notification notification, @NotNull final HyperlinkEvent event) {
+        notification.expire();
+        ShowSettingsUtilImpl.showSettingsDialog(myProject, "lessc", "");
     }
 
 }
