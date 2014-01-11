@@ -70,7 +70,7 @@ public class NotificationListenerImpl implements NotificationListener {
 
     private static boolean isViewFileEvent(@NotNull final HyperlinkEvent event) {
         final String description = StringUtils.defaultString(event.getDescription());
-        return "file".equals(description) || description.endsWith(".less") || description.endsWith(".css");
+        return "file".equals(description) || description.endsWith(".less") || description.endsWith(".css") || event.getURL() != null;
     }
 
     private static boolean isIgnoreEvent(@NotNull final HyperlinkEvent event) {
@@ -91,9 +91,16 @@ public class NotificationListenerImpl implements NotificationListener {
     }
 
     private void handleViewFileEvent(@NotNull final Notification notification, @NotNull final HyperlinkEvent event) {
-        final String eventDescription = event.getDescription(); // retrieves the "href" attribute of the hyperlink
-        final String curFilePath = StringUtils.defaultString(this.filePath, eventDescription);
-        final VirtualFile file = LocalFileSystem.getInstance().findFileByPath(curFilePath);
+        final String path;
+
+        if (event.getURL() != null) {
+            path = event.getURL().getPath();
+        } else {
+            final String href = event.getDescription(); // retrieves the "href" attribute of the hyperlink
+            path = StringUtils.defaultString(this.filePath, href);
+        }
+
+        final VirtualFile file = LocalFileSystem.getInstance().findFileByPath(path);
         openFileInEditor(notification, file);
     }
 
