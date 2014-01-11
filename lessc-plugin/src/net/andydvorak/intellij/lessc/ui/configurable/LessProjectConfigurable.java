@@ -28,6 +28,8 @@ import javax.swing.*;
 
 public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstract implements Configurable.NoScroll {
 
+    public static final String ID = "lessc";
+
     private static final Icon icon = null; // IconLoader.getIcon("/resources/lessc32x32.png");
     private static final Logger logger = Logger.getInstance(LessProjectConfigurable.class.getName());
 
@@ -48,7 +50,7 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
 
     @NotNull
     public String getId() {
-        return "lessc";
+        return ID;
     }
 
     public JComponent createComponent() {

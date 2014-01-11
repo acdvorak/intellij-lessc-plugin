@@ -30,6 +30,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import net.andydvorak.intellij.lessc.LessManager;
+import net.andydvorak.intellij.lessc.ui.configurable.LessProjectConfigurable;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -82,12 +83,17 @@ public class NotificationListenerImpl implements NotificationListener {
 
     private static boolean isSettingsEvent(@NotNull final HyperlinkEvent event) {
         final String description = event.getDescription();
-        return "settings".equals(description) || "dismiss".equals(description);
+        return "settings".equals(description);
+    }
+
+    private static boolean isDismissEvent(@NotNull final HyperlinkEvent event) {
+        final String description = event.getDescription();
+        return "dismiss".equals(description);
     }
 
     private static boolean isIgnoreEvent(@NotNull final HyperlinkEvent event) {
         final String description = event.getDescription();
-        return "ignore".equals(description) || "dismiss".equals(description);
+        return "ignore".equals(description);
     }
 
     @Override
@@ -98,7 +104,9 @@ public class NotificationListenerImpl implements NotificationListener {
         if (isViewFileEvent(event)) {
             handleViewFileEvent(notification, event);
         } else if (isSettingsEvent(event)) {
-            handleSettingsEvent(notification, event);
+            handleSettingsEvent(notification);
+        } else if (isDismissEvent(event)) {
+            notification.hideBalloon();
         } else if (isIgnoreEvent(event)) {
             notification.expire();
         }
@@ -134,9 +142,9 @@ public class NotificationListenerImpl implements NotificationListener {
         notification.hideBalloon();
     }
 
-    private void handleSettingsEvent(@NotNull final Notification notification, @NotNull final HyperlinkEvent event) {
-        notification.expire();
-        ShowSettingsUtilImpl.showSettingsDialog(myProject, "lessc", "");
+    private void handleSettingsEvent(@NotNull final Notification notification) {
+        notification.hideBalloon();
+        ShowSettingsUtilImpl.showSettingsDialog(myProject, LessProjectConfigurable.ID, "");
     }
 
 }

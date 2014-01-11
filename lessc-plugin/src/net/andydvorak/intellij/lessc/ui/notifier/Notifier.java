@@ -27,6 +27,7 @@ import net.andydvorak.intellij.lessc.ui.messages.NotificationsBundle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -156,6 +157,10 @@ public class Notifier {
     /*
      * Warn
      */
+
+    public void warn(@NotNull final String title, @NotNull final String message, @Nullable final NotificationListener listener) {
+        warn(title, message, listener, new HashSet<LessFile>());
+    }
 
     public void warn(@NotNull final String title, @NotNull final String message, @Nullable final NotificationListener listener,
                      @NotNull final Set<LessFile> modifiedLessFiles) {
