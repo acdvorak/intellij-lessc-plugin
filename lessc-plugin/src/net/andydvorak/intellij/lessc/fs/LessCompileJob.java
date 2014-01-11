@@ -49,7 +49,6 @@ public class LessCompileJob implements CompileObservable {
     private final AtomicInteger curLessFileIndex = new AtomicInteger(-1);
 
     private final Set<LessFile> updatedLessFiles = new LinkedHashSet<LessFile>();
-    private final Set<String> updatedLessFilePaths = new LinkedHashSet<String>();
     private final Set<CompileObserver> observers = new LinkedHashSet<CompileObserver>();
 
     /*
@@ -84,9 +83,8 @@ public class LessCompileJob implements CompileObservable {
         }
     }
 
-    public void addUpdatedLessFile(LessFile lessFile) {
+    public void addUpdatedLessFile(final LessFile lessFile) {
         updatedLessFiles.add(lessFile);
-        updatedLessFilePaths.add(lessFile.getCanonicalPathSafe());
     }
 
     /**
@@ -96,30 +94,23 @@ public class LessCompileJob implements CompileObservable {
         return new LinkedHashSet<LessFile>(updatedLessFiles);
     }
 
-    /**
-     * @return set of paths to LESS {@code File}s that produced new or updated CSS files after being compiled
-     */
-    public Set<String> getUpdatedLessFilePaths() {
-        return new LinkedHashSet<String>(updatedLessFilePaths);
-    }
-
     public int getNumUpdated() {
         return getUpdatedLessFiles().size();
     }
 
     @Override
-    public void addObserver(@NotNull CompileObserver observer) {
+    public void addObserver(@NotNull final CompileObserver observer) {
         observers.add(observer);
     }
 
     @Override
-    public void removeObserver(@NotNull CompileObserver observer) {
+    public void removeObserver(@NotNull final CompileObserver observer) {
         observers.remove(observer);
     }
 
     @Override
-    public void notifyObservers(@NotNull CompileEvent event) {
-        for (CompileObserver observer : observers) {
+    public void notifyObservers(@NotNull final CompileEvent event) {
+        for (final CompileObserver observer : observers) {
             event.notify(observer);
         }
     }
@@ -146,9 +137,8 @@ public class LessCompileJob implements CompileObservable {
         return compiled.get();
     }
 
-    // TODO: Rename this method
-    public boolean canCreateNewCompileJob() {
-        return !isRunning() && (!isFinished() || System.currentTimeMillis() - finished.get() > WAIT_INTERVAL_MS);
+    public boolean needsToWait() {
+        return isRunning() || (isFinished() && System.currentTimeMillis() - finished.get() <= WAIT_INTERVAL_MS);
     }
 
     /*
@@ -184,12 +174,12 @@ public class LessCompileJob implements CompileObservable {
 
         notifyObservers(new CompileEvent() {
             @Override
-            public void notify(@NotNull CompileObserver observer) {
+            public void notify(@NotNull final CompileObserver observer) {
                 observer.compileStarted(sourceAndDependents);
             }
         });
 
-        for (LessFile lessFile : sourceAndDependents) {
+        for (final LessFile lessFile : sourceAndDependents) {
             compile(lessFile);
         }
     }
@@ -212,7 +202,7 @@ public class LessCompileJob implements CompileObservable {
             addUpdatedLessFile(lessFile);
             event = new CompileEvent() {
                 @Override
-                public void notify(@NotNull CompileObserver observer) {
+                public void notify(@NotNull final CompileObserver observer) {
                     observer.outputFileChanged(lessFile);
                 }
             };
@@ -220,7 +210,7 @@ public class LessCompileJob implements CompileObservable {
         } else {
             event = new CompileEvent() {
                 @Override
-                public void notify(@NotNull CompileObserver observer) {
+                public void notify(@NotNull final CompileObserver observer) {
                     observer.outputFileUnchanged(lessFile);
                 }
             };
@@ -238,7 +228,7 @@ public class LessCompileJob implements CompileObservable {
 
         notifyObservers(new CompileEvent() {
             @Override
-            public void notify(@NotNull CompileObserver observer) {
+            public void notify(@NotNull final CompileObserver observer) {
                 observer.compileFinished(numCompiled);
             }
         });

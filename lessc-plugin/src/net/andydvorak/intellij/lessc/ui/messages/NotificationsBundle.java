@@ -29,22 +29,13 @@ import java.util.ResourceBundle;
  * @since 11/14/12
  */
 public class NotificationsBundle {
+
     private static Reference<ResourceBundle> ourBundle;
 
     @NonNls
     private static final String BUNDLE_NAME = "messages.NotificationsBundle";
 
-    @SuppressWarnings({"HardCodedStringLiteral", "UnresolvedPropertyKey"})
-    public static String logTitle(@NonNls String id) {
-        return message("log." + id + ".title");
-    }
-
-    @SuppressWarnings({"HardCodedStringLiteral", "UnresolvedPropertyKey"})
-    public static String balloonTitle(@NonNls String id) {
-        return message("balloon." + id + ".title");
-    }
-
-    public static String message(@PropertyKey(resourceBundle = BUNDLE_NAME)String key, Object... params) {
+    public static String message(@PropertyKey(resourceBundle = BUNDLE_NAME) final String key, final Object... params) {
         return CommonBundle.message(getBundle(), key, params);
     }
 
@@ -57,4 +48,5 @@ public class NotificationsBundle {
         }
         return bundle;
     }
+
 }

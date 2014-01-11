@@ -42,7 +42,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {
+class LessProfilesPanel extends MasterDetailsComponent implements SearchableConfigurable {
 
     @NotNull private final Project project;
     @NotNull private final LessManager lessManager;
@@ -170,7 +170,7 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
 
         final String copyText = UIBundle.message("action.copy.less.profile.text");
         final String copyDescription = UIBundle.message("action.copy.less.profile.description");
-        final String copyPromptTitle = UIBundle.message("action.copy.less.profile.description");
+        final String copyPromptTitle = UIBundle.message("action.copy.less.profile.prompt.title");
 
         result.add(new AnAction(copyText, copyDescription, PlatformIcons.COPY_ICON) {
             {
@@ -275,7 +275,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
         });
     }
 
-    @Nullable
     private boolean confirmWarning(final String title, final String message) {
         return Messages.YES == Messages.showYesNoDialog(message, title, Messages.getWarningIcon());
     }
@@ -297,11 +296,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @Nls
     public String getDisplayName() {
         return UIBundle.message("pref.display.name");
-    }
-
-    @Nullable
-    public Icon getIcon() {
-        return null;
     }
 
     @Nullable
@@ -327,18 +321,6 @@ public class LessProfilesPanel extends MasterDetailsComponent implements Searcha
     @Override
     protected MasterDetailsStateService getStateService() {
         return MasterDetailsStateService.getInstance(project);
-    }
-
-    public void addItemsChangeListener(final Runnable runnable) {
-        addItemsChangeListener(new ItemsChangeListener() {
-            public void itemChanged(@Nullable final Object deletedItem) {
-                SwingUtilities.invokeLater(runnable);
-            }
-
-            public void itemsExternallyChanged() {
-                SwingUtilities.invokeLater(runnable);
-            }
-        });
     }
 
 }

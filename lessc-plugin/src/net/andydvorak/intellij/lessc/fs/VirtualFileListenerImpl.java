@@ -20,7 +20,7 @@ import com.intellij.openapi.vfs.*;
 
 public class VirtualFileListenerImpl implements VirtualFileListener {
 
-    final VirtualFileWatcher fileWatcher;
+    private final VirtualFileWatcher fileWatcher;
 
     public VirtualFileListenerImpl(final VirtualFileWatcher fileWatcher) {
         this.fileWatcher = fileWatcher;

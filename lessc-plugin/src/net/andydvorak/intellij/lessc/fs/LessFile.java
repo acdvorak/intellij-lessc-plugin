@@ -55,10 +55,6 @@ public class LessFile extends File implements Comparable<File> {
         this(new File(parent, child));
     }
 
-    public LessFile(final File parent, final String child) {
-        this(new File(parent, child));
-    }
-
     public LessFile(final URI uri) {
         this(new File(uri));
     }
@@ -95,7 +91,7 @@ public class LessFile extends File implements Comparable<File> {
     @NotNull
     public List<LessProfile> getLessProfiles(final Collection<LessProfile> lessProfiles) {
         final List<LessProfile> profiles = new ArrayList<LessProfile>();
-        for (LessProfile lessProfile : lessProfiles) {
+        for (final LessProfile lessProfile : lessProfiles) {
             final File lessProfileDir = new File(lessProfile.getLessDirPath());
             if (lessProfileDir.exists() && FileUtil.isAncestor(lessProfileDir, this, false)) {
                 profiles.add(lessProfile);
@@ -114,11 +110,11 @@ public class LessFile extends File implements Comparable<File> {
         boolean include = includePatterns.isEmpty();
         boolean exclude = false;
 
-        for (String includePattern : includePatterns) {
+        for (final String includePattern : includePatterns) {
             include |= matches(includePattern);
         }
 
-        for (String excludePattern : excludePatterns) {
+        for (final String excludePattern : excludePatterns) {
             exclude |= matches(excludePattern);
         }
 
@@ -148,7 +144,7 @@ public class LessFile extends File implements Comparable<File> {
         final LessFile parentLessFile = this;
         return getLessFiles(lessProfile, new Filter() {
             @Override
-            public boolean accept(@NotNull LessFile lessFile) throws IOException {
+            public boolean accept(@NotNull final LessFile lessFile) throws IOException {
                 return  lessFile.notEquals(parentLessFile) &&
 //                        lessFile.shouldCompile(lessProfile) && // this prevents us from finding compilable dependents in uncompilable files
                         lessFile.imports(parentLessFile);
@@ -171,7 +167,7 @@ public class LessFile extends File implements Comparable<File> {
         LOG.debug("Dependency tree for " + getName() + " contains " + dependents.size() + " files");
         final Set<LessFile> compilable = filter(dependents, new Filter() {
             @Override
-            public boolean accept(@NotNull LessFile lessFile) throws IOException {
+            public boolean accept(@NotNull final LessFile lessFile) throws IOException {
                 return lessFile.shouldCompile(lessProfile);
             }
         });
@@ -189,7 +185,7 @@ public class LessFile extends File implements Comparable<File> {
     public boolean imports(@NotNull final LessFile importedLessFile) throws IOException {
         final Set<LessFile> matchingImports = getImports(new Filter() {
             @Override
-            public boolean accept(@NotNull LessFile lessFile) {
+            public boolean accept(@NotNull final LessFile lessFile) {
                 return importedLessFile.equals(lessFile);
             }
         });
@@ -197,7 +193,7 @@ public class LessFile extends File implements Comparable<File> {
     }
 
     @NotNull
-    public Set<LessFile> getImports(@NotNull Filter filter) throws IOException {
+    public Set<LessFile> getImports(@NotNull final Filter filter) throws IOException {
         final Set<LessFile> imports = new LinkedHashSet<LessFile>();
         final Matcher importMatcher = LESS_IMPORT_PATTERN.matcher(FileUtil.loadFile(this));
         while (importMatcher.find()) {
@@ -236,12 +232,12 @@ public class LessFile extends File implements Comparable<File> {
         final Set<LessFile> sourceFileDependents = getFirstLevelDependents(lessProfile);
         final Set<LessFile> sourceFileDependentsFiltered = filter(sourceFileDependents, new Filter() {
             @Override
-            public boolean accept(@NotNull LessFile lessFile) throws IOException {
+            public boolean accept(@NotNull final LessFile lessFile) throws IOException {
                 return !curDependents.contains(lessFile) && !newDependents.contains(lessFile);
             }
         });
 
-        for (LessFile dependentLessFile : sourceFileDependentsFiltered) {
+        for (final LessFile dependentLessFile : sourceFileDependentsFiltered) {
             newDependents.add(dependentLessFile);
 
             final Set<LessFile> allDependents = mergeSets(curDependents, newDependents);
@@ -272,7 +268,7 @@ public class LessFile extends File implements Comparable<File> {
 
         int numUpdated = 0;
 
-        for (CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
+        for (final CssDirectory cssDirectory : lessProfile.getCssDirectories()) {
             final File cssDestFile = new File(cssDirectory.getPath(), relativeCssPath);
 
             // CSS file hasn't changed, so don't bother updating
@@ -334,7 +330,7 @@ public class LessFile extends File implements Comparable<File> {
 
     private static List<String> normalizePatterns(final String patterns) {
         final Set<String> normalized = new LinkedHashSet<String>();
-        for (String pattern : StringUtils.defaultString(patterns).split(";")) {
+        for (final String pattern : StringUtils.defaultString(patterns).split(";")) {
             if (StringUtils.isNotEmpty(pattern))
                 normalized.add(makePatternAbsolute(pattern));
         }
@@ -373,7 +369,7 @@ public class LessFile extends File implements Comparable<File> {
                                              @NotNull final Filter filter) throws IOException {
         final List<File> files = FileUtil.findFilesByMask(LESS_FILENAME_PATTERN, lessProfile.getLessDir());
         final Set<LessFile> lessFiles = new LinkedHashSet<LessFile>();
-        for (File file : files) {
+        for (final File file : files) {
             final LessFile lessFile = new LessFile(file);
             if (filter.accept(lessFile)) {
                 lessFiles.add(lessFile);
@@ -391,7 +387,7 @@ public class LessFile extends File implements Comparable<File> {
 
     private static Set<LessFile> filter(@NotNull final Set<LessFile> lessFiles, @NotNull final Filter filter) throws IOException {
         final Set<LessFile> filtered = new LinkedHashSet<LessFile>();
-        for (LessFile lessFile : lessFiles) {
+        for (final LessFile lessFile : lessFiles) {
             if (filter.accept(lessFile)) {
                 filtered.add(lessFile);
             }
@@ -406,7 +402,7 @@ public class LessFile extends File implements Comparable<File> {
     private static String getCanonicalPathSafe(final File file) {
         try {
             return file.getCanonicalPath();
-        } catch (IOException ignored) {
+        } catch (final IOException ignored) {
             return file.getAbsolutePath();
         }
     }

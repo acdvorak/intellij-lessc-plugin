@@ -27,21 +27,23 @@ public class LessProjectState {
     /**
      * Old profile map.  Uses profile names as keys.  This is problematic when renaming/deleting profiles.
      */
+    @SuppressWarnings("CanBeFinal")
     public Map<String, LessProfile> lessProfiles = new LinkedHashMap<String, LessProfile>();
 
     /**
      * New profile map.  Uses unique profile IDs as keys.  {@link #lessProfiles} must be automatically migrated into this map.
      */
+    @SuppressWarnings("CanBeFinal")
     public Map<Integer, LessProfile> lessProfileMap = new LinkedHashMap<Integer, LessProfile>();
 
-    public boolean moveCssFiles = true;
-    public boolean promptOnMove = true;
+    private boolean moveCssFiles = true;
+    private boolean promptOnMove = true;
 
-    public boolean copyCssFiles = true;
-    public boolean promptOnCopy = true;
+    private boolean copyCssFiles = true;
+    private boolean promptOnCopy = true;
 
-    public boolean deleteCssFiles = true;
-    public boolean promptOnDelete = true;
+    private boolean deleteCssFiles = true;
+    private boolean promptOnDelete = true;
 
     public boolean isMoveCssFiles() {
         return moveCssFiles;

@@ -21,17 +21,21 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
+import com.intellij.openapi.vfs.VirtualFileVisitor;
 import net.andydvorak.intellij.lessc.LessManager;
 import net.andydvorak.intellij.lessc.state.LessProfile;
 import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Andrew C. Dvorak
@@ -39,14 +43,14 @@ import java.util.List;
  */
 public class LessCompileAction extends AnAction {
 
-    public void actionPerformed(AnActionEvent _e) {
+    public void actionPerformed(final AnActionEvent _e) {
         final AnActionEventWrapper e = new AnActionEventWrapper(_e);
         final Collection<VirtualFile> files = e.getLessFiles();
         final LessManager lessManager = LessManager.getInstance(e.getProject());
 
         int numMissing = 0;
 
-        for (VirtualFile file : files) {
+        for (final VirtualFile file : files) {
             final VirtualFileEvent virtualFileEvent = new VirtualFileEvent(this, file, file.getName(), file.getParent());
             final List<LessProfile> lessProfiles = lessManager.getLessProfiles(virtualFileEvent);
 
@@ -75,12 +79,12 @@ public class LessCompileAction extends AnAction {
     /**
      * @see <a href="http://devnet.jetbrains.net/message/5126605#5126605">JetBrains forum post</a>
      */
-    public void update(AnActionEvent _e) {
+    public void update(final AnActionEvent _e) {
         super.update(_e);
 
         final AnActionEventWrapper e = new AnActionEventWrapper(_e);
 
-        boolean visible = e.hasProject() && e.hasLessFiles();
+        final boolean visible = e.hasProject() && e.hasLessFiles();
 
         // Visibility
         e.getPresentation().setVisible(visible);
@@ -94,10 +98,6 @@ public class LessCompileAction extends AnAction {
             super(e.getInputEvent(), e.getDataContext(), e.getPlace(), e.getPresentation(), e.getActionManager(), e.getModifiers());
         }
 
-        public VirtualFile getVirtualFile() {
-            return getData(PlatformDataKeys.VIRTUAL_FILE);
-        }
-
         public VirtualFile[] getVirtualFiles() {
             return getData(PlatformDataKeys.VIRTUAL_FILE_ARRAY);
         }
@@ -108,28 +108,28 @@ public class LessCompileAction extends AnAction {
         }
 
         public boolean hasLessFiles() {
-            return hasLessFiles(getVirtualFiles());
+            return hasLessFilesRecursive(getVirtualFiles());
         }
 
         public Collection<VirtualFile> getLessFiles() {
             return getLessFiles(getVirtualFiles());
         }
 
-        public static boolean hasLessFiles(final VirtualFile[] files) {
-            if (files == null || files.length == 0) return false;
-
-            for (VirtualFile file : files) {
-                if (isLessFile(file))
-                    return true;
-            }
+        public static boolean hasLessFilesRecursive(final VirtualFile[] files) {
+            final AtomicBoolean hasLessFiles = new AtomicBoolean();
 
             // Search subdirectories recursively
-            for (VirtualFile file : files) {
-                if (hasLessFiles(file.getChildren()))
-                    return true;
+            for (final VirtualFile file : files) {
+                VfsUtilCore.visitChildrenRecursively(file, new VirtualFileVisitor<Object>() {
+                    @Override
+                    public boolean visitFile(@NotNull final VirtualFile file) {
+                        hasLessFiles.compareAndSet(false, isLessFile(file));
+                        return true;
+                    }
+                });
             }
 
-            return false;
+            return hasLessFiles.get();
         }
 
         private static boolean isLessFile(final VirtualFile file) {
@@ -149,7 +149,7 @@ public class LessCompileAction extends AnAction {
             if (ArrayUtils.isEmpty(files))
                 return lessFiles;
 
-            for (VirtualFile file : files) {
+            for (final VirtualFile file : files) {
                 if (isLessFile(file))
                     lessFiles.add(file);
 

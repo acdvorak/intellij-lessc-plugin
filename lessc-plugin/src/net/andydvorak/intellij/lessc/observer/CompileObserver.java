@@ -26,8 +26,15 @@ import java.util.Set;
  * @since 11/13/12
  */
 public interface CompileObserver {
+
     public void compileStarted(@NotNull Set<LessFile> lessFiles);
+
+    @SuppressWarnings("UnusedParameters")
     public void outputFileChanged(@NotNull LessFile lessFile);
+
+    @SuppressWarnings("UnusedParameters")
     public void outputFileUnchanged(@NotNull LessFile lessFile);
+
     public void compileFinished(int numChanged);
+
 }

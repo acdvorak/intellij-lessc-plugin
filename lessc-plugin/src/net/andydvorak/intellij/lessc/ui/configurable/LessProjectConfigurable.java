@@ -33,16 +33,13 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
 
     private LessProfilesPanel profilesPanel;
 
+    @SuppressWarnings("WeakerAccess")
     public LessProjectConfigurable(final Project project) {
         this.profilesPanel = new LessProfilesPanel(project);
     }
 
     public String getDisplayName() {
         return UIBundle.message("pref.display.name");
-    }
-
-    public Icon getIcon() {
-        return icon;
     }
 
     public String getHelpTopic() {
@@ -97,16 +94,16 @@ public class LessProjectConfigurable extends SearchableConfigurable.Parent.Abstr
         return true;
     }
 
-    public Runnable enableSearch(String option) {
+    public Runnable enableSearch(final String option) {
         return null;
     }
 
     /**
      * Child configurables
-     * @return
+     * @return Array of child configurables
      */
     protected Configurable[] buildConfigurables() {
         return new Configurable[] {  };
     }
-    
+
 }

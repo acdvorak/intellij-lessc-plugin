@@ -64,23 +64,23 @@ public class NotificationListenerImpl implements NotificationListener {
         return line != -1 || column != -1 ? new LogicalPosition(line > -1 ? line - 1 : 0, column > -1 ? column : 0) : null;
     }
 
-    private boolean isSupportedEvent(@NotNull HyperlinkEvent event) {
-        return !myProject.isDisposed() && event.getEventType() == HyperlinkEvent.EventType.ACTIVATED;
+    private boolean isUnsupportedEvent(@NotNull final HyperlinkEvent event) {
+        return myProject.isDisposed() || event.getEventType() != HyperlinkEvent.EventType.ACTIVATED;
     }
 
-    private static boolean isViewFileEvent(@NotNull HyperlinkEvent event) {
+    private static boolean isViewFileEvent(@NotNull final HyperlinkEvent event) {
         final String description = StringUtils.defaultString(event.getDescription());
         return "file".equals(description) || description.endsWith(".less") || description.endsWith(".css");
     }
 
-    private static boolean isIgnoreEvent(@NotNull HyperlinkEvent event) {
+    private static boolean isIgnoreEvent(@NotNull final HyperlinkEvent event) {
         final String description = event.getDescription();
         return "ignore".equals(description) || "dismiss".equals(description);
     }
 
     @Override
-    public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-        if (!isSupportedEvent(event))
+    public void hyperlinkUpdate(@NotNull final Notification notification, @NotNull final HyperlinkEvent event) {
+        if (isUnsupportedEvent(event))
             return;
 
         if (isViewFileEvent(event)) {

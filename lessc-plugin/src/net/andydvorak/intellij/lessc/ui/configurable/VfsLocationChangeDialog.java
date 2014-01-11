@@ -16,7 +16,6 @@
 
 package net.andydvorak.intellij.lessc.ui.configurable;
 
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFileEvent;
@@ -28,26 +27,26 @@ import net.andydvorak.intellij.lessc.state.LessProjectState;
  * @since 11/1/12
  */
 public class VfsLocationChangeDialog {
+
+    private static final long PROMPT_INTERVAL_MS = 1000;
+
     private int result = -1;
     private long lastPrompt = -1;
-    private long promptIntervalMillis = 1000;
-    private final Project myProject;
     private final LessProjectState myLessProjectState;
 
-    public VfsLocationChangeDialog(final Project project, final LessProjectState state) {
-        myProject = project;
+    public VfsLocationChangeDialog(final LessProjectState state) {
         myLessProjectState = state;
     }
 
     public synchronized boolean shouldMoveCssFile(final VirtualFileEvent virtualFileEvent) {
-        DialogWrapper.DoNotAskOption option = new DialogWrapper.DoNotAskOption() {
+        final DialogWrapper.DoNotAskOption option = new DialogWrapper.DoNotAskOption() {
             @Override
             public boolean isToBeShown() {
                 return myLessProjectState.isPromptOnMove();
             }
 
             @Override
-            public void setToBeShown(boolean value, int exitCode) {
+            public void setToBeShown(final boolean value, final int exitCode) {
                 myLessProjectState.setPromptOnMove(value);
             }
 
@@ -68,7 +67,7 @@ public class VfsLocationChangeDialog {
         };
 
         if (option.isToBeShown()) {
-            if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
+            if (System.currentTimeMillis() - lastPrompt > PROMPT_INTERVAL_MS) {
                 result = Messages.showYesNoDialog(
                         UIBundle.message("vfs.move.message", virtualFileEvent.getFileName()),
                         UIBundle.message("vfs.move.title"), // Title
@@ -92,14 +91,14 @@ public class VfsLocationChangeDialog {
     }
 
     public synchronized boolean shouldCopyCssFile(final VirtualFileEvent virtualFileEvent) {
-        DialogWrapper.DoNotAskOption option = new DialogWrapper.DoNotAskOption() {
+        final DialogWrapper.DoNotAskOption option = new DialogWrapper.DoNotAskOption() {
             @Override
             public boolean isToBeShown() {
                 return myLessProjectState.isPromptOnCopy();
             }
 
             @Override
-            public void setToBeShown(boolean value, int exitCode) {
+            public void setToBeShown(final boolean value, final int exitCode) {
                 myLessProjectState.setPromptOnCopy(value);
             }
 
@@ -120,7 +119,7 @@ public class VfsLocationChangeDialog {
         };
 
         if (option.isToBeShown()) {
-            if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
+            if (System.currentTimeMillis() - lastPrompt > PROMPT_INTERVAL_MS) {
                 result = Messages.showYesNoDialog(
                         UIBundle.message("vfs.copy.message", virtualFileEvent.getFileName()),
                         UIBundle.message("vfs.copy.title"), // Title
@@ -144,14 +143,14 @@ public class VfsLocationChangeDialog {
     }
 
     public synchronized boolean shouldDeleteCssFile(final VirtualFileEvent virtualFileEvent) {
-        DialogWrapper.DoNotAskOption option = new DialogWrapper.DoNotAskOption() {
+        final DialogWrapper.DoNotAskOption option = new DialogWrapper.DoNotAskOption() {
             @Override
             public boolean isToBeShown() {
                 return myLessProjectState.isPromptOnDelete();
             }
 
             @Override
-            public void setToBeShown(boolean value, int exitCode) {
+            public void setToBeShown(final boolean value, final int exitCode) {
                 myLessProjectState.setPromptOnDelete(value);
             }
 
@@ -172,7 +171,7 @@ public class VfsLocationChangeDialog {
         };
 
         if (option.isToBeShown()) {
-            if (System.currentTimeMillis() - lastPrompt > promptIntervalMillis) {
+            if (System.currentTimeMillis() - lastPrompt > PROMPT_INTERVAL_MS) {
                 result = Messages.showYesNoDialog(
                         UIBundle.message("vfs.delete.message", virtualFileEvent.getFileName()),
                         UIBundle.message("vfs.delete.title"), // Title

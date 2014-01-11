@@ -39,21 +39,21 @@ public class Notifier {
      * <p>Adds an entry to the "Event Log" tool window.</p>
      * <p>Does <strong>NOT</strong> display a notification balloon.</p>
      */
-    public static final NotificationGroup LOG_GROUP = NotificationGroup.logOnlyGroup(
+    private static final NotificationGroup LOG_GROUP = NotificationGroup.logOnlyGroup(
             "LESS Compiler Notices");
 
     /**
      * <p>Displays a notification balloon above the "Changes" tool window button.</p>
      * <p>Does <strong>NOT</strong> create an entry in the "Event Log" tool window.</p>
      */
-    public static final NotificationGroup SUCCESS_GROUP = NotificationGroup.toolWindowGroup(
+    private static final NotificationGroup SUCCESS_GROUP = NotificationGroup.toolWindowGroup(
             "LESS Compiler Successful Compiles", ChangesViewContentManager.TOOLWINDOW_ID, false);
 
     /**
      * <p>Displays a sticky notification balloon in the global notification area.</p>
      * <p>Creates an entry in the "Event Log" tool window.</p>
      */
-    public static final NotificationGroup ERROR_GROUP = new NotificationGroup(
+    private static final NotificationGroup ERROR_GROUP = new NotificationGroup(
             "LESS Compiler Error Messages", NotificationDisplayType.STICKY_BALLOON, true);
 
     private static final String LOG_TITLE = NotificationsBundle.message("log.title");
@@ -73,14 +73,14 @@ public class Notifier {
     private final Project myProject;
     private final ConcurrentMultiMap<String, Notification> notifications = new ConcurrentMultiMap<String, Notification>();
 
-    public Notifier(@NotNull final Project project) {
+    private Notifier(@NotNull final Project project) {
         myProject = project;
     }
 
     @NotNull
-    public static Notification createNotification(@NotNull NotificationGroup notificationGroup,
+    public static Notification createNotification(@NotNull final NotificationGroup notificationGroup,
                                                   @NotNull String title, @NotNull String message,
-                                                  @NotNull NotificationType type, @Nullable NotificationListener listener) {
+                                                  @NotNull final NotificationType type, @Nullable final NotificationListener listener) {
         // title can be empty; description can't be null or empty
         if (StringUtil.isEmptyOrSpaces(message)) {
             message = title;
@@ -108,7 +108,7 @@ public class Notifier {
     public void expire(@NotNull final String lessFilePath) {
         synchronized (notifications) {
             if (notifications.containsKey(lessFilePath)) {
-                for (Notification notification : notifications.get(lessFilePath)) {
+                for (final Notification notification : notifications.get(lessFilePath)) {
                     notification.expire();
                 }
                 notifications.remove(lessFilePath);
@@ -124,7 +124,7 @@ public class Notifier {
                     @NotNull final Set<LessFile> modifiedLessFiles) {
         final Notification notification = createNotification(LOG_GROUP, LOG_TITLE, message, NotificationType.INFORMATION, listener);
 
-        for (LessFile lessFile : modifiedLessFiles) {
+        for (final LessFile lessFile : modifiedLessFiles) {
             add(lessFile.getCanonicalPathSafe(), notification);
         }
 
@@ -139,7 +139,7 @@ public class Notifier {
                         @NotNull final Set<LessFile> modifiedLessFiles) {
         final Notification notification = createNotification(SUCCESS_GROUP, BALLOON_TITLE, message, NotificationType.INFORMATION, listener);
 
-        for (LessFile lessFile : modifiedLessFiles) {
+        for (final LessFile lessFile : modifiedLessFiles) {
             add(lessFile.getCanonicalPathSafe(), notification);
         }
 

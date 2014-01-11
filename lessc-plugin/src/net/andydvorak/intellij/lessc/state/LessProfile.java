@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class LessProfile {
 
@@ -59,7 +58,7 @@ public class LessProfile {
 
     // For XML deserialization
     @SuppressWarnings("UnusedDeclaration")
-    public void setId(int id) {
+    public void setId(final int id) {
         this.id = id;
     }
 
@@ -67,7 +66,7 @@ public class LessProfile {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
@@ -100,7 +99,7 @@ public class LessProfile {
         return StringUtils.defaultString(includePattern);
     }
 
-    public void setIncludePattern(String includePattern) {
+    public void setIncludePattern(final String includePattern) {
         this.includePattern = includePattern;
     }
 
@@ -109,7 +108,7 @@ public class LessProfile {
         return StringUtils.defaultString(excludePattern);
     }
 
-    public void setExcludePattern(String excludePattern) {
+    public void setExcludePattern(final String excludePattern) {
         this.excludePattern = excludePattern;
     }
 
@@ -117,7 +116,7 @@ public class LessProfile {
         return compileAutomatically;
     }
 
-    public void setCompileAutomatically(boolean compileAutomatically) {
+    public void setCompileAutomatically(final boolean compileAutomatically) {
         this.compileAutomatically = compileAutomatically;
     }
 
@@ -144,7 +143,7 @@ public class LessProfile {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         final LessProfile that = (LessProfile) o;

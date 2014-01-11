@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Andrew C. Dvorak
  * @since 11/13/12
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface CompileObservable {
     public void addObserver(@NotNull CompileObserver observer);
     public void removeObserver(@NotNull CompileObserver observer);

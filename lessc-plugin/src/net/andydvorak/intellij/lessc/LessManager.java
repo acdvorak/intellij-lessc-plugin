@@ -29,7 +29,6 @@ import com.intellij.openapi.vfs.VirtualFileCopyEvent;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileMoveEvent;
-import com.intellij.profile.Profile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.util.containers.ConcurrentHashMap;
 import com.intellij.util.xmlb.XmlSerializerUtil;
@@ -81,10 +80,11 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
 
     private final Notifier notifier;
 
+    @SuppressWarnings("WeakerAccess")
     public LessManager(final Project project) {
         super(project);
         this.virtualFileListener = new VirtualFileListenerImpl(this);
-        this.vfsLocationChangeDialog = new VfsLocationChangeDialog(project, state);
+        this.vfsLocationChangeDialog = new VfsLocationChangeDialog(state);
         this.notifier = Notifier.getInstance(project);
     }
 
@@ -392,7 +392,7 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
      *         otherwise {@code false}
      */
     private boolean needsToWait(final String lessFilePath) {
-        return lastCompileTimes.containsKey(lessFilePath) && !lastCompileTimes.get(lessFilePath).canCreateNewCompileJob();
+        return lastCompileTimes.containsKey(lessFilePath) && lastCompileTimes.get(lessFilePath).needsToWait();
     }
 
     /**

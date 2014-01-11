@@ -49,12 +49,8 @@ public class CssDirectory {
     public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
-        CssDirectory that = (CssDirectory) o;
-
-        if (cssDirPath != null ? !cssDirPath.equals(that.cssDirPath) : that.cssDirPath != null) return false;
-
-        return true;
+        final CssDirectory that = (CssDirectory) o;
+        return !(cssDirPath != null ? !cssDirPath.equals(that.cssDirPath) : that.cssDirPath != null);
     }
 
     @Override

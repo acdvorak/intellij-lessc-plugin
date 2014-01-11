@@ -30,14 +30,10 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class TextFieldWithBrowseButtonImpl extends TextFieldWithBrowseButton {
+class TextFieldWithBrowseButtonImpl extends TextFieldWithBrowseButton {
 
     private final Project myProject;
-    private String myTitle;
-
-    public TextFieldWithBrowseButtonImpl(final Project project) {
-        this(project, null);
-    }
+    private final String myTitle;
 
     public TextFieldWithBrowseButtonImpl(@Nullable final Project project, @Nullable final String title) {
         super();
@@ -48,11 +44,11 @@ public class TextFieldWithBrowseButtonImpl extends TextFieldWithBrowseButton {
         final TextFieldWithBrowseButtonImpl parent = this;
         final Project defaultProject = ProjectManager.getInstance().getDefaultProject();
         this.getButton().addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 final FileChooserDescriptor d = getFileChooserDescriptor();
-                String initial = parent.getText();
-                VirtualFile initialFile = StringUtil.isNotEmpty(initial) ? LocalFileSystem.getInstance().findFileByPath(initial) : null;
-                VirtualFile file =
+                final String initial = parent.getText();
+                final VirtualFile initialFile = StringUtil.isNotEmpty(initial) ? LocalFileSystem.getInstance().findFileByPath(initial) : null;
+                final VirtualFile file =
                         myProject != null ? FileChooser.chooseFile(d, myProject, initialFile) : FileChooser.chooseFile(d, defaultProject, initialFile);
                 if (file != null) {
                     String path = file.getPresentableUrl();
@@ -66,16 +62,12 @@ public class TextFieldWithBrowseButtonImpl extends TextFieldWithBrowseButton {
     }
 
     private FileChooserDescriptor getFileChooserDescriptor() {
-        FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
+        final FileChooserDescriptor d = new FileChooserDescriptor(false, true, false, false, false, false);
         if (myTitle != null) {
             d.setTitle(myTitle);
         }
         d.setShowFileSystemRoots(true);
         return d;
-    }
-
-    private void setFileChooserTitle(final String title) {
-        this.myTitle = title;
     }
 
 }

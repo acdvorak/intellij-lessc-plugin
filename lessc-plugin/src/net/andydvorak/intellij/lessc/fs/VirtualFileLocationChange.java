@@ -36,14 +36,15 @@ import java.util.Set;
  * @author Andrew C. Dvorak
  * @since 11/1/12
  */
+@SuppressWarnings("WeakerAccess")
 public class VirtualFileLocationChange {
     @NotNull private final CssDirectory cssRootDir;
     @NotNull private final VirtualFile oldFile;
     @NotNull private final VirtualFile newParent;
 
-    public VirtualFileLocationChange(@NotNull final CssDirectory cssRootDir,
-                                     @NotNull final VirtualFile oldFile,
-                                     @NotNull final VirtualFile newParent) {
+    private VirtualFileLocationChange(@NotNull final CssDirectory cssRootDir,
+                                      @NotNull final VirtualFile oldFile,
+                                      @NotNull final VirtualFile newParent) {
         this.cssRootDir = cssRootDir;
         this.oldFile = oldFile;
         this.newParent = newParent;
@@ -82,12 +83,13 @@ public class VirtualFileLocationChange {
         refresh(cssRootDir);
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        VirtualFileLocationChange that = (VirtualFileLocationChange) o;
+        final VirtualFileLocationChange that = (VirtualFileLocationChange) o;
 
         if (!ObjectUtils.equals(cssRootDir.getPath(), that.cssRootDir.getPath())) return false;
         if (!ObjectUtils.equals(newParent.getPath(), that.newParent.getPath())) return false;
@@ -105,7 +107,7 @@ public class VirtualFileLocationChange {
     }
 
     public static void refresh(@NotNull final Collection<CssDirectory> cssRootDirs) {
-        for (CssDirectory cssRootDir : cssRootDirs)
+        for (final CssDirectory cssRootDir : cssRootDirs)
             refresh(cssRootDir);
     }
 
@@ -121,6 +123,7 @@ public class VirtualFileLocationChange {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static int copyCssFiles(@NotNull final VirtualFileCopyEvent virtualFileCopyEvent,
                                    @Nullable final LessProfile lessProfile,
                                    @NotNull final VfsLocationChangeDialog vfsLocationChangeDialog) throws IOException {
@@ -129,13 +132,14 @@ public class VirtualFileLocationChange {
         if (changes.isEmpty() || !vfsLocationChangeDialog.shouldCopyCssFile(virtualFileCopyEvent))
             return 0;
 
-        for (VirtualFileLocationChange locationChange : changes) {
+        for (final VirtualFileLocationChange locationChange : changes) {
             locationChange.copy();
         }
 
         return changes.size();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static int moveCssFiles(@NotNull final VirtualFileMoveEvent virtualFileMoveEvent,
                                    @Nullable final LessProfile lessProfile,
                                    @NotNull final VfsLocationChangeDialog vfsLocationChangeDialog) throws IOException {
@@ -144,13 +148,14 @@ public class VirtualFileLocationChange {
         if (changes.isEmpty() || !vfsLocationChangeDialog.shouldMoveCssFile(virtualFileMoveEvent))
             return 0;
 
-        for (VirtualFileLocationChange locationChange : changes) {
+        for (final VirtualFileLocationChange locationChange : changes) {
             locationChange.move();
         }
 
         return changes.size();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static int deleteCssFiles(@NotNull final VirtualFileEvent virtualFileEvent,
                                      @Nullable final LessProfile lessProfile,
                                      @NotNull final VfsLocationChangeDialog vfsLocationChangeDialog) throws IOException {
@@ -159,7 +164,7 @@ public class VirtualFileLocationChange {
         if (changes.isEmpty() || !vfsLocationChangeDialog.shouldDeleteCssFile(virtualFileEvent))
             return 0;
 
-        for (VirtualFileLocationChange locationChange : changes) {
+        for (final VirtualFileLocationChange locationChange : changes) {
             locationChange.delete();
         }
 
@@ -168,28 +173,23 @@ public class VirtualFileLocationChange {
 
     @NotNull
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
-                                                            @NotNull final VirtualFileMoveEvent moveEvent) throws IOException {
+                                                            @NotNull final VirtualFileMoveEvent moveEvent) {
         return getChanges(lessProfile, moveEvent.getFile(), moveEvent.getOldParent());
     }
 
     @NotNull
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
-                                                            @NotNull final VirtualFileCopyEvent copyEvent) throws IOException {
+                                                            @NotNull final VirtualFileCopyEvent copyEvent) {
         return getChanges(lessProfile, copyEvent.getFile(), copyEvent.getOriginalFile().getParent());
     }
 
     /**
      * NOTE: This method will create the parent directories for new CSS files if they don't already exist.
-     * @param lessProfile
-     * @param newVirtualLessFile
-     * @param oldVirtualLessParent
-     * @return
-     * @throws IOException
      */
     @NotNull
     public static Set<VirtualFileLocationChange> getChanges(@Nullable final LessProfile lessProfile,
                                                             @NotNull final VirtualFile newVirtualLessFile,
-                                                            @NotNull final VirtualFile oldVirtualLessParent) throws IOException {
+                                                            @NotNull final VirtualFile oldVirtualLessParent) {
         final Set<VirtualFileLocationChange> changes = new HashSet<VirtualFileLocationChange>();
 
         if (lessProfile == null)
@@ -210,7 +210,7 @@ public class VirtualFileLocationChange {
         if (oldRelativeCssPath == null)
             return changes;
 
-        for(CssDirectory cssRootDir : lessProfile.getCssDirectories()) {
+        for(final CssDirectory cssRootDir : lessProfile.getCssDirectories()) {
             final VirtualFile oldVirtualCssFile = getVirtualFile(cssRootDir, oldRelativeCssPath);
 
             if (oldVirtualCssFile == null)

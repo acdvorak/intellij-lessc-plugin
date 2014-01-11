@@ -16,6 +16,7 @@
 
 package net.andydvorak.intellij.lessc.ui.configurable;
 
+import com.intellij.ui.JBColor;
 import com.intellij.util.ui.ColumnInfo;
 import net.andydvorak.intellij.lessc.ui.messages.UIBundle;
 import net.andydvorak.intellij.lessc.state.CssDirectory;
@@ -26,7 +27,7 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.File;
 
-public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
+class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
 
     public CssDirectoryColumn() {
         super(UIBundle.message("table.header.css.output.dir"));
@@ -34,7 +35,7 @@ public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
 
     public TableCellRenderer getRenderer(final CssDirectory cssDirectory) {
         return new DefaultTableCellRenderer() {
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (value == null) {
                     setText("");
@@ -43,7 +44,7 @@ public class CssDirectoryColumn extends ColumnInfo<CssDirectory, String> {
                     final String path = (String) value;
                     if (!isSelected) {
                         final File file = new File(path);
-                        if ( ! (file.exists() && file.isDirectory()) ) setForeground(Color.RED);
+                        if ( ! (file.exists() && file.isDirectory()) ) setForeground(JBColor.RED);
                     }
                     setText(path);
                 }

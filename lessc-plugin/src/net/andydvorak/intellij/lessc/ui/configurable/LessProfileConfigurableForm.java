@@ -47,7 +47,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.EventListenerList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -80,11 +79,9 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
     private final LessProfile lessProfile;
     private final LessProfile currentLessProfileUiState;
 
-    private int lessProfileId;
+    private final int lessProfileId;
     private String lessProfileName;
     private final LessProfilesPanel lessProfilesPanel;
-
-    private final EventListenerList listeners = new EventListenerList();
 
     private boolean modified;
     private JPanel rootPanel;
@@ -281,11 +278,6 @@ public class LessProfileConfigurableForm extends NamedConfigurable<LessProfile> 
     @Nls
     public String getDisplayName() {
         return lessProfile.getName();
-    }
-
-    @Nullable
-    public Icon getIcon() {
-        return null;
     }
 
     @Nullable

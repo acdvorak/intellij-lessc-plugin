@@ -69,7 +69,7 @@ public class CompileObserverImpl implements CompileObserver {
     }
 
     @Override
-    public void compileFinished(int numChanged) {
+    public void compileFinished(final int numChanged) {
         assert(this.numChanged == numChanged);
         updateProgress();
     }

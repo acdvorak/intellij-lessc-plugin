@@ -43,7 +43,8 @@
                   <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Exclude files by path:"/>
+                  <labelFor value="5ce35"/>
+                  <text value="&amp;Exclude files by path:"/>
                 </properties>
               </component>
               <component id="97100" class="javax.swing.JLabel">
@@ -51,18 +52,10 @@
                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Include files by path:"/>
+                  <labelFor value="ddb2"/>
+                  <text value="&amp;Include files by path:"/>
                   <verticalAlignment value="1"/>
                   <verticalTextPosition value="1"/>
-                </properties>
-              </component>
-              <component id="88eca" class="javax.swing.JLabel">
-                <constraints>
-                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <font size="10"/>
-                  <text value="use ; as delimiter, * and ? as wildcards"/>
                 </properties>
               </component>
               <component id="ddb2" class="javax.swing.JTextField" binding="includePatternTextField">
@@ -84,6 +77,15 @@
               <component id="889e8" class="javax.swing.JLabel">
                 <constraints>
                   <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <font size="10"/>
+                  <text value="use ; as delimiter, * and ? as wildcards"/>
+                </properties>
+              </component>
+              <component id="af257" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <font size="10"/>
@@ -117,7 +119,7 @@
                   <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Reset prompts"/>
+                  <text value="&amp;Reset prompts"/>
                 </properties>
               </component>
               <hspacer id="c1064">
@@ -137,7 +139,7 @@
                   <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Compress CSS output"/>
+                  <text value="Com&amp;press CSS output"/>
                   <toolTipText value="Remove whitespace and other unnecessary characters from the output to decrease file size and speed up download times."/>
                 </properties>
               </component>
@@ -147,7 +149,7 @@
                 </constraints>
                 <properties>
                   <selected value="true"/>
-                  <text value="Compile automatically on save"/>
+                  <text value="&amp;Compile automatically on save"/>
                   <toolTipText value="Automatically compile LESS files to CSS whenever they change.  Uncheck this box if you prefer to compile manually."/>
                 </properties>
               </component>
