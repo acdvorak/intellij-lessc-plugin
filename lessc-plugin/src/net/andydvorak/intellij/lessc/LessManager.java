@@ -139,6 +139,15 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
     /** Import state from external .xml file */
     public void loadState(final LessProjectState state) {
         XmlSerializerUtil.copyBean(state, this.state);
+        migrateConfig();
+        checkProfiles();
+    }
+
+    private void migrateConfig() {
+        if (this.state.lessProfiles.isEmpty())
+            return;
+
+        LOG.info("Migrating old profile config to new format");
 
         int nextProfileId = getNextProfileId();
 
@@ -148,7 +157,26 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
             this.state.lessProfileMap.put(profile.getId(), profile);
         }
 
+        // TODO: Re-save settings file
+
         this.state.lessProfiles.clear();
+    }
+
+    private void checkProfiles() {
+        for (final LessProfile profile : state.lessProfileMap.values()) {
+            if (StringUtils.isBlank(profile.getLessDirPath())) {
+                final String title = NotificationsBundle.message("profile.missing.less.dir.title");
+                final String text = NotificationsBundle.message("profile.missing.less.dir.text", profile.getName());
+                final String html = NotificationsBundle.message("profile.missing.less.dir.html", profile.getName());
+                warn(title, text, html);
+            }
+            if (profile.getCssDirectories().isEmpty()) {
+                final String title = NotificationsBundle.message("profile.missing.css.dirs.title");
+                final String text = NotificationsBundle.message("profile.missing.css.dirs.text", profile.getName());
+                final String html = NotificationsBundle.message("profile.missing.css.dirs.html", profile.getName());
+                warn(title, text, html);
+            }
+        }
     }
 
     private int getNextProfileId() {
@@ -522,6 +550,12 @@ public class LessManager extends AbstractProjectComponent implements PersistentS
         notifier.success(messageShortText + " " + DISMISS_LINK, listener, modifiedLessFiles);
 
         LOG.info(messageFullText.toString());
+    }
+
+    private void warn(final String title, final String text, final String html) {
+        final NotificationListenerImpl listener = new NotificationListenerImpl(myProject);
+        notifier.warn(title, html, listener);
+        LOG.warn(text);
     }
 
     private String createLink(final LessFile lessFile) {
