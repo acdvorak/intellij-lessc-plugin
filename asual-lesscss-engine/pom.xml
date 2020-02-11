@@ -40,12 +40,12 @@
 		<repository>
 			<id>com.asual.repositories.releases</id>
 			<name>Asual Releases Repository</name>
-			<url>http://www.asual.com/maven/content/repositories/releases</url>
+			<url>https://www.asual.com/maven/content/repositories/releases</url>
 		</repository>
 		<snapshotRepository>
 			<id>com.asual.repositories.snapshots</id>
 			<name>Asual Snapshots Repository</name>
-			<url>http://www.asual.com/maven/content/repositories/snapshots</url>
+			<url>https://www.asual.com/maven/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 
